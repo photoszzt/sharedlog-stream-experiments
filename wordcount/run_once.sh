@@ -75,6 +75,6 @@ ssh -q $MANAGER_HOST -- uname -a >>$EXP_DIR/kernel_version
 #     --log_length=1024 >$EXP_DIR/results.log
 
 ssh -q $CLIENT_HOST -- $SRC_DIR/bin/wordcount_client -faas_gateway $ENTRY_HOST:8080 \
-    -in_fname /src/data/books.dat
+    -in_fname /src/data/books.dat >$EXP_DIR/results.log
 
 $HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
