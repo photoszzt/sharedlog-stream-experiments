@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 EXP_DIR=$1
 
@@ -18,7 +19,7 @@ scp -q $BASE_DIR/docker-compose-base.yml $MANAGER_HOST:~
 $HELPER_SCRIPT generate-docker-compose --base-dir=$BASE_DIR
 scp -q $BASE_DIR/docker-compose.yml $MANAGER_HOST:~
 
-ssh -q $MANAGER_HOST -- docker stack rm faas-test
+ssh -q $MANAGER_HOST -- docker stack rm faas-test || true
 
 sleep 40
 
@@ -49,7 +50,7 @@ for HOST in $ALL_STORAGE_HOSTS; do
     ssh -q $HOST -- sudo mkdir -p /mnt/storage/journal
 done
 
-ssh -q $MANAGER_HOST -- docker network rm faas-test_default
+ssh -q $MANAGER_HOST -- docker network rm faas-test_default || true
 ssh -q $MANAGER_HOST -- SRC_DIR=$SRC_DIR FAAS_DIR=$FAAS_DIR FAAS_BUILD_TYPE=$FAAS_BUILD_TYPE \
     docker stack deploy \
     -c ~/docker-compose-base.yml -c ~/docker-compose.yml faas-test
