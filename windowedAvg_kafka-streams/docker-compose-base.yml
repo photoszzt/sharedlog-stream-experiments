@@ -1,0 +1,29 @@
+version: "3.8"
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.99.0.0/16
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    hostname: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      - ZOOKEEPER_CLIENT_PORT=2181
+      - ZOOKEEPER_TICK_TIME=2000
+    
+  broker:
+    image: confluentinc/cp-kafka:latest
+    hostname: broker-{{.Task.Slot}}
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: '{{.Task.Slot}}'
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+    volumes:
+      - /mnt/storage/kdata:/var/lib/kafka/data
+      - /mnt/efs/experiments/kafka_entry/run:/etc/confluent/docker/run
