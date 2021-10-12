@@ -19,29 +19,11 @@ services:
     hostname: broker-{{.Task.Slot}}
     depends_on:
       - zookeeper
-    ports:
-      - "29092:29092"
     environment:
-      HOST_IP: ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+'
       KAFKA_BROKER_ID: '{{.Task.Slot}}'
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://broker-{{.Task.Slot}}:9092,PLAINTEXT_HOST://${HOST_IP}:29092'
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_HOST
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
     volumes:
       - /mnt/storage/kdata:/var/lib/kafka/data
-
-  # app:
-  #   image: "openjdk:11.0.12-jre-slim-buster"
-  #   depends_on:
-  #     - broker
-  #   volumes:
-  #     - /mnt/efs/workspace/kafka-streams-benchmark/wordcount:/src
-  #   environment:
-  #     BOOTSTRAP_SERVER_CONFIG: broker-1:9092
-  #   entrypoint: ["java", "-jar", "/src/target/wordcount-1.0-SNAPSHOT-jar-with-dependencies.jar"]
-  #   deploy:
-  #     restart_policy:
-  #       condition: none
-      
+      - /mnt/efs/experiments/kafka_entry/run:/etc/confluent/docker/run
