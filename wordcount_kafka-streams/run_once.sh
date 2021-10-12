@@ -70,3 +70,7 @@ ssh -q $MANAGER_HOST -- "docker service create \
     --network kstreams-test_default --restart-condition none \
     --name kstreams-test_wordcount openjdk:11.0.12-jre-slim-buster \
     bash -c 'java -jar /src/target/wordcount-1.0-SNAPSHOT-jar-with-dependencies.jar'"
+
+sleep 65
+
+$HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
