@@ -11,8 +11,8 @@ EXP_DIR=$1
 BASE_DIR=`realpath $(dirname $0)`
 SRC_DIR=/mnt/efs/workspace/sharedlog-stream
 FAAS_DIR=/mnt/efs/workspace/faas
-# FAAS_BUILD_TYPE=release
-FAAS_BUILD_TYPE=debug
+FAAS_BUILD_TYPE=release
+# FAAS_BUILD_TYPE=debug
 HELPER_SCRIPT=/mnt/efs/workspace/research-helper-scripts/microservice_helper
 
 MANAGER_HOST=`$HELPER_SCRIPT get-docker-manager-host --base-dir=$BASE_DIR`
@@ -80,6 +80,6 @@ ssh -q $MANAGER_HOST -- uname -a >>$EXP_DIR/kernel_version
 #     --num_log_spaces=$NUM_LOGSPACES \
 #     --log_length=1024 >$EXP_DIR/results.log
 
-ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name windowedAvg -faas_gateway $ENTRY_HOST:8080
+ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name windowedAvg -faas_gateway $ENTRY_HOST:8080 >$EXP_DIR/results.log
 
 $HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
