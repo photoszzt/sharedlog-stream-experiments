@@ -6,8 +6,8 @@ EXP_DIR=$1
 BASE_DIR=`realpath $(dirname $0)`
 SRC_DIR=/mnt/efs/workspace/sharedlog-stream
 FAAS_DIR=/mnt/efs/workspace/faas
-# FAAS_BUILD_TYPE=release
-FAAS_BUILD_TYPE=debug
+FAAS_BUILD_TYPE=release
+# FAAS_BUILD_TYPE=debug
 HELPER_SCRIPT=/mnt/efs/workspace/research-helper-scripts/microservice_helper
 
 MANAGER_HOST=`$HELPER_SCRIPT get-docker-manager-host --base-dir=$BASE_DIR`
