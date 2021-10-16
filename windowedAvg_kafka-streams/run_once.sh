@@ -14,7 +14,7 @@ scp -q $BASE_DIR/docker-compose-base.yml $MANAGER_HOST:~
 $HELPER_SCRIPT generate-docker-compose --base-dir=$BASE_DIR
 scp -q $BASE_DIR/docker-compose.yml $MANAGER_HOST:~
 
-ssh -q $MANAGER_HOST -- docker stack rm kstreams-test || true
+ssh -q $MANAGER_HOST -- docker stack rm kstreams-test || true 
 ssh -q $MANAGER_HOST -- docker service rm "kstreams-test_source" || true
 ssh -q $MANAGER_HOST -- docker service rm "kstreams-test_windowedAvg" || true
 
@@ -70,3 +70,7 @@ ssh -q $MANAGER_HOST -- "docker service create \
     --network kstreams-test_default --restart-condition none \
     --name kstreams-test_windowedAvg openjdk:11.0.12-jre-slim-buster \
     bash -c 'java -cp /src/build/libs/nexmark-kafka-streams-0.2-SNAPSHOT-uber.jar com.github.nexmark.kafka.queries.RunQuery 9'"
+
+sleep 60
+
+$HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
