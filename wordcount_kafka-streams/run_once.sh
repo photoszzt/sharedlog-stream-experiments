@@ -3,6 +3,7 @@ set -euo pipefail
 set -x
 
 EXP_DIR=$1
+NUM_INSTANCE=$2
 
 BASE_DIR=`realpath $(dirname $0)`
 SRC_DIR=/mnt/efs/workspace/kafka-streams-benchmark/wordcount/
@@ -67,7 +68,8 @@ sleep 30
 ssh -q $MANAGER_HOST -- "docker service create \
     --mount type=bind,source=/mnt/efs/workspace/kafka-streams-benchmark/wordcount,destination=/src \
     --constraint node.labels.app_node==true --env BOOTSTRAP_SERVER_CONFIG=$FIRST_BROKER_CONTAINER_IP:9092 \
-    --network kstreams-test_default --restart-condition none \
+    --network kstreams-test_default --restart-condition none --replicas=$NUM_INSTANCE \
+    --replicas-max-per-node=1 --hostname='wordcount-{{.Task.Slot}}' \
     --name kstreams-test_wordcount openjdk:11.0.12-jre-slim-buster \
     bash -c 'java -jar /src/target/wordcount-1.0-SNAPSHOT-jar-with-dependencies.jar'"
 
