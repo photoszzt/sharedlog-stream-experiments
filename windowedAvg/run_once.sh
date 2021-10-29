@@ -3,10 +3,6 @@
 set -x
 
 EXP_DIR=$1
-# CONCURRENCY=$2
-# BATCH_SIZE=$3
-# TOTAL_BATCHES=$4
-# NUM_LOGSPACES=$5
 
 BASE_DIR=`realpath $(dirname $0)`
 SRC_DIR=/mnt/efs/workspace/sharedlog-stream
@@ -73,12 +69,6 @@ mkdir -p $EXP_DIR
 
 ssh -q $MANAGER_HOST -- cat /proc/cmdline >>$EXP_DIR/kernel_cmdline
 ssh -q $MANAGER_HOST -- uname -a >>$EXP_DIR/kernel_version
-
-# ssh -q $CLIENT_HOST -- $SRC_DIR/microbench/bin/append_bench \
-#     --faas_gateway=$ENTRY_HOST:8080 --concurrency=$CONCURRENCY \
-#     --batch_size=$BATCH_SIZE --total_batches=$TOTAL_BATCHES \
-#     --num_log_spaces=$NUM_LOGSPACES \
-#     --log_length=1024 >$EXP_DIR/results.log
 
 ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name windowedAvg -faas_gateway $ENTRY_HOST:8080 >$EXP_DIR/results.log
 
