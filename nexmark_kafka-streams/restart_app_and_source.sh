@@ -3,9 +3,10 @@ set -euo pipefail
 
 EXP_DIR=$1
 NUM_INSTANCE=$2
+SERDE=${3:-json}
+DURATION=${4:-60}
 
 BASE_DIR=`realpath $(dirname $0)`
-SRC_DIR=/mnt/efs/workspace/kafka-streams-benchmark/wordcount/
 HELPER_SCRIPT=/mnt/efs/workspace/research-helper-scripts/microservice_helper
 
 MANAGER_HOST=`$HELPER_SCRIPT get-docker-manager-host --base-dir=$BASE_DIR`
@@ -24,7 +25,7 @@ ssh -q $MANAGER_HOST -- "docker service create \
     --mount type=bind,source=/mnt/efs/workspace/sharedlog-stream,destination=/src \
     --constraint node.labels.source_node==true --network kstreams-test_default \
     --name kstreams-test_source --restart-condition none ubuntu:focal /src/bin/nexmark_genevents_kafka \
-    -broker $FIRST_BROKER_CONTAINER_IP:9092 -num_events 100000"
+    -broker $FIRST_BROKER_CONTAINER_IP:9092 -num_events 0 -duration $DURATION"
 
 sleep 30
 
@@ -34,7 +35,7 @@ ssh -q $MANAGER_HOST -- "docker service create \
     --network kstreams-test_default --restart-condition none --replicas=$NUM_INSTANCE \
     --replicas-max-per-node=1 --hostname='windowedAvg-{{.Task.Slot}}' \
     --name kstreams-test_windowedAvg openjdk:11.0.12-jre-slim-buster \
-    bash -c 'java -cp /src/build/libs/nexmark-kafka-streams-0.2-SNAPSHOT-uber.jar com.github.nexmark.kafka.queries.RunQuery 9'"
+    bash -c 'java -cp /src/build/libs/nexmark-kafka-streams-0.2-SNAPSHOT-uber.jar com.github.nexmark.kafka.queries.RunQuery --name $NAME --serde $SERDE'"
 
 sleep 60
 
