@@ -70,6 +70,8 @@ mkdir -p $EXP_DIR
 ssh -q $MANAGER_HOST -- cat /proc/cmdline >>$EXP_DIR/kernel_cmdline
 ssh -q $MANAGER_HOST -- uname -a >>$EXP_DIR/kernel_version
 
-ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name q1 -faas_gateway $ENTRY_HOST:8080 >$EXP_DIR/results.log
+ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name q1 \
+    -faas_gateway $ENTRY_HOST:8080 \
+    -wconfig $SRC_DIR/workload_config/q1.json >$EXP_DIR/results.log
 
 $HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
