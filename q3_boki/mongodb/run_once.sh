@@ -71,7 +71,8 @@ ssh -q $MANAGER_HOST -- cat /proc/cmdline >>$EXP_DIR/kernel_cmdline
 ssh -q $MANAGER_HOST -- uname -a >>$EXP_DIR/kernel_version
 
 ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name q3 \
-    -faas_gateway $ENTRY_HOST:8080 -duration 60 -serde msgp \
+    -faas_gateway $ENTRY_HOST:8080 -duration 60 -serde msgp -tran -comm_every_niter 100 \
+    -tab_type mongodb \
     -wconfig $SRC_DIR/workload_config/q3.json >$EXP_DIR/results.log
 
 $HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
