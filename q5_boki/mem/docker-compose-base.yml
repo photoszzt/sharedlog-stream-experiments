@@ -4,14 +4,6 @@ networks:
     ipam:
       config:
         - subnet: 172.99.0.0/16
-volumes:
-  mongo-data-0:
-    driver: local
-  mongo-data-1:
-    driver: local
-  mongo-data-2:
-    driver: local
-
 services:
   zookeeper:
     image: zookeeper:3.6.2
@@ -179,41 +171,6 @@ services:
     environment:
       - FAAS_NODE_ID={{.Task.Slot}}
     restart: always
-  
-  mongodb-0:
-    image: bitnami/mongodb:5.0.6
-    environment:
-      - MONGODB_ADVERTISED_HOSTNAME=mongodb-0
-      - MONGODB_REPLICA_SET_MODE=primary
-      - ALLOW_EMPTY_PASSWORD=yes
-      - MONGODB_REPLICA_SET_KEY="replca"
-    volumes:
-      - mongo-data-0:/bitnami
-    restart: always
-
-  mongodb-1:
-    image: bitnami/mongodb:5.0.6
-    environment:
-      - MONGODB_REPLICA_SET_MODE=secondary
-      - ALLOW_EMPTY_PASSWORD=yes
-      - MONGODB_REPLICA_SET_KEY="replca"
-      - MONGODB_INITIAL_PRIMARY_HOST=mongodb-0
-      - MONGODB_INITIAL_PRIMARY_HOST_NUMBER=27017
-    volumes:
-      - mongo-data-1:/bitnami
-    restart: always
-
-  mongodb-2:
-    image: bitnami/mongodb:5.0.6
-    environment:
-      - MONGODB_REPLICA_SET_MODE=secondary
-      - ALLOW_EMPTY_PASSWORD=yes
-      - MONGODB_REPLICA_SET_KEY="replca"
-      - MONGODB_INITIAL_PRIMARY_HOST=mongodb-0
-      - MONGODB_INITIAL_PRIMARY_HOST_NUMBER=27017
-    volumes:
-      - mongo-data-2:/bitnami
-    restart: always
 
   nexmark-source:
     image: ubuntu:focal
@@ -230,7 +187,7 @@ services:
        - faas-engine
     restart: always
 
-  q1:
+  q5-bid-keyed-by-auction:
     image: ubuntu:focal
     entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "30"]
     volumes:
@@ -244,3 +201,35 @@ services:
     depends_on:
        - faas-engine
     restart: always
+    
+  q5-auc-bid:
+    image: ubuntu:focal
+    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "40"]
+    volumes:
+      - ${SRC_DIR:?}:/src
+      - ${FAAS_DIR:?}:/faas
+      - /mnt/inmem/faas:/tmp/faas
+    environment:
+       - FAAS_BUILD_TYPE=${FAAS_BUILD_TYPE:-release}
+       - FAAS_GO_MAX_PROC_FACTOR=8
+       - GOGC=200
+    depends_on:
+       - faas-engine
+    restart: always
+
+  q5-max-bid:
+    image: ubuntu:focal
+    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "50"]
+    volumes:
+      - ${SRC_DIR:?}:/src
+      - ${FAAS_DIR:?}:/faas
+      - /mnt/inmem/faas:/tmp/faas
+    environment:
+       - FAAS_BUILD_TYPE=${FAAS_BUILD_TYPE:-release}
+       - FAAS_GO_MAX_PROC_FACTOR=8
+       - GOGC=200
+    depends_on:
+       - faas-engine
+    restart: always
+
+  

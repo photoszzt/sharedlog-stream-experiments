@@ -29,7 +29,7 @@ services:
       - --zookeeper_host=zookeeper:2181
       - --listen_iface=eth0
       - --root_path_for_ipc=/tmp/faas/ipc
-      - --func_config_file=/faas/tmp/q5.json
+      - --func_config_file=/faas/tmp/q1.json
       - --num_io_workers=4
       - --socket_listen_backlog=1024
       - --instant_rps_p_norm=0.8
@@ -42,8 +42,8 @@ services:
       - --slog_engine_propagate_auxdata
       # - --slog_enable_statecheck
       # - --slog_statecheck_interval_sec=10
-      - --log_path=/tmp/log/engine.log
-      - --alsologtostderr
+      # - --log_path=/tmp/log/engine.log
+      # - --alsologtostderr
       # - --v=1
     depends_on:
       - zookeeper-setup
@@ -82,7 +82,7 @@ services:
       - --zookeeper_host=zookeeper:2181
       - --listen_iface=eth0
       - --http_port=8080
-      - --func_config_file=/faas/tmp/q5.json
+      - --func_config_file=/faas/tmp/q1.json
       - --num_io_workers=8
       - --socket_listen_backlog=1024
       - --io_uring_entries=2048
@@ -113,23 +113,23 @@ services:
       - --io_uring_fd_slots=4096
       - --slog_local_cut_interval_us=500
       # - --slog_storage_flusher_threads=4
-      - --slog_storage_flusher_threads=2
+      # - --slog_storage_flusher_threads=2
       # - --slog_storage_backend=tkrzw_tree
       - --slog_storage_backend=rocksdb
       # - --slog_storage_backend=lmdb
       - --slog_storage_cache_cap_mb=2048
       - --rocksdb_max_background_jobs=2
-      - --rocksdb_mbytes_per_sync=8
-      - --rocksdb_max_total_wal_size_mb=64
-      - --rocksdb_rate_mbytes_per_sec=256
+      # - --rocksdb_mbytes_per_sync=8
+      # - --rocksdb_max_total_wal_size_mb=64
+      # - --rocksdb_rate_mbytes_per_sec=256
       # - --rocksdb_enable_compression
       # - --lmdb_mapsize_mb=32768
       # - --slog_enable_statecheck
       # - --slog_statecheck_interval_sec=10
-      - --journal_save_path=/tmp/storage/journal
+      # - --journal_save_path=/tmp/storage/journal
       # - --journal_file_openflag_dsync
-      - --log_path=/tmp/log/storage.log
-      - --alsologtostderr
+      # - --log_path=/tmp/log/storage.log
+      # - --alsologtostderr
       # - --v=1
     depends_on:
       - zookeeper-setup
@@ -154,13 +154,13 @@ services:
       - --io_uring_entries=2048
       - --io_uring_fd_slots=4096
       - --slog_global_cut_interval_us=500
-      - --slog_sequencer_enable_journal
-      - --journal_save_path=/tmp/storage/journal
+      # - --slog_sequencer_enable_journal
+      # - --journal_save_path=/tmp/storage/journal
       # - --journal_file_openflag_dsync
       # - --slog_enable_statecheck
       # - --slog_statecheck_interval_sec=10
-      - --log_path=/tmp/log/sequencer.log
-      - --alsologtostderr
+      # - --log_path=/tmp/log/sequencer.log
+      # - --alsologtostderr
       # - --v=1
     depends_on:
       - zookeeper-setup
@@ -187,7 +187,7 @@ services:
        - faas-engine
     restart: always
 
-  q5-bid-keyed-by-auction:
+  q8AucsBySellerID:
     image: ubuntu:focal
     entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "30"]
     volumes:
@@ -201,8 +201,8 @@ services:
     depends_on:
        - faas-engine
     restart: always
-    
-  q5-auc-bid:
+
+  q8PersonsByID:
     image: ubuntu:focal
     entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "40"]
     volumes:
@@ -217,7 +217,7 @@ services:
        - faas-engine
     restart: always
 
-  q5-max-bid:
+  q8JoinStream:
     image: ubuntu:focal
     entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "50"]
     volumes:
@@ -231,3 +231,4 @@ services:
     depends_on:
        - faas-engine
     restart: always
+  
