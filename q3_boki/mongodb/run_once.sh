@@ -2,6 +2,11 @@
 
 set -x
 
+if [ "$1" = "" ]; then
+	echo "should provide exp_dir"
+	exit 1
+fi
+
 EXP_DIR=$1
 
 BASE_DIR=`realpath $(dirname $0)`
@@ -72,7 +77,7 @@ ssh -q $MANAGER_HOST -- uname -a >>$EXP_DIR/kernel_version
 
 ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name q3 \
     -faas_gateway $ENTRY_HOST:8080 -duration 60 -serde msgp -tran -comm_every_niter 100 \
-    -tab_type mongodb \
+    -tab_type mongodb -mongo_addr mongodb://mongodb-0:27017,mongodb-1:27017,mongodb-2:27017/?replicaSet=replicaset \
     -wconfig $SRC_DIR/workload_config/q3.json >$EXP_DIR/results.log
 
 $HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
