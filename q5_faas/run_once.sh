@@ -1,8 +1,13 @@
 #!/bin/bash
 
 set -x
+if [ "$1" = "" ]; then
+	echo "should provide exp_dir"
+	exit 1
+fi
 
 EXP_DIR=$1
+TRAN=${2:-false}
 
 BASE_DIR=`realpath $(dirname $0)`
 SRC_DIR=/mnt/efs/workspace/sharedlog-stream
