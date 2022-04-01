@@ -180,45 +180,30 @@ services:
       - FAAS_NODE_ID={{.Task.Slot}}
     restart: always
 
-  mongodb-0:
+  mongodb-primary:
     image: bitnami/mongodb:5.0.6
     environment:
-      - MONGODB_ADVERTISED_HOSTNAME=mongodb-0
+      - MONGODB_ADVERTISED_HOSTNAME=mongodb-primary
       - MONGODB_REPLICA_SET_MODE=primary
       - ALLOW_EMPTY_PASSWORD=yes
-        # - MONGODB_REPLICA_SET_KEY=replca
+      # - MONGODB_REPLICA_SET_KEY=replca
     volumes:
       - mongo-data-0:/bitnami
     restart: always
 
-  mongodb-1:
+  mongodb-secondary:
     image: bitnami/mongodb:5.0.6
     depends_on:
-      - mongodb-0
+      - mongodb-primary
     environment:
-      - MONGODB_ADVERTISED_HOSTNAME=mongodb-1
+      - MONGODB_ADVERTISED_HOSTNAME=mongodb-secondary-{{.Task.Slot}}
       - MONGODB_REPLICA_SET_MODE=secondary
       - ALLOW_EMPTY_PASSWORD=yes
-        # - MONGODB_REPLICA_SET_KEY=replca
-      - MONGODB_INITIAL_PRIMARY_HOST=mongodb-0
+      # - MONGODB_REPLICA_SET_KEY=replca
+      - MONGODB_INITIAL_PRIMARY_HOST=mongodb-primary
       - MONGODB_INITIAL_PRIMARY_HOST_NUMBER=27017
     volumes:
       - mongo-data-1:/bitnami
-    restart: always
-
-  mongodb-2:
-    image: bitnami/mongodb:5.0.6
-    depends_on:
-      - mongodb-0
-    environment:
-      - MONGODB_ADVERTISED_HOSTNAME=mongodb-2
-      - MONGODB_REPLICA_SET_MODE=secondary
-      - ALLOW_EMPTY_PASSWORD=yes
-        # - MONGODB_REPLICA_SET_KEY=replca
-      - MONGODB_INITIAL_PRIMARY_HOST=mongodb-0
-      - MONGODB_INITIAL_PRIMARY_HOST_NUMBER=27017
-    volumes:
-      - mongo-data-2:/bitnami
     restart: always
 
   nexmark-source:
