@@ -18,6 +18,8 @@ services:
     volumes:
       - mongo-data-primary:/bitnami
     restart: always
+    ports:
+      - 27017:27017
     deploy:
       replicas: 1
 
@@ -30,13 +32,17 @@ services:
       - MONGODB_REPLICA_SET_MODE=secondary
       - ALLOW_EMPTY_PASSWORD=yes
       # - MONGODB_REPLICA_SET_KEY=replca
-      - MONGODB_INITIAL_PRIMARY_HOST=mongodb-primary
+      - MONGODB_INITIAL_PRIMARY_HOST=localhost
       - MONGODB_INITIAL_PRIMARY_HOST_NUMBER=27017
     volumes:
       - mongo-1:/bitnami
     restart: always
+    ports:
+      - 27021:27017
+    deploy:
+      replicas: 1
 
-  mongodb-1:
+  mongodb-2:
     image: bitnami/mongodb:5.0.6
     depends_on:
       - mongodb-primary
@@ -45,8 +51,12 @@ services:
       - MONGODB_REPLICA_SET_MODE=secondary
       - ALLOW_EMPTY_PASSWORD=yes
       # - MONGODB_REPLICA_SET_KEY=replca
-      - MONGODB_INITIAL_PRIMARY_HOST=mongodb-primary
+      - MONGODB_INITIAL_PRIMARY_HOST=localhost
       - MONGODB_INITIAL_PRIMARY_HOST_NUMBER=27017
     volumes:
       - mongo-2:/bitnami
+    ports:
+      - 27022:27017
     restart: always
+    deploy:
+      replicas: 1
