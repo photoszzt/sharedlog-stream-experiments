@@ -180,32 +180,56 @@ services:
       - FAAS_NODE_ID={{.Task.Slot}}
     restart: always
 
-  mongodb-primary:
+  mongodb-0:
     image: bitnami/mongodb:5.0.6
     environment:
-      - MONGODB_ADVERTISED_HOSTNAME=mongodb-primary
+      - MONGODB_ADVERTISED_HOSTNAME=mongodb-0
       - MONGODB_REPLICA_SET_MODE=primary
       - ALLOW_EMPTY_PASSWORD=yes
-      # - MONGODB_REPLICA_SET_KEY=replca
+      # - MONGODB_REPLICA_SET_KEY="replca"
     volumes:
       - mongo-data-0:/bitnami
     restart: always
 
-  mongodb-secondary:
+  mongodb-1:
     image: bitnami/mongodb:5.0.6
-    depends_on:
-      - mongodb-primary
     environment:
-      - MONGODB_ADVERTISED_HOSTNAME=mongodb-secondary-{{.Task.Slot}}
       - MONGODB_REPLICA_SET_MODE=secondary
       - ALLOW_EMPTY_PASSWORD=yes
-      # - MONGODB_REPLICA_SET_KEY=replca
-      - MONGODB_INITIAL_PRIMARY_HOST=mongodb-primary
+      # - MONGODB_REPLICA_SET_KEY="replca"
+      - MONGODB_INITIAL_PRIMARY_HOST=mongodb-0
       - MONGODB_INITIAL_PRIMARY_HOST_NUMBER=27017
     volumes:
       - mongo-data-1:/bitnami
     restart: always
 
+  mongodb-2:
+    image: bitnami/mongodb:5.0.6
+    environment:
+      - MONGODB_REPLICA_SET_MODE=secondary
+      - ALLOW_EMPTY_PASSWORD=yes
+      # - MONGODB_REPLICA_SET_KEY="replca"
+      - MONGODB_INITIAL_PRIMARY_HOST=mongodb-0
+      - MONGODB_INITIAL_PRIMARY_HOST_NUMBER=27017
+    volumes:
+      - mongo-data-2:/bitnami
+    restart: always
+
+  scale:
+    image: ubuntu:focal
+    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "10"]
+    volumes:
+      - ${SRC_DIR:?}:/src
+      - ${FAAS_DIR:?}:/faas
+      - /mnt/inmem/faas:/tmp/faas
+    environment:
+       - FAAS_BUILD_TYPE=${FAAS_BUILD_TYPE:-release}
+       - FAAS_GO_MAX_PROC_FACTOR=8
+       - GOGC=200
+    depends_on:
+       - faas-engine
+    restart: always
+    
   nexmark-source:
     image: ubuntu:focal
     entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "20"]
