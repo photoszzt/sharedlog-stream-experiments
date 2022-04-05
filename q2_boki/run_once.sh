@@ -12,7 +12,7 @@ TRAN=${2:-false}
 
 BASE_DIR=$(realpath $(dirname $0))
 SRC_DIR=/mnt/efs/workspace/sharedlog-stream
-FAAS_DIR=/mnt/efs/workspace/faas
+FAAS_DIR=/mnt/efs/workspace/boki
 FAAS_BUILD_TYPE=release
 # FAAS_BUILD_TYPE=debug
 HELPER_SCRIPT=/mnt/efs/workspace/research-helper-scripts/microservice_helper
@@ -81,12 +81,12 @@ if [ "$TRAN" = "true" ]; then
         -app_name q2 -duration 60 -serde msgp \
         -tran -comm_every_niter 100 -comm_everyMS 0 \
         -faas_gateway $ENTRY_HOST:8080 \
-        -wconfig $SRC_DIR/workload_config/q2.json >$EXP_DIR/results.log
+        -wconfig $SRC_DIR/workload_config/q2.json >$EXP_DIR/results.log 2>&1
 else
     ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client \
         -app_name q2 -duration 60 -serde msgp \
         -faas_gateway $ENTRY_HOST:8080 \
-        -wconfig $SRC_DIR/workload_config/q2.json >$EXP_DIR/results.log
+        -wconfig $SRC_DIR/workload_config/q2.json >$EXP_DIR/results.log 2>&1
 fi
 
 $HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
