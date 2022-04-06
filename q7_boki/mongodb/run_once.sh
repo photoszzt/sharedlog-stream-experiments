@@ -29,6 +29,13 @@ ssh -q $MANAGER_HOST -- docker stack rm faas-test
 
 sleep 40
 
+MONGO_HOSTS=$($HELPER_SCRIPT get-machine-with-label --base-dir=$BASE_DIR --machine-label=mongo_node)
+for HOST in $MONGO_HOSTS; do
+    ssh -q $HOST -- docker volume rm faas-test_mongo-data-0 || true
+    ssh -q $HOST -- docker volume rm faas-test_mongo-data-1 || true
+    ssh -q $HOST -- docker volume rm faas-test_mongo-data-2 || true
+done
+
 ALL_SEQUENCER_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=sequencer_node)
 for HOST in $ALL_SEQUENCER_HOSTS; do
     ssh -q $HOST -- sudo rm -rf /mnt/inmem/log
