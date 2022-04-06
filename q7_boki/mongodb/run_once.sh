@@ -77,13 +77,13 @@ ssh -q $MANAGER_HOST -- uname -a >>$EXP_DIR/kernel_version
 
 if [ "$TRAN" = "true" ]; then
     ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name q7 -tran -comm_every_niter 100 \
-        -tab_type mongodb -mongo_addr mongodb://mongodb-primary:27017,mongodb-secondary-0:27017,mongodb-secondary-1:27017/?replicaSet=replicaset \
+        -tab_type mongodb -mongo_addr mongodb://mongodb-0:27017,mongodb-1:27017,mongodb-2:27017/?replicaSet=replicaset \
         -faas_gateway $ENTRY_HOST:8080 -duration 60 -serde msgp \
         -tran -comm_every_niter 100 -comm_everyMS 0 \
         -wconfig $SRC_DIR/workload_config/q7.json >$EXP_DIR/results.log 2>&1
 else
     ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name q7 \
-        -tab_type mongodb -mongo_addr mongodb://mongodb-primary:27017,mongodb-secondary-0:27017,mongodb-secondary-1:27017/?replicaSet=replicaset \
+        -tab_type mongodb -mongo_addr mongodb://mongodb-0:27017,mongodb-1:27017,mongodb-2:27017/?replicaSet=replicaset \
         -faas_gateway $ENTRY_HOST:8080 -duration 60 -serde msgp \
         -wconfig $SRC_DIR/workload_config/q7.json >$EXP_DIR/results.log 2>&1
 fi
