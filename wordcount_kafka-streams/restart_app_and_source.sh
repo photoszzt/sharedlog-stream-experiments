@@ -18,7 +18,7 @@ sleep 40
 ALL_BROKER_HOSTS=(`$HELPER_SCRIPT get-machine-with-label --machine-label=broker_node`)
 FIRST_BROKER=${ALL_BROKER_HOSTS[0]}
 container_id=$(ssh -q $FIRST_BROKER -oStrictHostKeyChecking=no -- "docker ps -f name=kstreams-test_broker --format "{{.ID}}"")
-FIRST_BROKER_CONTAINER_IP=$(ssh -q $FIRST_BROKER -oStrictHostKeyChecking=no -- "docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $container_id")
+FIRST_BROKER_CONTAINER_IP=$(ssh -q $FIRST_BROKER -oStrictHostKeyChecking=no -- "docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${container_id}")
 
 ssh -q $MANAGER_HOST -- "docker service create \
     --mount type=bind,source=/mnt/efs/workspace/sharedlog-stream,destination=/src \

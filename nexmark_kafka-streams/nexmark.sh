@@ -2,10 +2,64 @@
 set -euo pipefail
 set -x
 
-EXP_DIR=$1
-NUM_INSTANCE=$2
-SERDE=${3:-json}
-DURATION=${4:-60}
+NAME=""
+EXP_DIR=""
+NUM_INSTANCE=""
+NUM_SRC_INSTANCE=""
+SERDE=""
+DURATION=""
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --app*)
+            if [[ "$1" != *=* ]]; then shift; fi
+            NAME="${1#*=}"
+            ;;
+        --exp_dir*)
+            if [[ "$1" != *=* ]]; then shift; fi
+            EXP_DIR="${1#*=}"
+            ;;
+        --nins*)
+            if [[ "$1" != *=* ]]; then shift; fi
+            NUM_INSTANCE="${1#*=}"
+            ;;
+        --nsrc*)
+            if [[ "$1" != *=* ]]; then shift; fi
+            NUM_SRC_INSTANCE="${1#*=}"
+            ;;
+        --serde*)
+            if [[ "$1" != *=* ]]; then shift; fi
+            SERDE="${1#*=}"
+            ;;
+        --duration*)
+            if [[ "$1" != *=* ]]; then shift; fi
+            DURATION="${1#*=}"
+            ;;
+        --help|-h)
+            printf -- "--app <appname> one of q1,q2,q3,q5,q7,q8\n"
+            printf -- "--exp_dir <exp_dir> required\n"
+            printf -- "--nins <nins> number of instance\n"
+            printf -- "--nsrc <nsrc> number of source\n"
+            printf -- "--serde <json or msgp>\n"
+            printf -- "--duration <duration in sec>\n"
+            exit 0
+            ;;
+        *)
+            >&2 printf "Error: invalid argument"
+            exit 1
+            ;;
+    esac
+    shift
+done
+
+if [[ "$EXP_DIR" = "" ]] || [[ "$NUM_INSTANCE" = "" ]] || [[ "$NAME" = "" ]]; then
+    echo "should provide app name, exp_dir and number of instance"
+    exit 1
+fi
+
+NUM_SRC_INSTANCE=${NUM_SRC_INSTANCE:-1}
+SERDE=${SERDE:-json}
+DURATION=${DURATION:-60}
 
 BASE_DIR=`realpath $(dirname $0)`
 HELPER_SCRIPT=/mnt/efs/workspace/research-helper-scripts/microservice_helper
@@ -18,7 +72,7 @@ scp -q $BASE_DIR/docker-compose.yml $MANAGER_HOST:~
 
 ssh -q $MANAGER_HOST -- docker stack rm kstreams-test || true
 ssh -q $MANAGER_HOST -- docker service rm "kstreams-test_source" || true
-ssh -q $MANAGER_HOST -- docker service rm "kstreams-test_windowedAvg" || true
+ssh -q $MANAGER_HOST -- docker service rm "kstreams-test_nexmark" || true
 
 sleep 40
 
@@ -59,9 +113,10 @@ ssh -q $MANAGER_HOST -- uname -a >>$EXP_DIR/kernel_version
 
 ssh -q $MANAGER_HOST -- "docker service create \
     --mount type=bind,source=/mnt/efs/workspace/sharedlog-stream,destination=/src \
-    --constraint node.labels.source_node==true --network kstreams-test_default \
-    --name kstreams-test_source --restart-condition none ubuntu:focal /src/bin/nexmark_genevents_kafka \
-    -broker $FIRST_BROKER_CONTAINER_IP:9092 -num_events 0 -duration $DURATION"
+    --constraint node.labels.app_node==true --network kstreams-test_default \
+    --name kstreams-test_source --restart-condition none --replicas=$NUM_SRC_INSTANCE \
+    --replicas-max-per-node=1 --hostname='source-{{.Task.Slot}}' ubuntu:focal /src/bin/nexmark_genevents_kafka \
+    -broker $FIRST_BROKER_CONTAINER_IP:9092 -duration $DURATION"
 
 sleep 30
 
@@ -69,10 +124,10 @@ ssh -q $MANAGER_HOST -- "docker service create \
     --mount type=bind,source=/mnt/efs/workspace/nexmark/nexmark-kafka-streams,destination=/src \
     --constraint node.labels.app_node==true --env BOOTSTRAP_SERVER_CONFIG=$FIRST_BROKER_CONTAINER_IP:9092 \
     --network kstreams-test_default --restart-condition none --replicas=$NUM_INSTANCE \
-    --replicas-max-per-node=1 --hostname='windowedAvg-{{.Task.Slot}}' \
+    --replicas-max-per-node=1 --hostname='nexmark-{{.Task.Slot}}' \
     --name kstreams-test_$NAME openjdk:11.0.12-jre-slim-buster \
     bash -c 'java -cp /src/build/libs/nexmark-kafka-streams-0.2-SNAPSHOT-uber.jar com.github.nexmark.kafka.queries.RunQuery --name $NAME --serde $SERDE'"
 
-sleep 60
+sleep $DURATION
 
 $HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
