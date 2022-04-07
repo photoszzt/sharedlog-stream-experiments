@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ "$1" = "" ]; then
-    echo "should provide exp_dir and whether to use transaction"
+    echo "should provide exp_dir"
     exit 1
 fi
 
