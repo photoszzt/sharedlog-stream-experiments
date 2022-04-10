@@ -4,13 +4,6 @@ networks:
     ipam:
       config:
         - subnet: 172.99.0.0/16
-volumes:
-  mongo-data-0:
-    driver: local
-  mongo-data-1:
-    driver: local
-  mongo-data-2:
-    driver: local
 
 services:
   zookeeper:
@@ -188,7 +181,7 @@ services:
       - ALLOW_EMPTY_PASSWORD=yes
       # - MONGODB_REPLICA_SET_KEY="replca"
     volumes:
-      - mongo-data-0:/bitnami
+      - /mnt/storage/mdata:/bitnami
     restart: always
 
   mongodb-1:
@@ -200,7 +193,7 @@ services:
       - MONGODB_INITIAL_PRIMARY_HOST=mongodb-0
       - MONGODB_INITIAL_PRIMARY_HOST_NUMBER=27017
     volumes:
-      - mongo-data-1:/bitnami
+      - /mnt/storage/mdata:/bitnami
     restart: always
 
   mongodb-2:
@@ -212,7 +205,7 @@ services:
       - MONGODB_INITIAL_PRIMARY_HOST=mongodb-0
       - MONGODB_INITIAL_PRIMARY_HOST_NUMBER=27017
     volumes:
-      - mongo-data-2:/bitnami
+      - /mnt/storage/mdata:/bitnami
     restart: always
     
   scale:
