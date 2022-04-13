@@ -57,6 +57,8 @@ if [[ "$EXP_DIR" = "" ]] || [[ "$NUM_INSTANCE" = "" ]] || [[ "$NAME" = "" ]]; th
     exit 1
 fi
 
+echo "app: $NAME, exp_dir: $EXP_DIR, num_instance: $NUM_INSTANCE, num_src: $NUM_SRC_INSTANCE, serde: $SERDE, duration: $DURATION"
+
 NUM_SRC_INSTANCE=${NUM_SRC_INSTANCE:-1}
 SERDE=${SERDE:-json}
 DURATION=${DURATION:-60}
@@ -70,9 +72,9 @@ scp -q $BASE_DIR/docker-compose-base.yml $MANAGER_HOST:~
 $HELPER_SCRIPT generate-docker-compose --base-dir=$BASE_DIR
 scp -q $BASE_DIR/docker-compose.yml $MANAGER_HOST:~
 
-ssh -q $MANAGER_HOST -- docker stack rm kstreams-test || true
 ssh -q $MANAGER_HOST -- docker service rm "kstreams-test_source" || true
 ssh -q $MANAGER_HOST -- docker service rm "kstreams-test_nexmark" || true
+ssh -q $MANAGER_HOST -- docker stack rm kstreams-test || true
 
 sleep 40
 
@@ -118,15 +120,15 @@ ssh -q $MANAGER_HOST -- "docker service create \
     --replicas-max-per-node=1 --hostname='source-{{.Task.Slot}}' ubuntu:focal /src/bin/nexmark_genevents_kafka \
     -broker $FIRST_BROKER_CONTAINER_IP:9092 -duration $DURATION"
 
-sleep 30
+sleep 3
 
 ssh -q $MANAGER_HOST -- "docker service create \
     --mount type=bind,source=/mnt/efs/workspace/nexmark/nexmark-kafka-streams,destination=/src \
     --constraint node.labels.app_node==true --env BOOTSTRAP_SERVER_CONFIG=$FIRST_BROKER_CONTAINER_IP:9092 \
     --network kstreams-test_default --restart-condition none --replicas=$NUM_INSTANCE \
     --replicas-max-per-node=1 --hostname='nexmark-{{.Task.Slot}}' \
-    --name kstreams-test_$NAME openjdk:11.0.12-jre-slim-buster \
-    bash -c 'java -cp /src/build/libs/nexmark-kafka-streams-0.2-SNAPSHOT-uber.jar com.github.nexmark.kafka.queries.RunQuery --name $NAME --serde $SERDE'"
+    --name kstreams-test_nexmark openjdk:11.0.12-jre-slim-buster \
+    bash -c 'java -cp /src/build/libs/nexmark-kafka-streams-0.2-SNAPSHOT-uber.jar com.github.nexmark.kafka.queries.RunQuery --name $NAME --serde $SERDE --duration $DURATION --conf  /src/workload_config/${NAME}.properties'"
 
 sleep $DURATION
 
