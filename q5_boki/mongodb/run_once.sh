@@ -35,6 +35,7 @@ for HOST in $MONGO_HOSTS; do
     ssh -q $HOST -- sudo rm -rf /mnt/storage/mdata
     ssh -q $HOST -- sudo mkdir -p /mnt/storage/mdata 
     ssh -q $HOST -- sudo chown ubuntu:ubuntu /mnt/storage/mdata
+    ssh -q $HOST -- sudo chmod g+w,o+w /mnt/storage/mdata
 done
 
 ALL_SEQUENCER_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=sequencer_node)
