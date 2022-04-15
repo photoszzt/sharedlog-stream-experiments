@@ -8,6 +8,7 @@ fi
 
 EXP_DIR=$1
 TRAN=${2:-false}
+DURATION=${3:-60}
 
 BASE_DIR=$(realpath $(dirname $0))
 SRC_DIR=/mnt/efs/workspace/sharedlog-stream
@@ -77,12 +78,12 @@ ssh -q $MANAGER_HOST -- uname -a >>$EXP_DIR/kernel_version
 
 if [ "$TRAN" = "true" ]; then
     ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name q7 \
-        -faas_gateway $ENTRY_HOST:8080 -duration 60 -serde msgp \
+        -faas_gateway $ENTRY_HOST:8080 -duration ${DURATION} -serde msgp \
         -tran -comm_every_niter 100 -comm_everyMS 0 \
         -wconfig $SRC_DIR/workload_config/q7.json >$EXP_DIR/results.log 2>&1
 else
     ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name q7 \
-        -faas_gateway $ENTRY_HOST:8080 -duration 60 -serde msgp \
+        -faas_gateway $ENTRY_HOST:8080 -duration ${DURATION} -serde msgp \
         -wconfig $SRC_DIR/workload_config/q7.json >$EXP_DIR/results.log 2>&1
 fi
 
