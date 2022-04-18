@@ -26,6 +26,18 @@ def parse_nexmark(filepath: str, produced: dict, consumed: dict, times: list):
                 duration = float(line.strip().split(" ")[-1])
                 times.append(duration)
 
+def parse_source(filepath: str):
+    duration = 0.0
+    produced = 0
+    with open(filepath, "r") as f:
+        for line in f:
+            if "source processed" in line:
+                l_arr = line.strip().split(", ")
+                produced = int(l_arr[0].split(" ")[2])
+                duration = float(l_arr[1].split(" ")[-1])
+    return produced, duration
+
+
 def summary(events: dict, max_time: float):
     for tp, val in events.items():
         total = sum(val)
@@ -38,12 +50,23 @@ def main():
     nexmark_produced = {}
     nexmark_consumed = {}
     nexmark_time = []
+    src_time = []
+    src_prod = []
     for root, dirs, files in os.walk(args.dir):
         for name in files:
             if "nexmark" in name and "stdout" in name:
                 filepath = os.path.join(root, name)
                 parse_nexmark(filepath=filepath, produced=nexmark_produced, consumed=nexmark_consumed, times=nexmark_time)
+            if "source" in name and "stderr" in name:
+                filepath = os.path.join(root, name)
+                src_gen, src_dur = parse_source(filepath)
+                src_time.append(src_dur)
+                src_prod.append(src_gen)
+
     print()
+    src_max_time = max(src_time)
+    src_total_prod = sum(src_prod)
+    print(f"source produced: {src_total_prod}, time: {src_max_time}, throughput: {float(src_total_prod)/src_max_time}")
     print(f"consumed: {nexmark_consumed}, produced: {nexmark_produced}, time: {nexmark_time}")
     max_time = max(nexmark_time)
     print("consumed")
