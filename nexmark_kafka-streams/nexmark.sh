@@ -119,7 +119,7 @@ ssh -q $MANAGER_HOST -- "docker service create \
     --constraint node.labels.app_node==true --network kstreams-test_default \
     --name kstreams-test_source --restart-condition none --replicas=$NUM_SRC_INSTANCE \
     --replicas-max-per-node=1 --hostname='source-{{.Task.Slot}}' ubuntu:focal /src/bin/nexmark_genevents_kafka \
-    -broker $FIRST_BROKER_CONTAINER_IP:9092 -duration ${SRC_DURATION} -npar 4 -serde $SERDE"
+    -broker $FIRST_BROKER_CONTAINER_IP:9092 -duration ${SRC_DURATION} -npar 4 -serde $SERDE" -srcIns $NUM_SRC_INSTANCE
 
 sleep 10
 
