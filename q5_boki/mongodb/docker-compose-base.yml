@@ -6,18 +6,42 @@ networks:
         - subnet: 172.99.0.0/16
 
 services:
-  zookeeper:
+  zookeeper-1:
     image: zookeeper:3.6.2
     hostname: zookeeper
     ports:
       - 2181:2181
     restart: always
+    environment:
+      - ZOO_MY_ID=1
+      - ZOO_SERVERS=server.1=zookeeper1:2888:3888;2181 server.2=zookeeper2:2888:3888;2181 server.3=zookeeper3:2888:3888;2181
+
+  zookeeper-2:
+    image: zookeeper:3.6.2
+    hostname: zookeeper
+    ports:
+      - 2181:2181
+    restart: always
+    environment:
+      - ZOO_MY_ID=2
+      - ZOO_SERVERS=server.1=zookeeper1:2888:3888;2181 server.2=zookeeper2:2888:3888;2181 server.3=zookeeper3:2888:3888;2181
+
+  zookeeper-3:
+    image: zookeeper:3.6.2
+    hostname: zookeeper
+    ports:
+      - 2181:2181
+    restart: always
+    environment:
+      - ZOO_MY_ID=3
+      - ZOO_SERVERS=server.1=zookeeper1:2888:3888;2181 server.2=zookeeper2:2888:3888;2181 server.3=zookeeper3:2888:3888;2181
+
 
   zookeeper-setup:
     image: zookeeper:3.6.2
     command: /faas/tmp/zk_setup.sh
     depends_on:
-       - zookeeper
+       - zookeeper-1
     volumes:
       - ${FAAS_DIR:?}:/faas
     restart: always

@@ -38,6 +38,18 @@ for HOST in $MONGO_HOSTS; do
     ssh -q $HOST -- sudo mkdir -p /mnt/storage/mdata 
     ssh -q $HOST -- sudo chown ubuntu:ubuntu /mnt/storage/mdata
     ssh -q $HOST -- sudo chmod g+w,o+w /mnt/storage/mdata
+    ssh -q $HOST -- echo "ubuntu hard fsize unlimited" | sudo tee -a /etc/security/limits.conf
+    ssh -q $HOST -- echo "ubuntu soft fsize unlimited" | sudo tee -a /etc/security/limits.conf
+    ssh -q $HOST -- echo "ubuntu hard cpu unlimited" | sudo tee -a /etc/security/limits.conf
+    ssh -q $HOST -- echo "ubuntu soft cpu unlimited" | sudo tee -a /etc/security/limits.conf
+    ssh -q $HOST -- echo "ubuntu soft as unlimited" | sudo tee -a /etc/security/limits.conf
+    ssh -q $HOST -- echo "ubuntu hard as unlimited" | sudo tee -a /etc/security/limits.conf
+    ssh -q $HOST -- echo "ubuntu soft memlock unlimited" | sudo tee -a /etc/security/limits.conf
+    ssh -q $HOST -- echo "ubuntu hard memlock unlimited" | sudo tee -a /etc/security/limits.conf
+    ssh -q $HOST -- echo "ubuntu hard nofile 64000" | sudo tee -a /etc/security/limits.conf
+    ssh -q $HOST -- echo "ubuntu soft nofile 64000" | sudo tee -a /etc/security/limits.conf
+    ssh -q $HOST -- echo "ubuntu hard nproc 64000" | sudo tee -a /etc/security/limits.conf
+    ssh -q $HOST -- echo "ubuntu soft nproc 64000" | sudo tee -a /etc/security/limits.conf
 done
 
 ALL_SEQUENCER_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=sequencer_node)
