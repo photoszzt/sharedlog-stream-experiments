@@ -10,6 +10,7 @@ fi
 EXP_DIR=$1
 TRAN=${2:-false}
 DURATION=${3:-60}
+EVENTS_NUM=${4:-25000000}
 
 BASE_DIR=$(realpath $(dirname $0))
 SRC_DIR=/mnt/efs/workspace/sharedlog-stream
@@ -83,7 +84,7 @@ ssh -q $MANAGER_HOST -- docker network rm faas-test_default
 ssh -q $MANAGER_HOST -- SRC_DIR=$SRC_DIR FAAS_DIR=$FAAS_DIR FAAS_BUILD_TYPE=$FAAS_BUILD_TYPE \
     docker stack deploy \
     -c ~/docker-compose-base.yml -c ~/docker-compose.yml faas-test
-sleep 80
+sleep 100
 
 for HOST in $ALL_ENGINE_HOSTS; do
     ENGINE_CONTAINER_ID=$($HELPER_SCRIPT get-container-id --service faas-engine --machine-host $HOST)
@@ -101,12 +102,12 @@ ssh -q $MANAGER_HOST -- uname -a >>$EXP_DIR/kernel_version
 if [ "$TRAN" = "true" ]; then
     ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name q3 \
         -faas_gateway $ENTRY_HOST:8080 -duration ${DURATION} -serde msgp \
-        -tran -comm_every_niter 100 -comm_everyMS 0 \
+        -tran -comm_every_niter 0 -comm_everyMS 100 -events_num ${EVENTS_NUM} \
         -tab_type mongodb -mongo_addr mongodb://mongodb-0:27017,mongodb-1:27017,mongodb-2:27017/?replicaSet=replicaset \
         -wconfig $SRC_DIR/workload_config/q3.json >$EXP_DIR/results.log 2>&1
 else
     ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name q3 \
-        -faas_gateway $ENTRY_HOST:8080 -duration ${DURATION} -serde msgp \
+        -faas_gateway $ENTRY_HOST:8080 -duration ${DURATION} -serde msgp -events_num ${EVENTS_NUM} \
         -tab_type mongodb -mongo_addr mongodb://mongodb-0:27017,mongodb-1:27017,mongodb-2:27017/?replicaSet=replicaset \
         -wconfig $SRC_DIR/workload_config/q3.json >$EXP_DIR/results.log 2>&1
 fi
