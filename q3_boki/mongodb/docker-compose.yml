@@ -51,8 +51,7 @@ services:
     deploy:
       placement:
         constraints:
-        - node.labels.mongo_node == true
-        max_replicas_per_node: 1
+        - node.hostname == mongo-1
       replicas: 1
       resources: {}
     environment: []
@@ -61,8 +60,7 @@ services:
     deploy:
       placement:
         constraints:
-        - node.labels.mongo_node == true
-        max_replicas_per_node: 1
+        - node.hostname == mongo-2
       replicas: 1
       resources: {}
     environment: []
@@ -71,8 +69,7 @@ services:
     deploy:
       placement:
         constraints:
-        - node.labels.mongo_node == true
-        max_replicas_per_node: 1
+        - node.hostname == mongo-3
       replicas: 1
       resources: {}
     environment: []
@@ -141,6 +138,24 @@ services:
       placement:
         constraints:
         - node.hostname == faas-gateway
+      replicas: 1
+      resources: {}
+    environment: []
+    volumes: []
+  zookeeper2:
+    deploy:
+      placement:
+        constraints:
+        - node.hostname == faas-control-1
+      replicas: 1
+      resources: {}
+    environment: []
+    volumes: []
+  zookeeper3:
+    deploy:
+      placement:
+        constraints:
+        - node.hostname == faas-control-2
       replicas: 1
       resources: {}
     environment: []

@@ -5,42 +5,49 @@ networks:
       config:
         - subnet: 172.99.0.0/16
 services:
-  zookeeper-1:
-    image: zookeeper:3.6.2
+  zookeeper:
+    image: docker.io/bitnami/zookeeper:3.8
     hostname: zookeeper
     ports:
-      - 2181:2181
+      - '2181'
     restart: always
     environment:
-      - ZOO_MY_ID=1
-      - ZOO_SERVERS=server.1=zookeeper1:2888:3888;2181 server.2=zookeeper2:2888:3888;2181 server.3=zookeeper3:2888:3888;2181
+      # - ZOO_SERVER_ID=1
+      - ZOO_TICK_TIME=2000
+      - ALLOW_ANONYMOUS_LOGIN=yes
+        # - ZOO_SERVERS=zookeeper:2888:3888,zookeeper2:2888:3888,zookeeper3:2888:3888
 
-  zookeeper-2:
-    image: zookeeper:3.6.2
-    hostname: zookeeper
-    ports:
-      - 2181:2181
-    restart: always
-    environment:
-      - ZOO_MY_ID=2
-      - ZOO_SERVERS=server.1=zookeeper1:2888:3888;2181 server.2=zookeeper2:2888:3888;2181 server.3=zookeeper3:2888:3888;2181
+        # zookeeper2:
+        #   image: docker.io/bitnami/zookeeper:3.8
+        #   hostname: zookeeper2
+        #   ports:
+        #     - '2181'
+        #   restart: always
+        #   environment:
+        #     - ZOO_SERVER_ID=2
+        #     - ZOO_TICK_TIME=2000
+        #     - ALLOW_ANONYMOUS_LOGIN=yes
+        #     - ZOO_SERVERS=zookeeper:2888:3888,zookeeper2:2888:3888,zookeeper3:2888:3888
 
-  zookeeper-3:
-    image: zookeeper:3.6.2
-    hostname: zookeeper
-    ports:
-      - 2181:2181
-    restart: always
-    environment:
-      - ZOO_MY_ID=3
-      - ZOO_SERVERS=server.1=zookeeper1:2888:3888;2181 server.2=zookeeper2:2888:3888;2181 server.3=zookeeper3:2888:3888;2181
-
+        # zookeeper3:
+        #   image: docker.io/bitnami/zookeeper:3.8
+        #   hostname: zookeeper3
+        #   ports:
+        #     - '2181'
+        #   restart: always
+        #   environment:
+        #     - ZOO_SERVER_ID=3
+        #     - ZOO_TICK_TIME=2000
+        #     - ALLOW_ANONYMOUS_LOGIN=yes
+        #     - ZOO_SERVERS=zookeeper:2888:3888,zookeeper2:2888:3888,zookeeper3:2888:3888
 
   zookeeper-setup:
     image: zookeeper:3.6.2
     command: /faas/tmp/zk_setup.sh
     depends_on:
-       - zookeeper-1
+       - zookeeper
+         # - zookeeper2
+         # - zookeeper3
     volumes:
       - ${FAAS_DIR:?}:/faas
     restart: always

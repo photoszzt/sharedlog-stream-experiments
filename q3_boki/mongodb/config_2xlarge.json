@@ -1,8 +1,6 @@
 {
     "machines": {
         "faas-gateway": { "type": "c5d.2xlarge", "role": "manager" },
-        "faas-control-1": { "type": "c5d.2xlarge", "role": "worker", "labels": ["manager_node=true"] },
-        "faas-control-2": { "type": "c5d.2xlarge", "role": "worker", "labels": ["manager_node=true"] },
         "faas-sequencer-1": { "type": "c5d.2xlarge", "role": "worker", "mount_instance_storage": "nvme1n1", "labels": ["sequencer_node=true"] },
         "faas-sequencer-2": { "type": "c5d.2xlarge", "role": "worker", "mount_instance_storage": "nvme1n1", "labels": ["sequencer_node=true"] },
         "faas-sequencer-3": { "type": "c5d.2xlarge", "role": "worker", "mount_instance_storage": "nvme1n1", "labels": ["sequencer_node=true"] },
@@ -20,18 +18,16 @@
         "mongo-3": {"type": "c5d.2xlarge", "role": "worker", "mount_instance_storage": "nvme1n1", "labels": ["mongo_node=true"] }
     },
     "services": {
-        "zookeeper-1": { "placement": "faas-gateway" },
-        "zookeeper-2": { "placement_label": "manager_node" },
-        "zookeeper-3": { "placement_label": "manager_node" },
+        "zookeeper": { "placement": "faas-gateway" },
         "zookeeper-setup": { "placement": "faas-gateway" },
         "faas-controller": { "placement": "faas-gateway" },
         "faas-gateway": { "placement": "faas-gateway" },
         "faas-storage": { "placement_label": "storage_node", "replicas": 4 },
         "faas-sequencer": { "placement_label": "sequencer_node", "replicas": 3 },
         "faas-engine": { "placement_label": "engine_node", "replicas": 4 },
-        "mongodb-0": { "placement_label": "mongo_node" },
-        "mongodb-1": { "placement_label": "mongo_node" },
-        "mongodb-2": { "placement_label": "mongo_node" },
+        "mongodb-0": { "placement": "mongo-1" },
+        "mongodb-1": { "placement": "mongo-2" },
+        "mongodb-2": { "placement": "mongo-3" },
         "nexmark-source": { "placement_label": "engine_node", "replicas": 4 },
         "q3AuctionsBySellerID": { "placement_label": "engine_node", "replicas": 4 },
         "q3PersonsByID": { "placement_label": "engine_node", "replicas": 4 },
