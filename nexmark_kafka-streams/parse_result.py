@@ -8,7 +8,7 @@ CONSUMER_TAG = "consumer-fetch-manager-metrics records-consumed-total"
 def parse_nexmark(filepath: str, produced: dict, consumed: dict, times: list):
     with open(filepath, "r") as f:
         for line in f:
-            if "topic=" in line:
+            if "topic=" in line and (PRODUCER_TAG in line or CONSUMER_TAG in line):
                 l_arr = line.strip().split(", ")
                 print(l_arr)
                 assert "topic=" in l_arr[2]
