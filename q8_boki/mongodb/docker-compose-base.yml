@@ -271,26 +271,9 @@ services:
        - faas-engine
     restart: always
 
-  q8AucsBySellerID:
+  q8GroupBy:
     image: ubuntu:focal
     entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "30"]
-    volumes:
-      - ${SRC_DIR:?}:/src
-      - ${FAAS_DIR:?}:/faas
-      - /mnt/inmem/faas:/tmp/faas
-    environment:
-       - FAAS_BUILD_TYPE=${FAAS_BUILD_TYPE:-release}
-       - FAAS_GO_MAX_PROC_FACTOR=8
-       - GOGC=200
-       - MEASURE_PROC=1
-       - BUFPUSH=1
-    depends_on:
-       - faas-engine
-    restart: always
-
-  q8PersonsByID:
-    image: ubuntu:focal
-    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "40"]
     volumes:
       - ${SRC_DIR:?}:/src
       - ${FAAS_DIR:?}:/faas
