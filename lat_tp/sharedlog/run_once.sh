@@ -57,7 +57,7 @@ done
 DURATION=${DURATION:-60}
 echo "exp_dir: $EXP_DIR, num_producer: $NUM_PRODUCER, duration: $DURATION, num partition: $NUM_PARTITION, payload: $PAYLOAD"
 
-if [[ "$NUM_EVENTS" = "" ]]; then
+if [[ "$EVENTS_NUM" = "" ]]; then
     echo "need to specify number of events"
     exit 1
 fi
@@ -101,8 +101,8 @@ ssh -q $CLIENT_HOST -- $SRC_DIR/bin/sharedlog_bench_client \
     -stat_dir ./${EXP_DIR}/stats -npar ${NUM_PARTITION} -nprod ${NUM_PRODUCER} \
     -payload $SRC_DIR/data/${PAYLOAD} >$EXP_DIR/results.log 2>&1
 
-ssh -q $CLIENT_HOST -- "for i in $(ls /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats); do gzip -9 /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats/$i; done"
+ssh -q $CLIENT_HOST -- "for i in $(ls /home/ubuntu/${EXP_DIR}/stats); do gzip -9 /home/ubuntu/${EXP_DIR}/stats/$i; done"
 
-scp -r $CLIENT_HOST:/home/ubuntu/${APP_NAME}/${EXP_DIR}/stats ${EXP_DIR}
+scp -r $CLIENT_HOST:/home/ubuntu/${EXP_DIR}/stats ${EXP_DIR}
 
 $HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
