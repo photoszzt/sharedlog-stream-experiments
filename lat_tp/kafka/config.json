@@ -1,1 +1,14 @@
-../../kafka_cluster/config.json
+{
+    "machines": {
+        "kstreams-broker-1": {"type": "c5d.2xlarge", "role": "worker", "mount_instance_storage": "nvme1n1", "labels": [ "broker_node=true" ]},
+        "kstreams-broker-2": {"type": "c5d.2xlarge", "role": "worker", "mount_instance_storage": "nvme1n1", "labels": [ "broker_node=true" ]},
+        "kstreams-broker-3": {"type": "c5d.2xlarge", "role": "worker", "mount_instance_storage": "nvme1n1", "labels": [ "broker_node=true" ]},
+        "kstreams-broker-4": {"type": "c5d.2xlarge", "role": "worker", "mount_instance_storage": "nvme1n1", "labels": [ "broker_node=true" ]},
+        "kstreams-control-1": {"type": "c5d.2xlarge", "role": "manager", "labels": [ "manager_node=true" ]},
+        "kstreams-app-1": {"type": "c5d.2xlarge", "role": "worker", "labels": [ "app_node=true" ]}
+    },
+    "services": {
+        "zookeeper": {"placement": "kstreams-control-1"},
+        "broker": {"placement_label": "broker_node", "replicas": 4 }
+    }
+}
