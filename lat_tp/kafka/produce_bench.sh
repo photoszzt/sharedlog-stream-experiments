@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 
 EXP_DIR=""
 NUM_PRODUCER=""
@@ -129,7 +130,7 @@ ssh -q $MANAGER_HOST -- "docker service create \
     --name kstreams-test_prod --restart-condition none --replicas=$NUM_PRODUCER \
     --replicas-max-per-node=1 --hostname='prod-{{.Task.Slot}}' ubuntu:focal /src/bin/kafka_produce_bench \
     -broker $FIRST_BROKER_CONTAINER_IP:9092 -duration ${DURATION} -events_num ${NUM_EVENTS} -npar ${NUM_PARTITION} \
-    -payload /src/data/$PAYLOAD
+    -payload /src/data/$PAYLOAD"
 
 sleep $DURATION
 
