@@ -57,7 +57,7 @@ done
 DURATION=${DURATION:-60}
 echo "exp_dir: $EXP_DIR, num_producer: $NUM_PRODUCER, duration: $DURATION, num partition: $NUM_PARTITION, payload: $PAYLOAD"
 
-if [[ "$NUM_EVENTS" = "" ]]; then
+if [[ "$EVENTS_NUM" = "" ]]; then
     echo "need to specify number of events"
     exit 1
 fi
