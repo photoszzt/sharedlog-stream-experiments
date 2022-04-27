@@ -3,6 +3,7 @@ set -x
 
 EXP_DIR=""
 NUM_PRODUCER=""
+NUM_CONSUMER=""
 DURATION=""
 NUM_EVENTS=""
 NUM_PARTITION=""
@@ -17,6 +18,10 @@ while [ $# -gt 0 ]; do
         --nprod*)
             if [[ "$1" != *=* ]]; then shift; fi
             NUM_PRODUCER="${1#*=}"
+            ;;
+        --ncon*)
+            if [[ "$1" != *=* ]]; then shift; fi
+            NUM_CONSUMER="${1#*=}"
             ;;
         --duration*)
             if [[ "$1" != *=* ]]; then shift; fi
@@ -37,6 +42,7 @@ while [ $# -gt 0 ]; do
         --help|-h)
             printf -- "--exp_dir <exp_dir> required\n"
             printf -- "--nprod <num> required\n"
+            printf -- "--ncon <num> required\n"
             printf -- "--duration <duration in sec>\n"
             printf -- "--events_num <number of events>\n"
             printf -- "--num_par <num partition>\n"
@@ -68,12 +74,16 @@ if [[ "$NUM_PARTITION" = "" ]]; then
     echo "need to specify number of partition"
     exit 1
 fi
+if [[ "$NUM_CONSUMER" = "" ]]; then
+    echo "need to specify number of consumer"
+    exit 1
+fi
 if [[ "$PAYLOAD" = "" ]]; then
     echo "need to specify the payload"
     exit 1
 fi
 
-echo "exp_dir: $EXP_DIR, num_producer: $NUM_PRODUCER, duration: $DURATION, num partition: $NUM_PARTITION, payload: $PAYLOAD"
+echo "exp_dir: $EXP_DIR, num_producer: $NUM_PRODUCER, num_consumer: $NUM_CONSUMER, duration: $DURATION, num partition: $NUM_PARTITION, payload: $PAYLOAD"
 
 BASE_DIR=`realpath $(dirname $0)`
 HELPER_SCRIPT=/mnt/efs/workspace/research-helper-scripts/microservice_helper
@@ -84,7 +94,8 @@ scp -q $BASE_DIR/docker-compose-base.yml $MANAGER_HOST:~
 $HELPER_SCRIPT generate-docker-compose --base-dir=$BASE_DIR
 scp -q $BASE_DIR/docker-compose.yml $MANAGER_HOST:~
 
-ssh -q $MANAGER_HOST -- docker service rm "kstreams-test_prod" || true
+ssh -q $MANAGER_HOST -- docker service rm "kstreams-test_produce" || true
+ssh -q $MANAGER_HOST -- docker service rm "kstreams-test_consume" || true
 ssh -q $MANAGER_HOST -- docker stack rm kstreams-test || true
 
 sleep 40
@@ -127,10 +138,19 @@ ssh -q $MANAGER_HOST -- uname -a >>$EXP_DIR/kernel_version
 ssh -q $MANAGER_HOST -- "docker service create \
     --mount type=bind,source=/mnt/efs/workspace/sharedlog-stream,destination=/src \
     --constraint node.labels.app_node==true --network kstreams-test_default \
-    --name kstreams-test_prod --restart-condition none --replicas=$NUM_PRODUCER \
+    --name kstreams-test_produce --restart-condition none --replicas=$NUM_PRODUCER \
     --replicas-max-per-node=1 --hostname='prod-{{.Task.Slot}}' ubuntu:focal /src/bin/kafka_produce_bench \
     -broker $FIRST_BROKER_CONTAINER_IP:9092 -duration ${DURATION} -events_num ${NUM_EVENTS} -npar ${NUM_PARTITION} \
     -payload /src/data/$PAYLOAD"
+
+sleep 2
+
+ssh -q $MANAGER_HOST -- "docker service create \
+    --mount type=bind,source=/mnt/efs/workspace/sharedlog-stream,destination=/src \
+    --constraint node.labels.app_node==true --network kstreams-test_default \
+    --name kstreams-test_consume --restart-condition none --replicas=$NUM_CONSUMER \
+    --replicas-max-per-node=1 --hostname='prod-{{.Task.Slot}}' ubuntu:focal /src/bin/kafka_consume_bench \
+    -broker $FIRST_BROKER_CONTAINER_IP:9092 -duration ${DURATION} -events_num ${NUM_EVENTS}"
 
 sleep $DURATION
 
