@@ -1,4 +1,13 @@
 services:
+  consume:
+    deploy:
+      placement:
+        constraints:
+        - node.hostname == faas-engine-1
+      replicas: 1
+      resources: {}
+    environment: []
+    volumes: []
   faas-controller:
     deploy:
       placement:
@@ -47,12 +56,11 @@ services:
       resources: {}
     environment: []
     volumes: []
-  slproduce:
+  produce:
     deploy:
       placement:
         constraints:
-        - node.labels.engine_node == true
-        max_replicas_per_node: 1
+        - node.hostname == faas-engine-1
       replicas: 1
       resources: {}
     environment: []
