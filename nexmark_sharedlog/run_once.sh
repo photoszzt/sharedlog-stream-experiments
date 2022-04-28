@@ -1,5 +1,4 @@
 #!/bin/bash
-set -euo pipefail
 set -x
 
 if [ "$1" = "" ]; then
@@ -88,27 +87,28 @@ if [ "$USE_MONGODB" = "true" ]; then
             -faas_gateway $ENTRY_HOST:8080 -duration ${DURATION} -serde msgp \
             -tran -comm_every_niter 0 -comm_everyMS 100 -events_num ${EVENTS_NUM} \
             -tab_type mongodb -mongo_addr mongodb://mongodb-0:27017,mongodb-1:27017,mongodb-2:27017/?replicaSet=replicaset \
-            -wconfig $SRC_DIR/workload_config/${APP_NAME}.json -stat_dir ${EXP_DIR}/stats >$EXP_DIR/results.log 2>&1
+            -wconfig $SRC_DIR/workload_config/${APP_NAME}.json -stat_dir /home/ubuntu/${EXP_DIR}/stats >$EXP_DIR/results.log 2>&1
     else
         ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name ${APP_NAME} \
             -faas_gateway $ENTRY_HOST:8080 -duration ${DURATION} -serde msgp -events_num ${EVENTS_NUM} \
             -tab_type mongodb -mongo_addr mongodb://mongodb-0:27017,mongodb-1:27017,mongodb-2:27017/?replicaSet=replicaset \
-            -wconfig $SRC_DIR/workload_config/${APP_NAME}.json -stat_dir ${EXP_DIR}/stats >$EXP_DIR/results.log 2>&1
+            -wconfig $SRC_DIR/workload_config/${APP_NAME}.json -stat_dir /home/ubuntu/${EXP_DIR}/stats >$EXP_DIR/results.log 2>&1
     fi
 else
     if [ "$TRAN" = "true" ]; then
         ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name ${APP_NAME} \
             -faas_gateway $ENTRY_HOST:8080 -duration ${DURATION} -serde msgp \
             -tran -comm_every_niter 0 -comm_everyMS 100 -events_num ${EVENTS_NUM} \
-            -wconfig $SRC_DIR/workload_config/${APP_NAME}.json -stat_dir ./${APP_NAME}/${EXP_DIR}/stats >$EXP_DIR/results.log 2>&1
+            -wconfig $SRC_DIR/workload_config/${APP_NAME}.json -stat_dir /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats >$EXP_DIR/results.log 2>&1
     else
         ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name ${APP_NAME} \
             -faas_gateway $ENTRY_HOST:8080 -duration ${DURATION} -events_num ${EVENTS_NUM} -serde msgp \
-            -wconfig $SRC_DIR/workload_config/${APP_NAME}.json -stat_dir ./${APP_NAME}/${EXP_DIR}/stats >$EXP_DIR/results.log 2>&1
+            -wconfig $SRC_DIR/workload_config/${APP_NAME}.json -stat_dir /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats >$EXP_DIR/results.log 2>&1
     fi
 fi
 
-ssh -q $CLIENT_HOST -- "for i in `ls /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats`; do gzip -9 /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats/$i; done"
+scp zip_files.sh $CLIENT_HOST:/home/ubuntu/zip_files.sh
+ssh -q $CLIENT_HOST -- "/home/ubuntu/zip_files.sh /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats"
 
 scp -r $CLIENT_HOST:/home/ubuntu/${APP_NAME}/${EXP_DIR}/stats ${EXP_DIR}
 
