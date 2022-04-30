@@ -41,7 +41,7 @@ def parse_source(filepath: str):
 def summary(events: dict, max_time: float):
     for tp, val in events.items():
         total = sum(val)
-        print(f"{tp} {total} events, throughput: {float(total)/max_time}")
+        print(f"{tp} {total} events, throughput: {round(float(total)/max_time, 1)}")
 
 def main():
     parser = argparse.ArgumentParser()
@@ -66,7 +66,7 @@ def main():
     print()
     src_max_time = max(src_time)
     src_total_prod = sum(src_prod)
-    print(f"source produced: {src_total_prod}, time: {src_max_time}, throughput: {float(src_total_prod)/src_max_time}")
+    print(f"source produced: {src_total_prod}, time: {src_max_time}, throughput: {round(float(src_total_prod)/src_max_time, 1)}")
     print(f"consumed: {nexmark_consumed}, produced: {nexmark_produced}, time: {nexmark_time}")
     max_time = max(nexmark_time)
     print("consumed")
