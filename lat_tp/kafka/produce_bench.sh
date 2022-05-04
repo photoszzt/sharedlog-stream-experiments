@@ -137,14 +137,14 @@ ssh -q $MANAGER_HOST -- uname -a >>$EXP_DIR/kernel_version
 
 ssh -q $MANAGER_HOST -- "docker service create \
     --mount type=bind,source=/mnt/efs/workspace/sharedlog-stream,destination=/src \
-    --constraint node.labels.app_node==true --network kstreams-test_default \
+    --constraint node.labels.consume_node==true --network kstreams-test_default \
     --name kstreams-test_consume --restart-condition none --replicas=$NUM_CONSUMER \
     --replicas-max-per-node=1 --publish published=8090,target=8090 ubuntu:focal /src/bin/kafka_consume_bench \
     -broker $FIRST_BROKER_CONTAINER_IP:9092 -duration ${DURATION} -events_num ${NUM_EVENTS}" &
 
 ssh -q $MANAGER_HOST -- "docker service create \
     --mount type=bind,source=/mnt/efs/workspace/sharedlog-stream,destination=/src \
-    --constraint node.labels.app_node==true --network kstreams-test_default \
+    --constraint node.labels.produce_node==true --network kstreams-test_default \
     --name kstreams-test_produce --restart-condition none --replicas=$NUM_PRODUCER \
     --replicas-max-per-node=1 --publish published=8080,target=8080 ubuntu:focal /src/bin/kafka_produce_bench \
     -broker $FIRST_BROKER_CONTAINER_IP:9092 -duration ${DURATION} -events_num ${NUM_EVENTS} -npar ${NUM_PARTITION} \
@@ -152,7 +152,8 @@ ssh -q $MANAGER_HOST -- "docker service create \
 
 sleep 2
 
-APP_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label app_node)
+PRODUCE_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label produce_node)
+CONSUME_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label consume_node)
 
 pids=()
 i=0
