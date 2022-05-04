@@ -138,20 +138,38 @@ ssh -q $MANAGER_HOST -- uname -a >>$EXP_DIR/kernel_version
 ssh -q $MANAGER_HOST -- "docker service create \
     --mount type=bind,source=/mnt/efs/workspace/sharedlog-stream,destination=/src \
     --constraint node.labels.app_node==true --network kstreams-test_default \
+    --name kstreams-test_consume --restart-condition none --replicas=$NUM_CONSUMER \
+    --replicas-max-per-node=1 --publish published=8090,target=8090 ubuntu:focal /src/bin/kafka_consume_bench \
+    -broker $FIRST_BROKER_CONTAINER_IP:9092 -duration ${DURATION} -events_num ${NUM_EVENTS}" &
+
+ssh -q $MANAGER_HOST -- "docker service create \
+    --mount type=bind,source=/mnt/efs/workspace/sharedlog-stream,destination=/src \
+    --constraint node.labels.app_node==true --network kstreams-test_default \
     --name kstreams-test_produce --restart-condition none --replicas=$NUM_PRODUCER \
-    --replicas-max-per-node=1 --hostname='prod-{{.Task.Slot}}' ubuntu:focal /src/bin/kafka_produce_bench \
+    --replicas-max-per-node=1 --publish published=8080,target=8080 ubuntu:focal /src/bin/kafka_produce_bench \
     -broker $FIRST_BROKER_CONTAINER_IP:9092 -duration ${DURATION} -events_num ${NUM_EVENTS} -npar ${NUM_PARTITION} \
     -payload /src/data/$PAYLOAD"
 
 sleep 2
 
-ssh -q $MANAGER_HOST -- "docker service create \
-    --mount type=bind,source=/mnt/efs/workspace/sharedlog-stream,destination=/src \
-    --constraint node.labels.app_node==true --network kstreams-test_default \
-    --name kstreams-test_consume --restart-condition none --replicas=$NUM_CONSUMER \
-    --replicas-max-per-node=1 --hostname='prod-{{.Task.Slot}}' ubuntu:focal /src/bin/kafka_consume_bench \
-    -broker $FIRST_BROKER_CONTAINER_IP:9092 -duration ${DURATION} -events_num ${NUM_EVENTS}"
+APP_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label app_node)
 
-sleep $DURATION
+pids=()
+i=0
+for HOST in $APP_HOSTS; do
+    ssh -q $MANAGER_HOST -- "curl $HOST:8080/produce" &
+    pids[$i]=$!
+    i=$(expr $i + 1)
+done
+
+for HOST in $APP_HOSTS; do
+    ssh -q $MANAGER_HOST -- "curl $HOST:8090/consume" &
+    pids[$i]=$!
+    i=$(expr $i + 1)
+done
+
+for pid in ${pids[*]}; do
+    wait $pid
+done
 
 $HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
