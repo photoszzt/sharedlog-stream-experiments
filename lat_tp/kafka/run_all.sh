@@ -22,8 +22,6 @@ EVENTS=18000
 
 // tps 1000
 TPS=1000
-DURATION=180
-WARM_DURATION=60
 WARM_EVENTS=60000
 EVENTS=180000
 ./produce_bench.sh --exp_dir 180s_60swarm/1p_1t_1par_5ms_${TPS}tps/100b --ncon 1 --nprod 1 --duration $DURATION \
@@ -41,8 +39,6 @@ EVENTS=180000
 
 // tps 10000
 TPS=10000
-DURATION=180
-WARM_DURATION=60
 WARM_EVENTS=600000
 EVENTS=1800000
 ./produce_bench.sh --exp_dir 180s_60swarm/1p_1t_1par_5ms_${TPS}tps/100b --ncon 1 --nprod 1 --duration $DURATION \
