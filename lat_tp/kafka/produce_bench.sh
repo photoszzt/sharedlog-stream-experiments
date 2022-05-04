@@ -8,6 +8,9 @@ DURATION=""
 NUM_EVENTS=""
 NUM_PARTITION=""
 PAYLOAD=""
+WARM_DURATION=""
+WARM_EVENTS=""
+TPS=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -26,6 +29,18 @@ while [ $# -gt 0 ]; do
         --duration*)
             if [[ "$1" != *=* ]]; then shift; fi
             DURATION="${1#*=}"
+            ;;
+        --warm_duration*)
+            if [[ "$1" != *=* ]]; then shift; fi
+            WARM_DURATION="${1#*=}"
+            ;;
+        --warm_events*)
+            if [[ "$1" != *=* ]]; then shift; fi
+            WARM_EVENTS="${1#*=}"
+            ;;
+        --tps*)
+            if [[ "$1" != *=* ]]; then shift; fi
+            TPS="${1#*=}"
             ;;
         --events_num*)
             if [[ "$1" != *=* ]]; then shift; fi
@@ -82,8 +97,20 @@ if [[ "$PAYLOAD" = "" ]]; then
     echo "need to specify the payload"
     exit 1
 fi
+if [[ "$WARM_EVENTS" = "" ]]; then
+    echo "need to specify number of warmup events"
+    exit 1
+fi
+if [[ "$WARM_DURATION" = "" ]]; then
+    echo "need to specify warmup duration"
+    exit 1
+fi
+if [[ "$TPS" = "" ]]; then
+    echo "need to specify tps"
+    exit 1
+fi
 
-echo "exp_dir: $EXP_DIR, num_producer: $NUM_PRODUCER, num_consumer: $NUM_CONSUMER, duration: $DURATION, num partition: $NUM_PARTITION, payload: $PAYLOAD"
+echo "exp_dir: $EXP_DIR, num_producer: $NUM_PRODUCER, num_consumer: $NUM_CONSUMER, duration: $DURATION, num partition: $NUM_PARTITION, payload: $PAYLOAD, warm_duration: $WARM_DURATION, warm_events: $WARM_EVENTS, tps: $TPS"
 
 BASE_DIR=`realpath $(dirname $0)`
 HELPER_SCRIPT=/mnt/efs/workspace/research-helper-scripts/microservice_helper
@@ -135,12 +162,14 @@ mkdir -p $EXP_DIR
 ssh -q $MANAGER_HOST -- cat /proc/cmdline >>$EXP_DIR/kernel_cmdline
 ssh -q $MANAGER_HOST -- uname -a >>$EXP_DIR/kernel_version
 
+CONSUME_DURATION=$(expr ${DURATION} + 5)
 ssh -q $MANAGER_HOST -- "docker service create \
     --mount type=bind,source=/mnt/efs/workspace/sharedlog-stream,destination=/src \
     --constraint node.labels.consume_node==true --network kstreams-test_default \
     --name kstreams-test_consume --restart-condition none --replicas=$NUM_CONSUMER \
     --replicas-max-per-node=1 --publish published=8090,target=8090 ubuntu:focal /src/bin/kafka_consume_bench \
-    -broker $FIRST_BROKER_CONTAINER_IP:9092 -duration ${DURATION} -events_num ${NUM_EVENTS}" &
+    -broker $FIRST_BROKER_CONTAINER_IP:9092 -duration ${CONSUME_DURATION} -events_num ${NUM_EVENTS} \
+    -warmup_time ${WARMUP_DURATION} -warmup_events ${WARMUP_EVENTS}" &
 
 ssh -q $MANAGER_HOST -- "docker service create \
     --mount type=bind,source=/mnt/efs/workspace/sharedlog-stream,destination=/src \
@@ -148,7 +177,7 @@ ssh -q $MANAGER_HOST -- "docker service create \
     --name kstreams-test_produce --restart-condition none --replicas=$NUM_PRODUCER \
     --replicas-max-per-node=1 --publish published=8080,target=8080 ubuntu:focal /src/bin/kafka_produce_bench \
     -broker $FIRST_BROKER_CONTAINER_IP:9092 -duration ${DURATION} -events_num ${NUM_EVENTS} -npar ${NUM_PARTITION} \
-    -payload /src/data/$PAYLOAD"
+    -payload /src/data/$PAYLOAD -tps $TPS"
 
 sleep 2
 
@@ -157,13 +186,13 @@ CONSUME_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label consume_no
 
 pids=()
 i=0
-for HOST in $APP_HOSTS; do
+for HOST in $PRODUCE_HOSTS; do
     ssh -q $MANAGER_HOST -- "curl $HOST:8080/produce" &
     pids[$i]=$!
     i=$(expr $i + 1)
 done
 
-for HOST in $APP_HOSTS; do
+for HOST in $CONSUME_HOSTS; do
     ssh -q $MANAGER_HOST -- "curl $HOST:8090/consume" &
     pids[$i]=$!
     i=$(expr $i + 1)
