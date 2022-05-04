@@ -169,7 +169,7 @@ ssh -q $MANAGER_HOST -- "docker service create \
     --name kstreams-test_consume --restart-condition none --replicas=$NUM_CONSUMER \
     --replicas-max-per-node=1 --publish published=8090,target=8090 ubuntu:focal /src/bin/kafka_consume_bench \
     -broker $FIRST_BROKER_CONTAINER_IP:9092 -duration ${CONSUME_DURATION} -events_num ${NUM_EVENTS} \
-    -warmup_time ${WARMUP_DURATION} -warmup_events ${WARMUP_EVENTS}" &
+    -warmup_time ${WARM_DURATION} -warmup_events ${WARM_EVENTS}" &
 
 ssh -q $MANAGER_HOST -- "docker service create \
     --mount type=bind,source=/mnt/efs/workspace/sharedlog-stream,destination=/src \
