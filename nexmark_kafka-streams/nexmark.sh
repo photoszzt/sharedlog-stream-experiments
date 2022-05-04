@@ -1,5 +1,4 @@
 #!/bin/bash
-set -euo pipefail
 set -x
 
 NAME=""
@@ -8,6 +7,7 @@ NUM_INSTANCE=""
 NUM_SRC_INSTANCE=""
 SERDE=""
 DURATION=""
+NUM_EVENTS=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -22,6 +22,10 @@ while [ $# -gt 0 ]; do
         --nins*)
             if [[ "$1" != *=* ]]; then shift; fi
             NUM_INSTANCE="${1#*=}"
+            ;;
+        --nevents*)
+            if [[ "$1" != *=* ]]; then shift; fi
+            NUM_EVENTS="${1#*=}"
             ;;
         --nsrc*)
             if [[ "$1" != *=* ]]; then shift; fi
@@ -54,6 +58,11 @@ done
 
 if [[ "$EXP_DIR" = "" ]] || [[ "$NUM_INSTANCE" = "" ]] || [[ "$NAME" = "" ]]; then
     echo "should provide app name, exp_dir and number of instance"
+    exit 1
+fi
+
+if [[ "$NUM_EVENTS" = "" ]]; then
+    echo "should provide num events"
     exit 1
 fi
 
@@ -119,7 +128,7 @@ ssh -q $MANAGER_HOST -- "docker service create \
     --constraint node.labels.app_node==true --network kstreams-test_default \
     --name kstreams-test_source --restart-condition none --replicas=$NUM_SRC_INSTANCE \
     --replicas-max-per-node=1 --hostname='source-{{.Task.Slot}}' ubuntu:focal /src/bin/nexmark_genevents_kafka \
-    -broker $FIRST_BROKER_CONTAINER_IP:9092 -duration ${SRC_DURATION} -npar 4 -serde $SERDE" -srcIns $NUM_SRC_INSTANCE
+    -broker $FIRST_BROKER_CONTAINER_IP:9092 -duration ${SRC_DURATION} -npar 4 -serde $SERDE" -srcIns $NUM_SRC_INSTANCE -events_num $NUM_EVENTS
 
 sleep 10
 
@@ -129,7 +138,7 @@ ssh -q $MANAGER_HOST -- "docker service create \
     --network kstreams-test_default --restart-condition none --replicas=$NUM_INSTANCE \
     --replicas-max-per-node=1 --hostname='nexmark-{{.Task.Slot}}' \
     --name kstreams-test_nexmark openjdk:11.0.12-jre-slim-buster \
-    bash -c 'java -cp /src/build/libs/nexmark-kafka-streams-0.2-SNAPSHOT-uber.jar com.github.nexmark.kafka.queries.RunQuery --name $NAME --serde $SERDE --duration $DURATION --conf  /src/workload_config/${NAME}.properties'"
+    bash -c 'java -cp /src/build/libs/nexmark-kafka-streams-0.2-SNAPSHOT-uber.jar com.github.nexmark.kafka.queries.RunQuery --name $NAME --serde $SERDE --srcEvents $NUM_EVENTS --conf  /src/workload_config/${NAME}.properties'"
 
 sleep $DURATION
 
