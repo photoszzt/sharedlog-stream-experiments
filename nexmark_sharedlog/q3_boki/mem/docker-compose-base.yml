@@ -95,7 +95,7 @@ services:
       - --zookeeper_host=zookeeper:2181
       - --metalog_replicas=3
       - --userlog_replicas=3
-      - --index_replicas=4
+      - --index_replicas=5
       # - --v=1
     depends_on:
       - zookeeper-setup
@@ -235,9 +235,26 @@ services:
        - faas-engine
     restart: always
 
+  nexmark-source-extra:
+    image: ubuntu:focal
+    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "20"]
+    volumes:
+      - ${SRC_DIR:?}:/src
+      - ${FAAS_DIR:?}:/faas
+      - /mnt/inmem/faas:/tmp/faas
+    environment:
+       - FAAS_BUILD_TYPE=${FAAS_BUILD_TYPE:-release}
+       - FAAS_GO_MAX_PROC_FACTOR=8
+       - GOGC=200
+       - MEASURE_PROC=1
+       - BUFPUSH=1
+    depends_on:
+       - faas-engine
+    restart: always
+
   q3GroupBy:
     image: ubuntu:focal
-    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "30"]
+    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler_debug", "30"]
     volumes:
       - ${SRC_DIR:?}:/src
       - ${FAAS_DIR:?}:/faas
@@ -254,7 +271,7 @@ services:
 
   q3JoinTable:
     image: ubuntu:focal
-    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "40"]
+    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler_debug", "40"]
     volumes:
       - ${SRC_DIR:?}:/src
       - ${FAAS_DIR:?}:/faas
