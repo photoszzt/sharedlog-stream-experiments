@@ -127,7 +127,7 @@ ssh -q $MANAGER_HOST -- uname -a >>$EXP_DIR/kernel_version
 ssh -q $CLIENT_HOST -- $SRC_DIR/bin/sharedlog_bench_client \
     -faas_gateway $ENTRY_HOST:8080 -duration ${DURATION} -events_num ${EVENTS_NUM} -serde msgp \
     -npar ${NUM_PARTITION} -nprod ${NUM_PRODUCER} \
-    -payload /src/data/${PAYLOAD} -tps $TPS -warmup_events $WARM_EVENTS 
-    -warm_time $WARM_DURATION \ >$EXP_DIR/results.log 2>&1
+    -payload /src/data/${PAYLOAD} -tps $TPS -warmup_events $WARM_EVENTS \
+    -warmup_time $WARM_DURATION \ >$EXP_DIR/results.log 2>&1
 
 $HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
