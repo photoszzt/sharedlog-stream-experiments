@@ -116,6 +116,7 @@ BASE_DIR=`realpath $(dirname $0)`
 HELPER_SCRIPT=/mnt/efs/workspace/research-helper-scripts/microservice_helper
 
 MANAGER_HOST=`$HELPER_SCRIPT get-docker-manager-host --base-dir=$BASE_DIR`
+CLIENT_HOST=$($HELPER_SCRIPT get-client-host --base-dir=$BASE_DIR)
 
 scp -q $BASE_DIR/docker-compose-base.yml $MANAGER_HOST:~
 $HELPER_SCRIPT generate-docker-compose --base-dir=$BASE_DIR
@@ -187,13 +188,13 @@ CONSUME_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label consume_no
 pids=()
 i=0
 for HOST in $PRODUCE_HOSTS; do
-    ssh -q $MANAGER_HOST -- "curl $HOST:8080/produce" &
+    ssh -q $CLIENT_HOST -- "curl $HOST:8080/produce" &
     pids[$i]=$!
     i=$(expr $i + 1)
 done
 
 for HOST in $CONSUME_HOSTS; do
-    ssh -q $MANAGER_HOST -- "curl $HOST:8090/consume" &
+    ssh -q $CLIENT_HOST -- "curl $HOST:8090/consume" &
     pids[$i]=$!
     i=$(expr $i + 1)
 done
