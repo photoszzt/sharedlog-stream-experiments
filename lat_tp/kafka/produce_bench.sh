@@ -180,7 +180,7 @@ ssh -q $MANAGER_HOST -- "docker service create \
     -broker $FIRST_BROKER_CONTAINER_IP:9092 -duration ${DURATION} -events_num ${NUM_EVENTS} -npar ${NUM_PARTITION} \
     -payload /src/data/$PAYLOAD -tps $TPS"
 
-sleep 2
+sleep 10
 
 PRODUCE_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label produce_node)
 CONSUME_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label consume_node)

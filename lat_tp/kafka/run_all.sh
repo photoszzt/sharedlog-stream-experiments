@@ -7,8 +7,9 @@ WARM_DURATION=60
 WARM_EVENTS=(6000 60000 600000)
 EVENTS=(18000 180000 1800000)
 payload=(100b 1Kb 4Kb 16Kb)
-for ((idx=1; idxM<=${#TPS[@]}; ++idx)); do
-    for ((j=1; j<=${#payload[@]}; ++j)); do
+for ((idx=0; idx<${#TPS[@]}; ++idx)); do
+    for ((j=0; j<${#payload[@]}; ++j)); do
+        echo ${TPS[idx]}, ${payload[j]}, ${EVENTS[idx]}, ${WARM_EVENTS[idx]}
         ./produce_bench.sh --exp_dir 180s_60swarm/1p_1t_1par_5ms_${TPS[idx]}tps/${payload[j]} \
             --ncon 1 --nprod 1 --duration $DURATION \
             --events_num ${EVENTS[idx]} --num_par 1 --payload payload-${payload[j]}.data \
