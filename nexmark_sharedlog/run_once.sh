@@ -107,8 +107,7 @@ else
     fi
 fi
 
-scp zip_files.sh $CLIENT_HOST:/home/ubuntu/zip_files.sh
-ssh -q $CLIENT_HOST -- "/home/ubuntu/zip_files.sh /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats"
+ssh -q $CLIENT_HOST -- "/mnt/efs/experiments/nexmark_sharedlog/zip_files.sh /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats"
 
 scp -r $CLIENT_HOST:/home/ubuntu/${APP_NAME}/${EXP_DIR}/stats ${EXP_DIR}
 
