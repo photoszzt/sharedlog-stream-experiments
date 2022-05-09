@@ -12,6 +12,8 @@ TRAN=""
 DURATION=""
 EVENTS_NUM=""
 USE_MONGODB=""
+TPS=""
+WARM_DURATION=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -35,6 +37,14 @@ while [ $# -gt 0 ]; do
             if [[ "$1" != *=* ]]; then shift; fi
             EVENTS_NUM="${1#*=}"
             ;;
+        --warm_duration*)
+            if [[ "$1" != *=* ]]; then shift; fi
+            WARM_DURATION="${1#*=}"
+            ;;
+        --tps*)
+            if [[ "$1" != *=* ]]; then shift; fi
+            TPS="${1#*=}"
+            ;;
         --use_mongodb*)
             if [[ "$1" != *=* ]]; then shift; fi
             USE_MONGODB="${1#*=}"
@@ -57,10 +67,23 @@ done
 
 TRAN=${TRAN:-false}
 DURATION=${DURATION:-60}
-EVENTS_NUM=${EVENTS_NUM:-25000000}
 USE_MONGODB=${USE_MONGODB:-false}
 
-echo "app: ${APP_NAME}, exp_dir: ${EXP_DIR}, tran: ${TRAN}, duration: ${DURATION}, events_num: ${EVENTS_NUM}, use_mongodb: ${USE_MONGODB}"
+if [[ "$EVENTS_NUM" = "" ]]; then
+    echo "need to specify number of events"
+    exit 1
+fi
+if [[ "$WARM_DURATION" = "" ]]; then
+    echo "need to specify warmup duration"
+    exit 1
+fi
+if [[ "$TPS" = "" ]]; then
+    echo "need to specify tps"
+    exit 1
+fi
+
+
+echo "app: ${APP_NAME}, exp_dir: ${EXP_DIR}, tran: ${TRAN}, duration: ${DURATION}, events_num: ${EVENTS_NUM}, use_mongodb: ${USE_MONGODB}, tps: ${TPS}, warmup time: ${WARM_DURATION}"
 
 HELPER_SCRIPT=/mnt/efs/workspace/research-helper-scripts/microservice_helper
 BASE_DIR=$(realpath $(dirname $0))
@@ -85,25 +108,30 @@ if [ "$USE_MONGODB" = "true" ]; then
     if [ "$TRAN" = "true" ]; then
         ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name ${APP_NAME} \
             -faas_gateway $ENTRY_HOST:8080 -duration ${DURATION} -serde msgp \
-            -tran -comm_every_niter 0 -comm_everyMS 100 -events_num ${EVENTS_NUM} \
+            -tran -comm_every_niter 0 -comm_everyMS 100 --flushms 100 -events_num ${EVENTS_NUM} \
             -tab_type mongodb -mongo_addr mongodb://mongodb-0:27017,mongodb-1:27017,mongodb-2:27017/?replicaSet=replicaset \
-            -wconfig $SRC_DIR/workload_config/${APP_NAME}.json -stat_dir /home/ubuntu/${EXP_DIR}/stats >$EXP_DIR/results.log 2>&1
+            -wconfig $SRC_DIR/workload_config/${APP_NAME}.json -tps $TPS -warmup_time $WARM_DURATION \
+            -stat_dir /home/ubuntu/${EXP_DIR}/stats >$EXP_DIR/results.log 2>&1
     else
         ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name ${APP_NAME} \
-            -faas_gateway $ENTRY_HOST:8080 -duration ${DURATION} -serde msgp -events_num ${EVENTS_NUM} \
+            -faas_gateway $ENTRY_HOST:8080 -duration ${DURATION} --flushms 100 -serde msgp -events_num ${EVENTS_NUM} \
             -tab_type mongodb -mongo_addr mongodb://mongodb-0:27017,mongodb-1:27017,mongodb-2:27017/?replicaSet=replicaset \
-            -wconfig $SRC_DIR/workload_config/${APP_NAME}.json -stat_dir /home/ubuntu/${EXP_DIR}/stats >$EXP_DIR/results.log 2>&1
+            -wconfig $SRC_DIR/workload_config/${APP_NAME}.json -tps $TPS -warmup_time $WARM_DURATION \
+            -stat_dir /home/ubuntu/${EXP_DIR}/stats >$EXP_DIR/results.log 2>&1
     fi
 else
     if [ "$TRAN" = "true" ]; then
         ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name ${APP_NAME} \
             -faas_gateway $ENTRY_HOST:8080 -duration ${DURATION} -serde msgp \
-            -tran -comm_every_niter 0 -comm_everyMS 100 -events_num ${EVENTS_NUM} \
-            -wconfig $SRC_DIR/workload_config/${APP_NAME}.json -stat_dir /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats >$EXP_DIR/results.log 2>&1
+            -tran -comm_every_niter 0 -comm_everyMS 100 -flushms 100 -events_num ${EVENTS_NUM} \
+            -wconfig $SRC_DIR/workload_config/${APP_NAME}.json \
+            -stat_dir /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats \
+            -tps $TPS -warmup_time $WARM_DURATION >$EXP_DIR/results.log 2>&1
     else
         ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name ${APP_NAME} \
-            -faas_gateway $ENTRY_HOST:8080 -duration ${DURATION} -events_num ${EVENTS_NUM} -serde msgp \
-            -wconfig $SRC_DIR/workload_config/${APP_NAME}.json -stat_dir /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats >$EXP_DIR/results.log 2>&1
+            -faas_gateway $ENTRY_HOST:8080 -duration ${DURATION} --flushms 100 -events_num ${EVENTS_NUM} -serde msgp \
+            -wconfig $SRC_DIR/workload_config/${APP_NAME}.json -tps $TPS -warmup_time $WARM_DURATION \
+            -stat_dir /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats >$EXP_DIR/results.log 2>&1
     fi
 fi
 
