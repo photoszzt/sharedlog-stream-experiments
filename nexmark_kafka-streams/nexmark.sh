@@ -8,6 +8,8 @@ NUM_SRC_INSTANCE=""
 SERDE=""
 DURATION=""
 NUM_EVENTS=""
+WARM_DURATION=""
+TPS=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -23,13 +25,17 @@ while [ $# -gt 0 ]; do
             if [[ "$1" != *=* ]]; then shift; fi
             NUM_INSTANCE="${1#*=}"
             ;;
-        --nevents*)
-            if [[ "$1" != *=* ]]; then shift; fi
-            NUM_EVENTS="${1#*=}"
-            ;;
         --nsrc*)
             if [[ "$1" != *=* ]]; then shift; fi
             NUM_SRC_INSTANCE="${1#*=}"
+            ;;
+        --warm_duration*)
+            if [[ "$1" != *=* ]]; then shift; fi
+            WARM_DURATION="${1#*=}"
+            ;;
+        --tps*)
+            if [[ "$1" != *=* ]]; then shift; fi
+            TPS="${1#*=}"
             ;;
         --serde*)
             if [[ "$1" != *=* ]]; then shift; fi
@@ -39,6 +45,10 @@ while [ $# -gt 0 ]; do
             if [[ "$1" != *=* ]]; then shift; fi
             DURATION="${1#*=}"
             ;;
+        --nevents*)
+            if [[ "$1" != *=* ]]; then shift; fi
+            NUM_EVENTS="${1#*=}"
+            ;;
         --help|-h)
             printf -- "--app <appname> one of q1,q2,q3,q5,q7,q8\n"
             printf -- "--exp_dir <exp_dir> required\n"
@@ -46,6 +56,8 @@ while [ $# -gt 0 ]; do
             printf -- "--nsrc <nsrc> number of source\n"
             printf -- "--serde <json or msgp>\n"
             printf -- "--duration <duration in sec>\n"
+            printf -- "--warm_duration <duration in sec>\n"
+            printf -- "--tps <events per sec>\n"
             exit 0
             ;;
         *)
@@ -66,11 +78,29 @@ if [[ "$NUM_EVENTS" = "" ]]; then
     exit 1
 fi
 
-echo "app: $NAME, exp_dir: $EXP_DIR, num_instance: $NUM_INSTANCE, num_src: $NUM_SRC_INSTANCE, serde: $SERDE, duration: $DURATION"
+if [[ "$SERDE" = "" ]]; then
+    echo "should provide serde"
+    exit 1
+fi
+if [[ "$NUM_SRC_INSTANCE" = "" ]]; then
+    echo "should provide num src instance"
+    exit 1
+fi
+if [[ "$DURATION" = "" ]]; then
+    echo "should provide duration"
+    exit 1
+fi
 
-NUM_SRC_INSTANCE=${NUM_SRC_INSTANCE:-1}
-SERDE=${SERDE:-json}
-DURATION=${DURATION:-60}
+if [[ "$TPS" = "" ]]; then
+    echo "should provide tps"
+    exit 1
+fi
+if [[ "$WARM_DURATION" = "" ]]; then
+    echo "should provide warm duration"
+    exit 1
+fi
+
+echo "app: $NAME, exp_dir: $EXP_DIR, num_instance: $NUM_INSTANCE, num events: $NUM_EVENTS, num_src: $NUM_SRC_INSTANCE, serde: $SERDE, duration: $DURATION, tps: $TPS, warm duration: $WARM_DURATION" > $EXP_DIR/params
 
 BASE_DIR=`realpath $(dirname $0)`
 HELPER_SCRIPT=/mnt/efs/workspace/research-helper-scripts/microservice_helper
@@ -122,15 +152,14 @@ mkdir -p $EXP_DIR
 ssh -q $MANAGER_HOST -- cat /proc/cmdline >>$EXP_DIR/kernel_cmdline
 ssh -q $MANAGER_HOST -- uname -a >>$EXP_DIR/kernel_version
 
-SRC_DURATION=$(expr $DURATION + 10)
+SRC_DURATION=$(expr $DURATION + $WARM_DURATION)
 ssh -q $MANAGER_HOST -- "docker service create \
     --mount type=bind,source=/mnt/efs/workspace/sharedlog-stream,destination=/src \
     --constraint node.labels.source_node==true --network kstreams-test_default \
     --name kstreams-test_source --restart-condition none --replicas=$NUM_SRC_INSTANCE \
     --replicas-max-per-node=1 --hostname='source-{{.Task.Slot}}' ubuntu:focal /src/bin/nexmark_genevents_kafka \
-    -broker $FIRST_BROKER_CONTAINER_IP:9092 -duration ${SRC_DURATION} -npar 4 -serde $SERDE" -srcIns $NUM_SRC_INSTANCE -events_num $NUM_EVENTS
-
-sleep 10
+    -broker $FIRST_BROKER_CONTAINER_IP:9092 -duration ${SRC_DURATION} -npar 4 -serde $SERDE \
+    -srcIns $NUM_SRC_INSTANCE -events_num $NUM_EVENTS -tps $TPS -iid '{{.Task.Slot}}'" &
 
 ssh -q $MANAGER_HOST -- "docker service create \
     --mount type=bind,source=/mnt/efs/workspace/nexmark/nexmark-kafka-streams,destination=/src \
@@ -138,7 +167,7 @@ ssh -q $MANAGER_HOST -- "docker service create \
     --network kstreams-test_default --restart-condition none --replicas=$NUM_INSTANCE \
     --replicas-max-per-node=1 --hostname='nexmark-{{.Task.Slot}}' \
     --name kstreams-test_nexmark openjdk:11.0.12-jre-slim-buster \
-    bash -c 'java -cp /src/build/libs/nexmark-kafka-streams-0.2-SNAPSHOT-uber.jar com.github.nexmark.kafka.queries.RunQuery --name $NAME --serde $SERDE --srcEvents $NUM_EVENTS --conf  /src/workload_config/${NAME}.properties'"
+    bash -c 'java -cp /src/build/libs/nexmark-kafka-streams-0.2-SNAPSHOT-uber.jar com.github.nexmark.kafka.queries.RunQuery --name $NAME --serde $SERDE --srcEvents $NUM_EVENTS --conf  /src/workload_config/${NAME}.properties --duration $DURATION --warmup_time $WARM_DURATION'"
 
 sleep $DURATION
 
