@@ -13,57 +13,57 @@ TPS=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
-        --app*)
-            if [[ "$1" != *=* ]]; then shift; fi
-            NAME="${1#*=}"
-            ;;
-        --exp_dir*)
-            if [[ "$1" != *=* ]]; then shift; fi
-            EXP_DIR="${1#*=}"
-            ;;
-        --nins*)
-            if [[ "$1" != *=* ]]; then shift; fi
-            NUM_INSTANCE="${1#*=}"
-            ;;
-        --nsrc*)
-            if [[ "$1" != *=* ]]; then shift; fi
-            NUM_SRC_INSTANCE="${1#*=}"
-            ;;
-        --warm_duration*)
-            if [[ "$1" != *=* ]]; then shift; fi
-            WARM_DURATION="${1#*=}"
-            ;;
-        --tps*)
-            if [[ "$1" != *=* ]]; then shift; fi
-            TPS="${1#*=}"
-            ;;
-        --serde*)
-            if [[ "$1" != *=* ]]; then shift; fi
-            SERDE="${1#*=}"
-            ;;
-        --duration*)
-            if [[ "$1" != *=* ]]; then shift; fi
-            DURATION="${1#*=}"
-            ;;
-        --nevents*)
-            if [[ "$1" != *=* ]]; then shift; fi
-            NUM_EVENTS="${1#*=}"
-            ;;
-        --help|-h)
-            printf -- "--app <appname> one of q1,q2,q3,q5,q7,q8\n"
-            printf -- "--exp_dir <exp_dir> required\n"
-            printf -- "--nins <nins> number of instance\n"
-            printf -- "--nsrc <nsrc> number of source\n"
-            printf -- "--serde <json or msgp>\n"
-            printf -- "--duration <duration in sec>\n"
-            printf -- "--warm_duration <duration in sec>\n"
-            printf -- "--tps <events per sec>\n"
-            exit 0
-            ;;
-        *)
-            >&2 printf "Error: invalid argument"
-            exit 1
-            ;;
+    --app*)
+        if [[ "$1" != *=* ]]; then shift; fi
+        NAME="${1#*=}"
+        ;;
+    --exp_dir*)
+        if [[ "$1" != *=* ]]; then shift; fi
+        EXP_DIR="${1#*=}"
+        ;;
+    --nins*)
+        if [[ "$1" != *=* ]]; then shift; fi
+        NUM_INSTANCE="${1#*=}"
+        ;;
+    --nsrc*)
+        if [[ "$1" != *=* ]]; then shift; fi
+        NUM_SRC_INSTANCE="${1#*=}"
+        ;;
+    --warm_duration*)
+        if [[ "$1" != *=* ]]; then shift; fi
+        WARM_DURATION="${1#*=}"
+        ;;
+    --tps*)
+        if [[ "$1" != *=* ]]; then shift; fi
+        TPS="${1#*=}"
+        ;;
+    --serde*)
+        if [[ "$1" != *=* ]]; then shift; fi
+        SERDE="${1#*=}"
+        ;;
+    --duration*)
+        if [[ "$1" != *=* ]]; then shift; fi
+        DURATION="${1#*=}"
+        ;;
+    --nevents*)
+        if [[ "$1" != *=* ]]; then shift; fi
+        NUM_EVENTS="${1#*=}"
+        ;;
+    --help | -h)
+        printf -- "--app <appname> one of q1,q2,q3,q5,q7,q8\n"
+        printf -- "--exp_dir <exp_dir> required\n"
+        printf -- "--nins <nins> number of instance\n"
+        printf -- "--nsrc <nsrc> number of source\n"
+        printf -- "--serde <json or msgp>\n"
+        printf -- "--duration <duration in sec>\n"
+        printf -- "--warm_duration <duration in sec>\n"
+        printf -- "--tps <events per sec>\n"
+        exit 0
+        ;;
+    *)
+        printf >&2 "Error: invalid argument"
+        exit 1
+        ;;
     esac
     shift
 done
@@ -100,12 +100,13 @@ if [[ "$WARM_DURATION" = "" ]]; then
     exit 1
 fi
 
-echo "app: $NAME, exp_dir: $EXP_DIR, num_instance: $NUM_INSTANCE, num events: $NUM_EVENTS, num_src: $NUM_SRC_INSTANCE, serde: $SERDE, duration: $DURATION, tps: $TPS, warm duration: $WARM_DURATION" > $EXP_DIR/params
+echo "app: $NAME, exp_dir: $EXP_DIR, num_instance: $NUM_INSTANCE, num events: $NUM_EVENTS, num_src: $NUM_SRC_INSTANCE, serde: $SERDE, duration: $DURATION, tps: $TPS, warm duration: $WARM_DURATION" >$EXP_DIR/params
 
-BASE_DIR=`realpath $(dirname $0)`
+BASE_DIR=$(realpath $(dirname $0))
 HELPER_SCRIPT=/mnt/efs/workspace/research-helper-scripts/microservice_helper
 
-MANAGER_HOST=`$HELPER_SCRIPT get-docker-manager-host --base-dir=$BASE_DIR`
+MANAGER_HOST=$($HELPER_SCRIPT get-docker-manager-host --base-dir=$BASE_DIR)
+CLIENT_HOST=$($HELPER_SCRIPT get-client-host --base-dir=$BASE_DIR)
 
 scp -q $BASE_DIR/docker-compose-base.yml $MANAGER_HOST:~
 $HELPER_SCRIPT generate-docker-compose --base-dir=$BASE_DIR
@@ -117,7 +118,7 @@ ssh -q $MANAGER_HOST -- docker stack rm kstreams-test || true
 
 sleep 40
 
-ALL_BROKER_HOSTS=`$HELPER_SCRIPT get-machine-with-label --machine-label=broker_node`
+ALL_BROKER_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=broker_node)
 FIRST_BROKER=""
 for HOST in $ALL_BROKER_HOSTS; do
     if [ "$FIRST_BROKER" = "" ]; then
@@ -157,18 +158,41 @@ ssh -q $MANAGER_HOST -- "docker service create \
     --mount type=bind,source=/mnt/efs/workspace/sharedlog-stream,destination=/src \
     --constraint node.labels.source_node==true --network kstreams-test_default \
     --name kstreams-test_source --restart-condition none --replicas=$NUM_SRC_INSTANCE \
-    --replicas-max-per-node=1 --hostname='source-{{.Task.Slot}}' ubuntu:focal /src/bin/nexmark_genevents_kafka \
+    --replicas-max-per-node=1 --hostname='source-{{.Task.Slot}}' ubuntu:focal \
+    /src/bin/nexmark_genevents_kafka \
     -broker $FIRST_BROKER_CONTAINER_IP:9092 -duration ${SRC_DURATION} -npar 4 -serde $SERDE \
     -srcIns $NUM_SRC_INSTANCE -events_num $NUM_EVENTS -tps $TPS -iid '{{.Task.Slot}}'" &
 
 ssh -q $MANAGER_HOST -- "docker service create \
     --mount type=bind,source=/mnt/efs/workspace/nexmark/nexmark-kafka-streams,destination=/src \
-    --constraint node.labels.app_node==true --env BOOTSTRAP_SERVER_CONFIG=$FIRST_BROKER_CONTAINER_IP:9092 \
+    --constraint node.labels.app_node==true \
+    --env BOOTSTRAP_SERVER_CONFIG=$FIRST_BROKER_CONTAINER_IP:9092 \
     --network kstreams-test_default --restart-condition none --replicas=$NUM_INSTANCE \
     --replicas-max-per-node=1 --hostname='nexmark-{{.Task.Slot}}' \
     --name kstreams-test_nexmark openjdk:11.0.12-jre-slim-buster \
     bash -c 'java -cp /src/build/libs/nexmark-kafka-streams-0.2-SNAPSHOT-uber.jar com.github.nexmark.kafka.queries.RunQuery --name $NAME --serde $SERDE --srcEvents $NUM_EVENTS --conf  /src/workload_config/${NAME}.properties --duration $DURATION --warmup_time $WARM_DURATION'"
 
-sleep $DURATION
+sleep 10
+
+SOURCE_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label source_node)
+APP_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label consume_node)
+
+pids=()
+i=0
+for HOST in $SOURCE_HOSTS; do
+    ssh -q $CLIENT_HOST -- "curl $HOST:8080/kproduce"
+    pids[$i]=$!
+    i=$(expr $i + 1)
+done
+
+for HOST in $APP_HOSTS; do
+    ssh -q $CLIENT_HOST -- "curl $HOST:8090/run"
+    pids[$i]=$!
+    i=$(expr $i + 1)
+done
+
+for pid in ${pids[*]}; do
+    wait $pid
+done
 
 $HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
