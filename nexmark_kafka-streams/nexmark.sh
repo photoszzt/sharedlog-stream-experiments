@@ -158,10 +158,10 @@ ssh -q $MANAGER_HOST -- "docker service create \
     --mount type=bind,source=/mnt/efs/workspace/sharedlog-stream,destination=/src \
     --constraint node.labels.source_node==true --network kstreams-test_default \
     --name kstreams-test_source --restart-condition none --replicas=$NUM_SRC_INSTANCE \
-    --replicas-max-per-node=1 --hostname='source-{{.Task.Slot}}' ubuntu:focal \
+    --replicas-max-per-node=1 --hostname='source-{{.Task.Slot}}' --env IID='{{.Task.Slot}}' ubuntu:focal \
     /src/bin/nexmark_genevents_kafka \
     -broker $FIRST_BROKER_CONTAINER_IP:9092 -duration ${SRC_DURATION} -npar 4 -serde $SERDE \
-    -srcIns $NUM_SRC_INSTANCE -events_num $NUM_EVENTS -tps $TPS -iid '{{.Task.Slot}}'" &
+    -srcIns $NUM_SRC_INSTANCE -events_num $NUM_EVENTS -tps $TPS" &
 
 ssh -q $MANAGER_HOST -- "docker service create \
     --mount type=bind,source=/mnt/efs/workspace/nexmark/nexmark-kafka-streams,destination=/src \
@@ -170,7 +170,9 @@ ssh -q $MANAGER_HOST -- "docker service create \
     --network kstreams-test_default --restart-condition none --replicas=$NUM_INSTANCE \
     --replicas-max-per-node=1 --hostname='nexmark-{{.Task.Slot}}' \
     --name kstreams-test_nexmark openjdk:11.0.12-jre-slim-buster \
-    bash -c 'java -cp /src/build/libs/nexmark-kafka-streams-0.2-SNAPSHOT-uber.jar com.github.nexmark.kafka.queries.RunQuery --name $NAME --serde $SERDE --srcEvents $NUM_EVENTS --conf  /src/workload_config/${NAME}.properties --duration $DURATION --warmup_time $WARM_DURATION'"
+    bash -c 'java -cp /src/build/libs/nexmark-kafka-streams-0.2-SNAPSHOT-uber.jar com.github.nexmark.kafka.queries.RunQuery \
+    --name $NAME --serde $SERDE --srcEvents $NUM_EVENTS --conf  /src/workload_config/${NAME}.properties --duration $DURATION \
+    --warmup_time $WARM_DURATION'"
 
 sleep 10
 
