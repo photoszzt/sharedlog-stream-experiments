@@ -10,6 +10,7 @@ DURATION=""
 NUM_EVENTS=""
 WARM_DURATION=""
 TPS=""
+FLUSH_MS=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -49,6 +50,10 @@ while [ $# -gt 0 ]; do
         if [[ "$1" != *=* ]]; then shift; fi
         NUM_EVENTS="${1#*=}"
         ;;
+    --flushms*)
+        if [[ "$1" != *=* ]]; then shift; fi
+        FLUSH_MS="${1#*=}"
+        ;;
     --help | -h)
         printf -- "--app <appname> one of q1,q2,q3,q5,q7,q8\n"
         printf -- "--exp_dir <exp_dir> required\n"
@@ -58,6 +63,7 @@ while [ $# -gt 0 ]; do
         printf -- "--duration <duration in sec>\n"
         printf -- "--warm_duration <duration in sec>\n"
         printf -- "--tps <events per sec>\n"
+        printf -- "--flushms <flush interval in ms>\n"
         exit 0
         ;;
     *)
@@ -100,7 +106,12 @@ if [[ "$WARM_DURATION" = "" ]]; then
     exit 1
 fi
 
-echo "app: $NAME, exp_dir: $EXP_DIR, num_instance: $NUM_INSTANCE, num events: $NUM_EVENTS, num_src: $NUM_SRC_INSTANCE, serde: $SERDE, duration: $DURATION, tps: $TPS, warm duration: $WARM_DURATION" >$EXP_DIR/params
+if [[ "$FLUSH_MS" = "" ]]; then
+    echo "should provide flushms"
+    exit 1
+fi
+
+echo "app: $NAME, exp_dir: $EXP_DIR, num_instance: $NUM_INSTANCE, num events: $NUM_EVENTS, num_src: $NUM_SRC_INSTANCE, serde: $SERDE, duration: $DURATION, tps: $TPS, warm duration: $WARM_DURATION, flushMs: $FLUSH_MS"
 
 BASE_DIR=$(realpath $(dirname $0))
 HELPER_SCRIPT=/mnt/efs/workspace/research-helper-scripts/microservice_helper
@@ -112,8 +123,14 @@ scp -q $BASE_DIR/docker-compose-base.yml $MANAGER_HOST:~
 $HELPER_SCRIPT generate-docker-compose --base-dir=$BASE_DIR
 scp -q $BASE_DIR/docker-compose.yml $MANAGER_HOST:~
 
-ssh -q $MANAGER_HOST -- docker service rm "kstreams-test_source" || true
-ssh -q $MANAGER_HOST -- docker service rm "kstreams-test_nexmark" || true
+ssh -q $MANAGER_HOST -oStrictHostKeyChecking=no -- docker service rm "kstreams-test_source" || true
+ssh -q $MANAGER_HOST -oStrictHostKeyChecking=no -- docker service rm "kstreams-test_nexmark" || true
+for ((i=0; i<$NUM_SRC_INSTANCE; i++)); do
+    ssh -q $MANAGER_HOST -- docker service rm "kstreams-test_source-${i}" || true
+done
+for ((i=0; i<$NUM_INSTANCE; i++)); do
+    ssh -q $MANAGER_HOST -- docker service rm "kstreams-test_nexmark-${i}" || true
+done
 ssh -q $MANAGER_HOST -- docker stack rm kstreams-test || true
 
 sleep 40
@@ -129,10 +146,10 @@ for HOST in $ALL_BROKER_HOSTS; do
     ssh -q $HOST -oStrictHostKeyChecking=no -- sudo chown ubuntu:ubuntu /mnt/storage/kdata
 done
 
-ssh -q $MANAGER_HOST -- docker network rm kstreams-test_default || true
-ssh -q $MANAGER_HOST -- docker stack deploy \
+ssh -q $MANAGER_HOST -oStrictHostKeyChecking=no -- docker network rm kstreams-test_default || true
+ssh -q $MANAGER_HOST -oStrictHostKeyChecking=no -- docker stack deploy \
     -c ~/docker-compose-base.yml -c ~/docker-compose.yml kstreams-test
-sleep 80
+sleep 40
 
 FIRST_BROKER_CONTAINER_IP=""
 for HOST in $ALL_BROKER_HOSTS; do
@@ -150,45 +167,55 @@ done
 
 rm -rf $EXP_DIR
 mkdir -p $EXP_DIR
-ssh -q $MANAGER_HOST -- cat /proc/cmdline >>$EXP_DIR/kernel_cmdline
-ssh -q $MANAGER_HOST -- uname -a >>$EXP_DIR/kernel_version
+echo "app: $NAME, exp_dir: $EXP_DIR, num_instance: $NUM_INSTANCE, num events: $NUM_EVENTS, num_src: $NUM_SRC_INSTANCE, serde: $SERDE, duration: $DURATION, tps: $TPS, warm duration: $WARM_DURATION, flushMs: $FLUSH_MS">$EXP_DIR/params
 
-SRC_DURATION=$(expr $DURATION + $WARM_DURATION)
-ssh -q $MANAGER_HOST -- "docker service create \
-    --mount type=bind,source=/mnt/efs/workspace/sharedlog-stream,destination=/src \
-    --constraint node.labels.source_node==true --network kstreams-test_default \
-    --name kstreams-test_source --restart-condition none --replicas=$NUM_SRC_INSTANCE \
-    --replicas-max-per-node=1 --hostname='source-{{.Task.Slot}}' --publish published=8080,target=8080 \
-    --env IID='{{.Task.Slot}}' ubuntu:focal /src/bin/nexmark_genevents_kafka \
-    -broker $FIRST_BROKER_CONTAINER_IP:9092 -duration ${SRC_DURATION} -npar 4 -serde $SERDE \
-    -srcIns $NUM_SRC_INSTANCE -events_num $NUM_EVENTS -tps $TPS" &
+ssh -q $MANAGER_HOST -oStrictHostKeyChecking=no -- cat /proc/cmdline >>$EXP_DIR/kernel_cmdline
+ssh -q $MANAGER_HOST -oStrictHostKeyChecking=no -- uname -a >>$EXP_DIR/kernel_version
 
-ssh -q $MANAGER_HOST -- "docker service create \
-    --mount type=bind,source=/mnt/efs/workspace/nexmark/nexmark-kafka-streams,destination=/src \
-    --constraint node.labels.app_node==true \
-    --env BOOTSTRAP_SERVER_CONFIG=$FIRST_BROKER_CONTAINER_IP:9092 \
-    --network kstreams-test_default --restart-condition none --replicas=$NUM_INSTANCE \
-    --replicas-max-per-node=1 --hostname='nexmark-{{.Task.Slot}}' \
-    --name kstreams-test_nexmark --publish published=8090,target=8090 openjdk:11.0.12-jre-slim-buster \
-    bash -c 'java -cp /src/build/libs/nexmark-kafka-streams-0.2-SNAPSHOT-uber.jar com.github.nexmark.kafka.queries.RunQuery \
-    --name $NAME --serde $SERDE --srcEvents $NUM_EVENTS --conf  /src/workload_config/${NAME}.properties --duration $DURATION \
-    --warmup_time $WARM_DURATION'"
+for ((j=0; j<$NUM_SRC_INSTANCE; j++)); do
+    PORT=$(expr 8000 + $j)
+    ssh -q $MANAGER_HOST -oStrictHostKeyChecking=no -- "docker service create \
+        --mount type=bind,source=/mnt/efs/workspace/sharedlog-stream,destination=/src \
+        --constraint node.labels.source_node==true --network kstreams-test_default \
+        --name kstreams-test_source-${j} --restart-condition none --replicas=1 \
+        --replicas-max-per-node=1 --hostname=source-${j} --publish mode=host,published=$PORT,target=$PORT \
+        --env IID=$j ubuntu:focal /src/bin/nexmark_genevents_kafka \
+        -broker $FIRST_BROKER_CONTAINER_IP:9092 -duration ${DURATION} -npar 4 -serde $SERDE \
+        -srcIns $NUM_SRC_INSTANCE -events_num $NUM_EVENTS -tps $TPS -port $PORT -flushms $FLUSH_MS" &
+done
 
-sleep 10
+for ((k=0; k<$NUM_INSTANCE; k++)); do
+    PORT=$(expr 7000 + $k)
+    ssh -q $MANAGER_HOST -oStrictHostKeyChecking=no -- "docker service create \
+        --mount type=bind,source=/mnt/efs/workspace/nexmark/nexmark-kafka-streams,destination=/src \
+        --constraint node.labels.app_node==true \
+        --env BOOTSTRAP_SERVER_CONFIG=$FIRST_BROKER_CONTAINER_IP:9092 \
+        --network kstreams-test_default --restart-condition none --replicas=1 \
+        --replicas-max-per-node=1 --hostname=nexmark-${k} \
+        --name kstreams-test_nexmark-${k} --publish mode=host,published=$PORT,target=$PORT openjdk:11.0.12-jre-slim-buster \
+        bash -c 'java -cp /src/build/libs/nexmark-kafka-streams-0.2-SNAPSHOT-uber.jar com.github.nexmark.kafka.queries.RunQuery \
+        --name $NAME --serde $SERDE --conf  /src/workload_config/${NAME}.properties --duration $DURATION --port $PORT  \
+        --flushms ${FLUSH_MS} --warmup_time ${WARM_DURATION}'" &
+done
 
-SOURCE_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label source_node)
-APP_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label consume_node)
+sleep 20
 
 pids=()
 i=0
-for HOST in $SOURCE_HOSTS; do
-    ssh -q $CLIENT_HOST -- "curl $HOST:8080/kproduce"
+for ((j=0; j<$NUM_SRC_INSTANCE; j++)); do
+    NODE=$(ssh -q $MANAGER_HOST -oStrictHostKeyChecking=no -- "docker service ps --format '{{.Node}}' kstreams-test_source-$j")
+    HOST=$(ssh -q $MANAGER_HOST -oStrictHostKeyChecking=no -- "docker node inspect $NODE --format '{{ .Status.Addr }}'")
+    PORT=$(expr 8000 + $j)
+    ssh -q $CLIENT_HOST -oStrictHostKeyChecking=no -- "curl $HOST:$PORT/kproduce" &
     pids[$i]=$!
     i=$(expr $i + 1)
 done
 
-for HOST in $APP_HOSTS; do
-    ssh -q $CLIENT_HOST -- "curl $HOST:8090/run"
+for ((jj=0; jj<$NUM_INSTANCE; jj++)); do
+    NODE=$(ssh -q $MANAGER_HOST -oStrictHostKeyChecking=no -- "docker service ps --format '{{.Node}}' kstreams-test_nexmark-${jj}")
+    HOST=$(ssh -q $MANAGER_HOST -oStrictHostKeyChecking=no -- "docker node inspect $NODE --format '{{ .Status.Addr }}'")
+    PORT=$(expr 7000 + ${jj})
+    ssh -q $CLIENT_HOST -oStrictHostKeyChecking=no -- "curl $HOST:$PORT/run" &
     pids[$i]=$!
     i=$(expr $i + 1)
 done
