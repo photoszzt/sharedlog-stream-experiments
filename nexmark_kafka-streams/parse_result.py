@@ -1,11 +1,13 @@
 import argparse
 import os
 from re import T
+import json
+from statistics import quantiles
 
 PRODUCER_TAG = "producer-topic-metrics record-send-total"
 CONSUMER_TAG = "consumer-fetch-manager-metrics records-consumed-total"
 
-def parse_nexmark(filepath: str, produced: dict, consumed: dict, times: list):
+def parse_nexmark(filepath: str, produced: dict, consumed: dict, times: list, all_lat_arr: list):
     with open(filepath, "r") as f:
         for line in f:
             if "topic=" in line and (PRODUCER_TAG in line or CONSUMER_TAG in line):
@@ -25,13 +27,19 @@ def parse_nexmark(filepath: str, produced: dict, consumed: dict, times: list):
             if "Duration" in line:
                 duration = float(line.strip().split(" ")[-1])
                 times.append(duration)
+            if "Latencies" in line:
+                arr_str = line.strip().split(":")[1].strip()
+                print(arr_str)
+                lat_arr = json.loads(arr_str)
+                all_lat_arr.extend(lat_arr)
+
 
 def parse_source(filepath: str):
     duration = 0.0
     produced = 0
     with open(filepath, "r") as f:
         for line in f:
-            if "source processed" in line:
+            if "throughput" in line:
                 l_arr = line.strip().split(", ")
                 produced = int(l_arr[0].split(" ")[2])
                 duration = float(l_arr[1].split(" ")[-1])
@@ -50,13 +58,16 @@ def main():
     nexmark_produced = {}
     nexmark_consumed = {}
     nexmark_time = []
+    e2e_latency = []
     src_time = []
     src_prod = []
     for root, dirs, files in os.walk(args.dir):
         for name in files:
             if "nexmark" in name and "stdout" in name:
                 filepath = os.path.join(root, name)
-                parse_nexmark(filepath=filepath, produced=nexmark_produced, consumed=nexmark_consumed, times=nexmark_time)
+                parse_nexmark(filepath=filepath, produced=nexmark_produced, 
+                              consumed=nexmark_consumed, times=nexmark_time, 
+                              all_lat_arr=e2e_latency)
             if "source" in name and "stderr" in name:
                 filepath = os.path.join(root, name)
                 src_gen, src_dur = parse_source(filepath)
@@ -73,8 +84,10 @@ def main():
     summary(nexmark_consumed, max_time)
     print("produced")
     summary(nexmark_produced, max_time)
-
-
+    quan = quantiles(e2e_latency, n=100)
+    p50 = quan[49]
+    p99 = quan[98]
+    print(f"p50: {p50} ms, p99: {p99} ms")
 
 
 if __name__ == '__main__':
