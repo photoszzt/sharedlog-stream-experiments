@@ -33,8 +33,9 @@ def main():
                     #     st = json.load(f)
                     #     e2e_latency.extend(st['Latencies']['eventTimeLatency'])
         if e2e_latency:
-            p50 = quantiles(e2e_latency, n=100)[49]
-            p99 = quantiles(e2e_latency, n=100)[98]
+            quan = quantiles(e2e_latency, n=100)
+            p50 = quan[49]
+            p99 = quan[98]
             if tps not in latency:
                 latency[tps] = {}
             latency[tps][dpath] = (p50, p99)
