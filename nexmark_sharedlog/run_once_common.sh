@@ -3,6 +3,7 @@ set -x
 
 BASE_DIR=$(realpath $(dirname $0))
 SRC_DIR=/mnt/efs/workspace/sharedlog-stream
+EXP_DIR=/mnt/efs/workspace/sharedlog-stream-experiments
 FAAS_DIR=/mnt/efs/workspace/boki
 FAAS_BUILD_TYPE=release
 # FAAS_BUILD_TYPE=debug
@@ -47,7 +48,7 @@ for HOST in $ALL_STORAGE_HOSTS; do
 done
 
 ssh -q $MANAGER_HOST -- docker network rm faas-test_default
-ssh -q $MANAGER_HOST -- SRC_DIR=$SRC_DIR FAAS_DIR=$FAAS_DIR FAAS_BUILD_TYPE=$FAAS_BUILD_TYPE \
+ssh -q $MANAGER_HOST -- SRC_DIR=$SRC_DIR FAAS_DIR=$FAAS_DIR EXP_DIR=$EXP_DIR FAAS_BUILD_TYPE=$FAAS_BUILD_TYPE \
     docker stack deploy \
     -c ~/docker-compose-base.yml -c ~/docker-compose.yml faas-test
 sleep 80
