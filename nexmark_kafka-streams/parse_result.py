@@ -29,7 +29,7 @@ def parse_nexmark(filepath: str, produced: dict, consumed: dict, times: list, al
                 times.append(duration)
             if "Latencies" in line:
                 arr_str = line.strip().split(":")[1].strip()
-                print(arr_str)
+                # print(arr_str)
                 lat_arr = json.loads(arr_str)
                 all_lat_arr.extend(lat_arr)
 
@@ -75,9 +75,10 @@ def main():
                 src_prod.append(src_gen)
 
     print()
-    src_max_time = max(src_time)
-    src_total_prod = sum(src_prod)
-    print(f"source produced: {src_total_prod}, time: {src_max_time}, throughput: {round(float(src_total_prod)/src_max_time, 1)}")
+    if src_time and stc_prod:
+        src_max_time = max(src_time)
+        src_total_prod = sum(src_prod)
+        print(f"source produced: {src_total_prod}, time: {src_max_time}, throughput: {round(float(src_total_prod)/src_max_time, 1)}")
     print(f"consumed: {nexmark_consumed}, produced: {nexmark_produced}, time: {nexmark_time}")
     max_time = max(nexmark_time)
     print("consumed")
