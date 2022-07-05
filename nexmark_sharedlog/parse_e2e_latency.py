@@ -12,12 +12,18 @@ def main():
     args = parser.parse_args()
     prog_dirs = {}
     latency = {}
-    for root, dirs, files in os.walk(args.dir):
-        for dname in dirs:
-            if "tps" in dname:
-                dpath = os.path.join(root, dname)
-                tps = dname.split("_")[0][:-3]
-                prog_dirs[dpath] = int(tps)
+    absdir = os.path.abspath(args.dir)
+    basedir = os.path.basename(absdir)
+    if "tps" not in basedir:
+        for root, dirs, files in os.walk(args.dir):
+            for dname in dirs:
+                if "tps" in dname:
+                    dpath = os.path.join(root, dname)
+                    tps = dname.split("_")[0][:-3]
+                    prog_dirs[dpath] = int(tps)
+    else:
+        tps = basedir.split("_")[0][:-3]
+        prog_dirs[absdir] = int(tps)
     for (dpath, tps) in prog_dirs.items():
         e2e_latency = []
         stats_dir = os.path.join(dpath, "stats")
@@ -28,7 +34,12 @@ def main():
                     fpath = os.path.join(root, fname)
                     with gzip.open(fpath, 'rb') as f:
                         st = json.load(f)
-                        e2e_latency.extend(st['Latencies']['eventTimeLatency'])
+                        print(st.keys())
+                        print(st['Latencies'].keys())
+                        if st['Latencies']['eventTimeLatency']:
+                            e2e_latency.extend(st['Latencies']['eventTimeLatency'])
+                        else:
+                            print(f"{fpath} event time latency is empty: {st['Latencies']['eventTimeLatency']}")
                     # with open(fpath, 'r') as f:
                     #     st = json.load(f)
                     #     e2e_latency.extend(st['Latencies']['eventTimeLatency'])
