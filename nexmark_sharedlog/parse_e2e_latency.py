@@ -36,10 +36,14 @@ def main():
                         st = json.load(f)
                         print(st.keys())
                         print(st['Latencies'].keys())
-                        if st['Latencies']['eventTimeLatency']:
-                            e2e_latency.extend(st['Latencies']['eventTimeLatency'])
-                        else:
-                            print(f"{fpath} event time latency is empty: {st['Latencies']['eventTimeLatency']}")
+                        found = False
+                        for key, value in st['Latencies'].items():
+                            if 'eventTimeLatency' in key:
+                                if st['Latencies'][key] is not None:
+                                    e2e_latency.extend(st['Latencies'][key])
+                                    found = True
+                        if not found:
+                            print(f"{fpath} event time latency is empty")
                     # with open(fpath, 'r') as f:
                     #     st = json.load(f)
                     #     e2e_latency.extend(st['Latencies']['eventTimeLatency'])
