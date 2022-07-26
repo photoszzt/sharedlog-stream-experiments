@@ -1,18 +1,19 @@
 #!/bin/bash
 /mnt/efs/workspace/research-helper-scripts/microservice_helper start-machines --use-spot-instances
 
-TPS=(1000 10000 100000 200000)
+TPS=(500 1000)
 DURATION=180
-WARM_DURATION=60
-EVENTS=(180000 1800000 18000000 36000000)
-APP=(q1 q2 q3 q5 q8)
+WARM_DURATION=0
+APP=(q1 q2 q3 q4 q5 q6 q7 q8)
 FLUSH_MS=100
 
 for ((j=0; j<${#APP[@]}; ++j)); do
     for ((idx=0; idx<${#TPS[@]}; ++idx)); do
+	EVENTS=$(expr ${TPS[idx]} \* $DURATION)
+        echo ${APP[j]}, ${EVENTS} events, ${TPS[idx]} tps
     ./nexmark.sh --app ${APP[j]} \
-        --exp_dir ./${APP[j]}/4src_2xlarge/${DURATION}s_${WARM_DURATION}swarm_${FLUSH_MS}ms/${TPS[idx]}tps_${EVENTS[idx]}/ \
-        --nins 4 --nsrc 4 --serde msgp --duration $DURATION --nevents ${EVENTS[idx]} \
+        --exp_dir ./${APP[j]}/4src_ets/${DURATION}s_${WARM_DURATION}swarm_${FLUSH_MS}ms/${TPS[idx]}tps_${EVENTS}/ \
+        --nins 4 --nsrc 4 --serde msgp --duration $DURATION --nevents ${EVENTS} \
         --tps ${TPS[idx]} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS
     done
 done

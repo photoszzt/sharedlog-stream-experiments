@@ -164,6 +164,7 @@ for HOST in $ALL_BROKER_HOSTS; do
         FIRST_BROKER_CONTAINER_IP=$docker_ip_outside
     fi
 done
+echo "first broker container ip: $FIRST_BROKER_CONTAINER_IP"
 
 rm -rf $EXP_DIR
 mkdir -p $EXP_DIR
