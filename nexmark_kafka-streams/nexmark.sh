@@ -11,6 +11,7 @@ NUM_EVENTS=""
 WARM_DURATION=""
 TPS=""
 FLUSH_MS=""
+GUARANTEE=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -54,6 +55,10 @@ while [ $# -gt 0 ]; do
         if [[ "$1" != *=* ]]; then shift; fi
         FLUSH_MS="${1#*=}"
         ;;
+    --gua*)
+        if [[ "$1" != *=* ]]; then shift; fi
+        GUARANTEE="${1#*=}"
+        ;;
     --help | -h)
         printf -- "--app <appname> one of q1,q2,q3,q5,q7,q8\n"
         printf -- "--exp_dir <exp_dir> required\n"
@@ -64,6 +69,7 @@ while [ $# -gt 0 ]; do
         printf -- "--warm_duration <duration in sec>\n"
         printf -- "--tps <events per sec>\n"
         printf -- "--flushms <flush interval in ms>\n"
+        printf -- "--gua <guarantee; alo or eo>\n"
         exit 0
         ;;
     *)
@@ -111,7 +117,12 @@ if [[ "$FLUSH_MS" = "" ]]; then
     exit 1
 fi
 
-echo "app: $NAME, exp_dir: $EXP_DIR, num_instance: $NUM_INSTANCE, num events: $NUM_EVENTS, num_src: $NUM_SRC_INSTANCE, serde: $SERDE, duration: $DURATION, tps: $TPS, warm duration: $WARM_DURATION, flushMs: $FLUSH_MS"
+if [[ "$GUARANTEE" = "" ]]; then
+    echo "should provide guarantee"
+    exit 1
+fi
+
+echo "app: $NAME, exp_dir: $EXP_DIR, num_instance: $NUM_INSTANCE, num events: $NUM_EVENTS, num_src: $NUM_SRC_INSTANCE, serde: $SERDE, duration: $DURATION, tps: $TPS, warm duration: $WARM_DURATION, flushMs: $FLUSH_MS, guarantee: $GUARANTEE"
 
 BASE_DIR=$(realpath $(dirname $0))
 HELPER_SCRIPT=/mnt/efs/workspace/research-helper-scripts/microservice_helper
@@ -196,7 +207,7 @@ for ((k=0; k<$NUM_INSTANCE; k++)); do
         --name kstreams-test_nexmark-${k} --publish mode=host,published=$PORT,target=$PORT openjdk:11.0.12-jre-slim-buster \
         bash -c 'java -cp /src/build/libs/nexmark-kafka-streams-0.2-SNAPSHOT-uber.jar com.github.nexmark.kafka.queries.RunQuery \
         --name $NAME --serde $SERDE --conf  /src/workload_config/${NAME}.properties --duration $DURATION --port $PORT  \
-        --flushms ${FLUSH_MS} --warmup_time ${WARM_DURATION}'" &
+        --flushms ${FLUSH_MS} --warmup_time ${WARM_DURATION}' --guarantee ${GUARANTEE}" &
 done
 
 sleep 20
