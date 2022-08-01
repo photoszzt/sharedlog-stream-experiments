@@ -11,10 +11,10 @@ for ((j=0; j<${#APP[@]}; ++j)); do
     for ((idx=0; idx<${#TPS[@]}; ++idx)); do
 	EVENTS=$(expr ${TPS[idx]} \* $DURATION)
         echo ${APP[j]}, ${EVENTS} events, ${TPS[idx]} tps
-    ./nexmark.sh --app ${APP[j]} \
-        --exp_dir ./${APP[j]}/4src_ets/${DURATION}s_${WARM_DURATION}swarm_${FLUSH_MS}ms/${TPS[idx]}tps_${EVENTS}/ \
-        --nins 4 --nsrc 4 --serde msgp --duration $DURATION --nevents ${EVENTS} \
-        --tps ${TPS[idx]} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS
+    	./nexmark.sh --app ${APP[j]} \
+    	    --exp_dir ./${APP[j]}/4src_ets/${DURATION}s_${WARM_DURATION}swarm_${FLUSH_MS}ms/${TPS[idx]}tps_${EVENTS}/ \
+    	    --nins 4 --nsrc 4 --serde msgp --duration $DURATION --nevents ${EVENTS} \
+    	    --tps ${TPS[idx]} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS
     done
 done
 
