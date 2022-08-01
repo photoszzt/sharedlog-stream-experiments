@@ -72,12 +72,21 @@ def main():
     print(f"{args.exppref}_p50_avg = round(mean({args.exppref}_p50), 1)")
     print(f"{args.exppref}_p90_avg = round(mean({args.exppref}_p90), 1)")
     print(f"{args.exppref}_p99_avg = round(mean({args.exppref}_p99), 1)")
+    p50_arr = []
+    p90_arr = []
+    p99_arr = []
     for name in names:
         p50arr = stats[name].p50
         p90arr = stats[name].p90
         p99arr = stats[name].p99
         if p50arr:
+            p50_arr += p50arr[1:] 
+            p90_arr += p90arr[1:] 
+            p99_arr += p99arr[1:] 
             print(f"p50 avg: {round(mean(p50arr), 1)}, p90 avg: {round(mean(p90arr), 1)}, p99avg: {round(mean(p99arr), 1)}")
+    print(f"overall avg")
+    print(f"p50 avg: {round(mean(p50_arr), 1)}, p90 avg: {round(mean(p90_arr), 1)}, p99avg: {round(mean(p99_arr), 1)}")
+
 
             
 if __name__ == '__main__':
