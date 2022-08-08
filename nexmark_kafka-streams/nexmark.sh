@@ -207,7 +207,7 @@ for ((k=0; k<$NUM_INSTANCE; k++)); do
         --name kstreams-test_nexmark-${k} --publish mode=host,published=$PORT,target=$PORT openjdk:11.0.12-jre-slim-buster \
         bash -c 'java -cp /src/build/libs/nexmark-kafka-streams-0.2-SNAPSHOT-uber.jar com.github.nexmark.kafka.queries.RunQuery \
         --name $NAME --serde $SERDE --conf  /src/workload_config/${NAME}.properties --duration $DURATION --port $PORT  \
-        --flushms ${FLUSH_MS} --warmup_time ${WARM_DURATION}' --guarantee ${GUARANTEE}" &
+        --flushms ${FLUSH_MS} --warmup_time ${WARM_DURATION} --guarantee ${GUARANTEE}'" &
 done
 
 sleep 20
