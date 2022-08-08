@@ -53,25 +53,25 @@ def main():
         if p50arr:
             print(f"{args.exppref}_{cnt}_p50={p50arr}; {args.exppref}_{cnt}_p90={p90arr}; {args.exppref}_{cnt}_p99={p99arr}")
             cnt += 1
-    p50_str = f"{args.exppref}_p50 = "
-    p90_str = f"{args.exppref}_p90 = "
-    p99_str = f"{args.exppref}_p99 = "
-    cnt = cnt - 1
-    for i in range(cnt):
-        if i != cnt - 1:
-            p50_str += f"{args.exppref}_{i+1}_p50[1:] + "
-            p90_str += f"{args.exppref}_{i+1}_p90[1:] + "
-            p99_str += f"{args.exppref}_{i+1}_p99[1:] + "
-        else:
-            p50_str += f"{args.exppref}_{i+1}_p50[1:]"
-            p90_str += f"{args.exppref}_{i+1}_p90[1:]"
-            p99_str += f"{args.exppref}_{i+1}_p99[1:]"
-    print(p50_str)
-    print(p90_str)
-    print(p99_str)
-    print(f"{args.exppref}_p50_avg = round(mean({args.exppref}_p50), 1)")
-    print(f"{args.exppref}_p90_avg = round(mean({args.exppref}_p90), 1)")
-    print(f"{args.exppref}_p99_avg = round(mean({args.exppref}_p99), 1)")
+    # p50_str = f"{args.exppref}_p50 = "
+    # p90_str = f"{args.exppref}_p90 = "
+    # p99_str = f"{args.exppref}_p99 = "
+    # cnt = cnt - 1
+    # for i in range(cnt):
+    #     if i != cnt - 1:
+    #         p50_str += f"{args.exppref}_{i+1}_p50[1:] + "
+    #         p90_str += f"{args.exppref}_{i+1}_p90[1:] + "
+    #         p99_str += f"{args.exppref}_{i+1}_p99[1:] + "
+    #     else:
+    #         p50_str += f"{args.exppref}_{i+1}_p50[1:]"
+    #         p90_str += f"{args.exppref}_{i+1}_p90[1:]"
+    #         p99_str += f"{args.exppref}_{i+1}_p99[1:]"
+    # print(p50_str)
+    # print(p90_str)
+    # print(p99_str)
+    # print(f"{args.exppref}_p50_avg = round(mean({args.exppref}_p50), 1)")
+    # print(f"{args.exppref}_p90_avg = round(mean({args.exppref}_p90), 1)")
+    # print(f"{args.exppref}_p99_avg = round(mean({args.exppref}_p99), 1)")
     p50_arr = []
     p90_arr = []
     p99_arr = []
@@ -80,12 +80,19 @@ def main():
         p90arr = stats[name].p90
         p99arr = stats[name].p99
         if p50arr:
-            p50_arr += p50arr[1:] 
-            p90_arr += p90arr[1:] 
-            p99_arr += p99arr[1:] 
-            print(f"p50 avg: {round(mean(p50arr), 1)}, p90 avg: {round(mean(p90arr), 1)}, p99avg: {round(mean(p99arr), 1)}")
-    print(f"overall avg")
-    print(f"p50 avg: {round(mean(p50_arr), 1)}, p90 avg: {round(mean(p90_arr), 1)}, p99avg: {round(mean(p99_arr), 1)}")
+            if len(p50arr) > 1:
+                p50_arr += p50arr[1:] 
+                p90_arr += p90arr[1:] 
+                p99_arr += p99arr[1:] 
+                print(f"p50 avg: {round(mean(p50arr[1:]), 1)}, p90 avg: {round(mean(p90arr[1:]), 1)}, p99avg: {round(mean(p99arr[1:]), 1)}")
+            else:
+                p50_arr += p50arr 
+                p90_arr += p90arr 
+                p99_arr += p99arr 
+                print(f"p50 avg: {round(mean(p50arr), 1)}, p90 avg: {round(mean(p90arr), 1)}, p99avg: {round(mean(p99arr), 1)}")
+
+    print(f"overall avg,p50\tp90\tp99")
+    print(f"{round(mean(p50_arr), 1)}, {round(mean(p90_arr), 1)}, {round(mean(p99_arr), 1)}")
 
 
             
