@@ -75,7 +75,7 @@ def main():
                 src_prod.append(src_gen)
 
     print()
-    if src_time and stc_prod:
+    if src_time and src_prod:
         src_max_time = max(src_time)
         src_total_prod = sum(src_prod)
         print(f"source produced: {src_total_prod}, time: {src_max_time}, throughput: {round(float(src_total_prod)/src_max_time, 1)}")
@@ -85,10 +85,10 @@ def main():
     summary(nexmark_consumed, max_time)
     print("produced")
     summary(nexmark_produced, max_time)
-    quan = quantiles(e2e_latency, n=100)
-    p50 = quan[49]
-    p99 = quan[98]
-    print(f"p50: {p50} ms, p99: {p99} ms")
+    # quan = quantiles(e2e_latency, n=100)
+    # p50 = quan[49]
+    # p99 = quan[98]
+    # print(f"p50: {p50} ms, p99: {p99} ms")
 
 
 if __name__ == '__main__':
