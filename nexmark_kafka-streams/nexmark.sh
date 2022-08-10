@@ -12,6 +12,7 @@ WARM_DURATION=""
 TPS=""
 FLUSH_MS=""
 GUARANTEE=""
+DISABLE_CACHE=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -59,8 +60,12 @@ while [ $# -gt 0 ]; do
         if [[ "$1" != *=* ]]; then shift; fi
         GUARANTEE="${1#*=}"
         ;;
+    --disable_cache*)
+        if [[ "$1" != *=* ]]; then shift; fi
+        DISABLE_CACHE="${1#*=}"
+        ;;
     --help | -h)
-        printf -- "--app <appname> one of q1,q2,q3,q5,q7,q8\n"
+        printf -- "--app <appname> one of q1,q2,q3,q4,q5,q6,q7,q8\n"
         printf -- "--exp_dir <exp_dir> required\n"
         printf -- "--nins <nins> number of instance\n"
         printf -- "--nsrc <nsrc> number of source\n"
@@ -70,6 +75,7 @@ while [ $# -gt 0 ]; do
         printf -- "--tps <events per sec>\n"
         printf -- "--flushms <flush interval in ms>\n"
         printf -- "--gua <guarantee; alo or eo>\n"
+	printf -- "--disable_cache <true or false>\n"
         exit 0
         ;;
     *)
@@ -122,7 +128,16 @@ if [[ "$GUARANTEE" = "" ]]; then
     exit 1
 fi
 
-echo "app: $NAME, exp_dir: $EXP_DIR, num_instance: $NUM_INSTANCE, num events: $NUM_EVENTS, num_src: $NUM_SRC_INSTANCE, serde: $SERDE, duration: $DURATION, tps: $TPS, warm duration: $WARM_DURATION, flushMs: $FLUSH_MS, guarantee: $GUARANTEE"
+CACHE_ARG=""
+
+if [[ "$DISABLE_CACHE" = "true" ]]; then
+	CACHE_ARG="--disable_cache"
+fi
+
+echo "app: $NAME, exp_dir: $EXP_DIR, num_instance: $NUM_INSTANCE, num events: $NUM_EVENTS, \
+	num_src: $NUM_SRC_INSTANCE, serde: $SERDE, duration: $DURATION, tps: $TPS, \
+	warm duration: $WARM_DURATION, flushMs: $FLUSH_MS, guarantee: $GUARANTEE, \
+	disable_cache: ${DISABLE_CACHE}, cache_arg: ${CACHE_ARG}"
 
 BASE_DIR=$(realpath $(dirname $0))
 HELPER_SCRIPT=/mnt/efs/workspace/research-helper-scripts/microservice_helper
@@ -179,7 +194,9 @@ echo "first broker container ip: $FIRST_BROKER_CONTAINER_IP"
 
 rm -rf $EXP_DIR
 mkdir -p $EXP_DIR
-echo "app: $NAME, exp_dir: $EXP_DIR, num_instance: $NUM_INSTANCE, num events: $NUM_EVENTS, num_src: $NUM_SRC_INSTANCE, serde: $SERDE, duration: $DURATION, tps: $TPS, warm duration: $WARM_DURATION, flushMs: $FLUSH_MS">$EXP_DIR/params
+echo "app: $NAME, exp_dir: $EXP_DIR, num_instance: $NUM_INSTANCE, num events: $NUM_EVENTS, num_src: $NUM_SRC_INSTANCE, \
+	serde: $SERDE, duration: $DURATION, tps: $TPS, warm duration: $WARM_DURATION, \
+	flushMs: $FLUSH_MS, guarantee: ${GUARANTEE}, disable_cache: ${DISABLE_CACHE}">$EXP_DIR/params
 
 ssh -q $MANAGER_HOST -oStrictHostKeyChecking=no -- cat /proc/cmdline >>$EXP_DIR/kernel_cmdline
 ssh -q $MANAGER_HOST -oStrictHostKeyChecking=no -- uname -a >>$EXP_DIR/kernel_version
@@ -207,7 +224,7 @@ for ((k=0; k<$NUM_INSTANCE; k++)); do
         --name kstreams-test_nexmark-${k} --publish mode=host,published=$PORT,target=$PORT openjdk:11.0.12-jre-slim-buster \
         bash -c 'java -cp /src/build/libs/nexmark-kafka-streams-0.2-SNAPSHOT-uber.jar com.github.nexmark.kafka.queries.RunQuery \
         --name $NAME --serde $SERDE --conf  /src/workload_config/${NAME}.properties --duration $DURATION --port $PORT  \
-        --flushms ${FLUSH_MS} --warmup_time ${WARM_DURATION} --guarantee ${GUARANTEE}'" &
+        --flushms ${FLUSH_MS} --warmup_time ${WARM_DURATION} --guarantee ${GUARANTEE} ${CACHE_ARG}'" &
 done
 
 sleep 20
