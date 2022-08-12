@@ -11,6 +11,7 @@ NUM_EVENTS=""
 WARM_DURATION=""
 TPS=""
 FLUSH_MS=""
+SRC_FLUSH_MS=""
 GUARANTEE=""
 DISABLE_CACHE=""
 
@@ -55,6 +56,10 @@ while [ $# -gt 0 ]; do
     --flushms*)
         if [[ "$1" != *=* ]]; then shift; fi
         FLUSH_MS="${1#*=}"
+        ;;
+    --src_flushms*)
+        if [[ "$1" != *=* ]]; then shift; fi
+        SRC_FLUSH_MS="${1#*=}"
         ;;
     --gua*)
         if [[ "$1" != *=* ]]; then shift; fi
@@ -122,6 +127,10 @@ if [[ "$FLUSH_MS" = "" ]]; then
     echo "should provide flushms"
     exit 1
 fi
+if [[ "$SRC_FLUSH_MS" = "" ]]; then
+    echo "should provide src flushms"
+    exit 1
+fi
 
 if [[ "$GUARANTEE" = "" ]]; then
     echo "should provide guarantee"
@@ -137,7 +146,7 @@ fi
 echo "app: $NAME, exp_dir: $EXP_DIR, num_instance: $NUM_INSTANCE, num events: $NUM_EVENTS, \
 	num_src: $NUM_SRC_INSTANCE, serde: $SERDE, duration: $DURATION, tps: $TPS, \
 	warm duration: $WARM_DURATION, flushMs: $FLUSH_MS, guarantee: $GUARANTEE, \
-	disable_cache: ${DISABLE_CACHE}, cache_arg: ${CACHE_ARG}"
+	disable_cache: ${DISABLE_CACHE}, cache_arg: ${CACHE_ARG}, src_flush_ms: ${SRC_FLUSH_MS}"
 
 BASE_DIR=$(realpath $(dirname $0))
 HELPER_SCRIPT=/mnt/efs/workspace/research-helper-scripts/microservice_helper
@@ -196,7 +205,7 @@ rm -rf $EXP_DIR
 mkdir -p $EXP_DIR
 echo "app: $NAME, exp_dir: $EXP_DIR, num_instance: $NUM_INSTANCE, num events: $NUM_EVENTS, num_src: $NUM_SRC_INSTANCE, \
 	serde: $SERDE, duration: $DURATION, tps: $TPS, warm duration: $WARM_DURATION, \
-	flushMs: $FLUSH_MS, guarantee: ${GUARANTEE}, disable_cache: ${DISABLE_CACHE}">$EXP_DIR/params
+	flushMs: $FLUSH_MS, guarantee: ${GUARANTEE}, disable_cache: ${DISABLE_CACHE}, src_flushms: ${SRC_FLUSH_MS}">$EXP_DIR/params
 
 ssh -q $MANAGER_HOST -oStrictHostKeyChecking=no -- cat /proc/cmdline >>$EXP_DIR/kernel_cmdline
 ssh -q $MANAGER_HOST -oStrictHostKeyChecking=no -- uname -a >>$EXP_DIR/kernel_version
@@ -210,7 +219,7 @@ for ((j=0; j<$NUM_SRC_INSTANCE; j++)); do
         --replicas-max-per-node=1 --hostname=source-${j} --publish mode=host,published=$PORT,target=$PORT \
         --env IID=$j ubuntu:focal /src/bin/nexmark_genevents_kafka \
         -broker $FIRST_BROKER_CONTAINER_IP:9092 -duration ${DURATION} -npar 4 -serde $SERDE \
-        -srcIns $NUM_SRC_INSTANCE -events_num $NUM_EVENTS -tps $TPS -port $PORT -flushms $FLUSH_MS" &
+        -srcIns $NUM_SRC_INSTANCE -events_num $NUM_EVENTS -tps $TPS -port $PORT -flushms $SRC_FLUSH_MS" &
 done
 
 for ((k=0; k<$NUM_INSTANCE; k++)); do

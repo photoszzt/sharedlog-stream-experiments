@@ -14,6 +14,7 @@ EVENTS_NUM=""
 TPS=""
 WARM_DURATION=""
 FLUSH_MS=""
+SRC_FLUSH_MS=""
 NUM_WORKER=""
 
 while [ $# -gt 0 ]; do
@@ -54,6 +55,10 @@ while [ $# -gt 0 ]; do
             if [[ "$1" != *=* ]]; then shift; fi
             FLUSH_MS="${1#*=}"
             ;;
+        --src_flushms*)
+            if [[ "$1" != *=* ]]; then shift; fi
+            SRC_FLUSH_MS="${1#*=}"
+            ;;
         --help|-h)
             printf -- "--app <appname> one of q1,q2,q3,q5,q7,q8\n"
             printf -- "--exp_dir <exp_dir> required\n"
@@ -88,6 +93,10 @@ if [[ "$FLUSH_MS" = "" ]]; then
     echo "need to specify flushms"
     exit 1
 fi
+if [[ "$SRC_FLUSH_MS" = "" ]]; then
+    echo "need to specify src flushms"
+    exit 1
+fi
 if [[ "$APP_NAME" = "" ]]; then
     echo "need to specify app name"
     exit 1
@@ -101,7 +110,10 @@ if [[ "$NUM_WORKER" = "" ]]; then
     exit 1
 fi
 
-echo "app: ${APP_NAME}, exp_dir: ${EXP_DIR}, guarantee: ${GUA}, duration: ${DURATION}, events_num: ${EVENTS_NUM}, tps: ${TPS}, warmup time: ${WARM_DURATION}, flushms: ${FLUSH_MS}"
+
+echo "app: ${APP_NAME}, exp_dir: ${EXP_DIR}, guarantee: ${GUA}, duration: ${DURATION}, \
+    events_num: ${EVENTS_NUM}, tps: ${TPS}, warmup time: ${WARM_DURATION}, flushms: ${FLUSH_MS}, \
+    src_flushms: ${SRC_FLUSH_MS}, num_worker: ${NUM_WORKER}"
 
 HELPER_SCRIPT=/mnt/efs/workspace/research-helper-scripts/microservice_helper
 BASE_DIR=$(realpath $(dirname $0))
@@ -120,7 +132,8 @@ ssh -q $MANAGER_HOST -- uname -a >>$EXP_DIR/kernel_version
 
 ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name ${APP_NAME} \
     -faas_gateway $ENTRY_HOST:8080 -duration ${DURATION} -serde msgp \
-    -guarantee $GUA -comm_everyMS ${FLUSH_MS} -flushms ${FLUSH_MS} -events_num ${EVENTS_NUM} \
+    -guarantee $GUA -comm_everyMS ${FLUSH_MS} -flushms ${FLUSH_MS} \
+    -src_flushms ${SRC_FLUSH_MS} -events_num ${EVENTS_NUM} \
     -wconfig $SRC_DIR/workload_config/${NUM_WORKER}_ins/${APP_NAME}.json -tab_type mem \
     -stat_dir /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats -waitForLast=true \
     -tps $TPS -warmup_time $WARM_DURATION >$EXP_DIR/results.log 2>&1
