@@ -48,8 +48,9 @@ def parse_source(filepath: str):
 
 def summary(events: dict, max_time: float):
     for tp, val in events.items():
-        total = sum(val)
-        print(f"{tp} {total} events, throughput: {round(float(total)/max_time, 1)}")
+        if 'changelog' not in tp:
+            total = sum(val)
+            print(f"{tp} {total} events, throughput: {round(float(total)/max_time, 1)}")
 
 def main():
     parser = argparse.ArgumentParser()
