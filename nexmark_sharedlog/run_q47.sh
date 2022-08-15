@@ -19,7 +19,7 @@ WARM_DURATION=0
 APP=(q4 q6 q7)
 DIR=(q4_boki q6_boki q7_boki/mem)
 FLUSH_MS=100
-SRC_FLUSH_MS=5
+SRC_FLUSH_MS=10
 
 for ((k = 0; k < ${#APP[@]}; ++k)); do
 	cd ${DIR[k]}
@@ -28,10 +28,10 @@ for ((k = 0; k < ${#APP[@]}; ++k)); do
 			TPS=$(expr ${TPS_PER_WORKER[idx]} \* ${NUM_WORKER[w]})
 			EVENTS=$(expr $TPS \* $DURATION)
 			echo ${APP[k]}, ${DIR[k]}, ${EVENTS} events, ${TPS} tps
-			./run_once.sh --app ${APP[k]} --exp_dir ./${NUM_WORKER[w]}src_normhash/${DURATION}s_${WARM_DURATION}swarm_${FLUSH_MS}ms/${TPS_PER_WORKER[idx]}tps_alo/ \
+			./run_once.sh --app ${APP[k]} --exp_dir ./${NUM_WORKER[w]}src_normhash/${DURATION}s_${WARM_DURATION}swarm_${FLUSH_MS}ms_src${SRC_FLUSH_MS}ms/${TPS_PER_WORKER[idx]}tps_alo/ \
 				--gua alo --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
 				--tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS
-			./run_once.sh --app ${APP[k]} --exp_dir ./${NUM_WORKER[w]}src_normhash/${DURATION}s_${WARM_DURATION}swarm_${FLUSH_MS}ms/${TPS_PER_WORKER[idx]}tps_epoch/ \
+			./run_once.sh --app ${APP[k]} --exp_dir ./${NUM_WORKER[w]}src_normhash/${DURATION}s_${WARM_DURATION}swarm_${FLUSH_MS}ms_src${SRC_FLUSH_MS}ms/${TPS_PER_WORKER[idx]}tps_epoch/ \
 				--gua epoch --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
 				--tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS
 			# ./run_once.sh --app ${APP[k]} --exp_dir ./${NUM_WORKER[w]}src_ets2/${DURATION}s_${WARM_DURATION}swarm_${FLUSH_MS}ms/${TPS_PER_WORKER[idx]}tps_2pc/ \
@@ -42,13 +42,13 @@ for ((k = 0; k < ${#APP[@]}; ++k)); do
 	cd -
 done
 
-cd q1_boki
-/mnt/efs/workspace/research-helper-scripts/microservice_helper stop-machines
-cd ..
-rm q2_boki/machines.json
-rm q3_boki/mem/machines.json
-rm q4_boki/machines.json
-rm q5_boki/mem/machines.json
-rm q6_boki/machines.json
-rm q7_boki/mem/machines.json
-rm q8_boki/mem/machines.json
+# cd q1_boki
+# /mnt/efs/workspace/research-helper-scripts/microservice_helper stop-machines
+# cd ..
+# rm q2_boki/machines.json
+# rm q3_boki/mem/machines.json
+# rm q4_boki/machines.json
+# rm q5_boki/mem/machines.json
+# rm q6_boki/machines.json
+# rm q7_boki/mem/machines.json
+# rm q8_boki/mem/machines.json

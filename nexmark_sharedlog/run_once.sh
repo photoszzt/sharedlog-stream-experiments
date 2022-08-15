@@ -134,7 +134,7 @@ ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name ${APP_NAME} \
     -faas_gateway $ENTRY_HOST:8080 -duration ${DURATION} -serde msgp \
     -guarantee $GUA -comm_everyMS ${FLUSH_MS} -flushms ${FLUSH_MS} \
     -src_flushms ${SRC_FLUSH_MS} -events_num ${EVENTS_NUM} \
-    -wconfig $SRC_DIR/workload_config/${NUM_WORKER}_ins/${APP_NAME}.json -tab_type mem \
+    -wconfig $SRC_DIR/workload_config/${NUM_WORKER}_ins/${APP_NAME}.json \
     -stat_dir /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats -waitForLast=true \
     -tps $TPS -warmup_time $WARM_DURATION >$EXP_DIR/results.log 2>&1
 
