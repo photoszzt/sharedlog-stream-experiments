@@ -7,7 +7,7 @@ WARM_DURATION=0
 APP=(q5)
 FLUSH_MS=100
 NUM_INS=4
-SRC_FLUSH_MS=10
+SRC_FLUSH_MS=100
 
 for ((j=0; j<${#APP[@]}; ++j)); do
     for ((idx=0; idx<${#TPS_PER_WORKER[@]}; ++idx)); do
@@ -25,4 +25,4 @@ for ((j=0; j<${#APP[@]}; ++j)); do
     done
 done
 
-/mnt/efs/workspace/research-helper-scripts/microservice_helper stop-machines
+#/mnt/efs/workspace/research-helper-scripts/microservice_helper stop-machines

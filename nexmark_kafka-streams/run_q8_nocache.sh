@@ -7,7 +7,7 @@ WARM_DURATION=0
 APP=(q8)
 FLUSH_MS=100
 NUM_INS=4
-SRC_FLUSH_MS=10
+SRC_FLUSH_MS=100
 
 for ((j=0; j<${#APP[@]}; ++j)); do
     for ((idx=0; idx<${#TPS_PER_WORKER[@]}; ++idx)); do

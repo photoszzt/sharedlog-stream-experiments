@@ -1,7 +1,7 @@
 #!/bin/bash
 /mnt/efs/workspace/research-helper-scripts/microservice_helper start-machines --use-spot-instances
 
-TPS_PER_WORKER=(1000 2000 4000 8000 16000)
+TPS_PER_WORKER=(64000 128000)
 DURATION=180
 WARM_DURATION=0
 APP=(q5)
@@ -25,4 +25,4 @@ for ((j=0; j<${#APP[@]}; ++j)); do
     done
 done
 
-/mnt/efs/workspace/research-helper-scripts/microservice_helper stop-machines
+# /mnt/efs/workspace/research-helper-scripts/microservice_helper stop-machines

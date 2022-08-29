@@ -1,7 +1,7 @@
 #!/bin/bash
 /mnt/efs/workspace/research-helper-scripts/microservice_helper start-machines --use-spot-instances
 
-TPS_PER_WORKER=(125 250 500)
+TPS_PER_WORKER=(1000 2000 4000)
 DURATION=180
 WARM_DURATION=0
 APP=(q4 q6 q7)
