@@ -149,7 +149,9 @@ echo "app: $NAME, exp_dir: $EXP_DIR, num_instance: $NUM_INSTANCE, num events: $N
 	disable_cache: ${DISABLE_CACHE}, cache_arg: ${CACHE_ARG}, src_flush_ms: ${SRC_FLUSH_MS}"
 
 BASE_DIR=$(realpath $(dirname $0))
-HELPER_SCRIPT=/mnt/efs/workspace/research-helper-scripts/microservice_helper
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+HELPER_SCRIPT=$(realpath $SCRIPT_DIR/../../research-helper-scripts/microservice_helper)
+WORKSPACE_DIR=$(realpath $SCRIPT_DIR/../../)
 
 MANAGER_HOST=$($HELPER_SCRIPT get-docker-manager-host --base-dir=$BASE_DIR)
 CLIENT_HOST=$($HELPER_SCRIPT get-client-host --base-dir=$BASE_DIR)
@@ -213,7 +215,7 @@ ssh -q $MANAGER_HOST -oStrictHostKeyChecking=no -- uname -a >>$EXP_DIR/kernel_ve
 for ((j=0; j<$NUM_SRC_INSTANCE; j++)); do
     PORT=$(expr 8000 + $j)
     ssh -q $MANAGER_HOST -oStrictHostKeyChecking=no -- "docker service create \
-        --mount type=bind,source=/mnt/efs/workspace/sharedlog-stream,destination=/src \
+        --mount type=bind,source=$WORKSPACE_DIR/sharedlog-stream,destination=/src \
         --constraint node.labels.source_node==true --network kstreams-test_default \
         --name kstreams-test_source-${j} --restart-condition none --replicas=1 \
         --replicas-max-per-node=1 --hostname=source-${j} --publish mode=host,published=$PORT,target=$PORT \
@@ -225,7 +227,7 @@ done
 for ((k=0; k<$NUM_INSTANCE; k++)); do
     PORT=$(expr 7000 + $k)
     ssh -q $MANAGER_HOST -oStrictHostKeyChecking=no -- "docker service create \
-        --mount type=bind,source=/mnt/efs/workspace/nexmark/nexmark-kafka-streams,destination=/src \
+        --mount type=bind,source=$WORKSPACE_DIR/nexmark/nexmark-kafka-streams,destination=/src \
         --constraint node.labels.app_node==true \
         --env BOOTSTRAP_SERVER_CONFIG=$FIRST_BROKER_CONTAINER_IP:9092 \
         --network kstreams-test_default --restart-condition none --replicas=1 \

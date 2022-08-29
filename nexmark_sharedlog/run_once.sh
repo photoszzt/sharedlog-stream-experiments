@@ -115,9 +115,11 @@ echo "app: ${APP_NAME}, exp_dir: ${EXP_DIR}, guarantee: ${GUA}, duration: ${DURA
     events_num: ${EVENTS_NUM}, tps: ${TPS}, warmup time: ${WARM_DURATION}, flushms: ${FLUSH_MS}, \
     src_flushms: ${SRC_FLUSH_MS}, num_worker: ${NUM_WORKER}"
 
-HELPER_SCRIPT=/mnt/efs/workspace/research-helper-scripts/microservice_helper
 BASE_DIR=$(realpath $(dirname $0))
-SRC_DIR=/mnt/efs/workspace/sharedlog-stream
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+WORKSPACE_DIR=$(realpath $SCRIPT_DIR/../../)
+HELPER_SCRIPT=$($WORKSPACE_DIR/research-helper-scripts/microservice_helper)
+SRC_DIR=$WORKSPACE_DIR/sharedlog-stream
 MANAGER_HOST=$($HELPER_SCRIPT get-docker-manager-host --base-dir=$BASE_DIR)
 CLIENT_HOST=$($HELPER_SCRIPT get-client-host --base-dir=$BASE_DIR)
 ENTRY_HOST=$($HELPER_SCRIPT get-service-host --base-dir=$BASE_DIR --service=faas-gateway)
