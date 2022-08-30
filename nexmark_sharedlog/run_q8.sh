@@ -1,8 +1,10 @@
 #!/bin/bash
 set -x
 
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+WORKSPACE_DIR=$(realpath $SCRIPT_DIR/../../)
 cd q8_boki/mem
-/mnt/efs/workspace/research-helper-scripts/microservice_helper start-machines --use-spot-instances
+$WORKSPACE_DIR/research-helper-scripts/microservice_helper start-machines --use-spot-instances
 cd ../..
 
 TPS_PER_WORKER=(1000 2000 4000 8000 16000)
@@ -36,5 +38,5 @@ for ((k=0; k<${#APP[@]}; ++k)); do
 done
 
 cd q8_boki/mem
-/mnt/efs/workspace/research-helper-scripts/microservice_helper stop-machines
+$WORKSPACE_DIR/research-helper-scripts/microservice_helper stop-machines
 cd ../..
