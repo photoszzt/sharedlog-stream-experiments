@@ -23,10 +23,10 @@ for ((iter=0; iter < 1; ++iter)); do
 				EVENTS=$(expr $TPS \* $DURATION)
 				echo ${APP[k]}, ${DIR[k]}, ${EVENTS} events, ${TPS} tps
 				subdir=${DURATION}s_${WARM_DURATION}swarm_${FLUSH_MS}ms_src${SRC_FLUSH_MS}ms
-				./run_once.sh --app ${APP[k]} --exp_dir ./${NUM_WORKER[w]}src_generics/${subdir}/${iter}/${TPS_PER_WORKER[idx]}tps_alo/ \
+				./run_once.sh --app ${APP[k]} --exp_dir ./${NUM_WORKER[w]}src_cache/${subdir}/${iter}/${TPS_PER_WORKER[idx]}tps_alo/ \
 					--gua alo --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
 					--tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS
-				./run_once.sh --app ${APP[k]} --exp_dir ./${NUM_WORKER[w]}src_generics/${subdir}/${iter}/${TPS_PER_WORKER[idx]}tps_epoch/ \
+				./run_once.sh --app ${APP[k]} --exp_dir ./${NUM_WORKER[w]}src_cache/${subdir}/${iter}/${TPS_PER_WORKER[idx]}tps_epoch/ \
 					--gua epoch --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
 					--tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS
 				# ./run_once.sh --app ${APP[k]} --exp_dir ./${NUM_WORKER[w]}src_ets2/${DURATION}s_${WARM_DURATION}swarm_${FLUSH_MS}ms/${TPS_PER_WORKER[idx]}tps_2pc/ \

@@ -4,10 +4,10 @@
 TPS_PER_WORKER=(1000 2000 4000)
 DURATION=180
 WARM_DURATION=0
-APP=(q4 q6 q7)
+APP=(q4 q6)
 FLUSH_MS=100
 NUM_INS=4
-SRC_FLUSH_MS=10
+SRC_FLUSH_MS=100
 
 for ((j=0; j<${#APP[@]}; ++j)); do
     for ((idx=0; idx<${#TPS_PER_WORKER[@]}; ++idx)); do
