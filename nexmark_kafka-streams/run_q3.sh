@@ -1,5 +1,8 @@
 #!/bin/bash
-/mnt/efs/workspace/research-helper-scripts/microservice_helper start-machines --use-spot-instances
+set -x
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+WORKSPACE_DIR=$(realpath $SCRIPT_DIR/../../)
+$WORKSPACE_DIR/research-helper-scripts/microservice_helper start-machines --use-spot-instances
 
 TPS_PER_WORKER=(250)
 DURATION=180
@@ -7,7 +10,7 @@ WARM_DURATION=0
 APP=(q3)
 FLUSH_MS=100
 NUM_INS=4
-SRC_FLUSH_MS=10
+SRC_FLUSH_MS=100
 
 for ((j=0; j<${#APP[@]}; ++j)); do
     for ((idx=0; idx<${#TPS_PER_WORKER[@]}; ++idx)); do
@@ -25,4 +28,4 @@ for ((j=0; j<${#APP[@]}; ++j)); do
     done
 done
 
-# /mnt/efs/workspace/research-helper-scripts/microservice_helper stop-machines
+$WORKSPACE_DIR/research-helper-scripts/microservice_helper stop-machines
