@@ -14,7 +14,9 @@ EVENTS_NUM=""
 TPS=""
 WARM_DURATION=""
 FLUSH_MS=""
+SRC_FLUSH_MS=""
 NUM_WORKER=""
+FAIL=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -54,6 +56,14 @@ while [ $# -gt 0 ]; do
             if [[ "$1" != *=* ]]; then shift; fi
             FLUSH_MS="${1#*=}"
             ;;
+        --src_flushms*)
+            if [[ "$1" != *=* ]]; then shift; fi
+            SRC_FLUSH_MS="${1#*=}"
+            ;;
+        --fail*)
+            if [[ "$1" != *=* ]]; then shift; fi
+            FAIL="${1#*=}"
+            ;;
         --help|-h)
             printf -- "--app <appname> one of q1,q2,q3,q5,q7,q8\n"
             printf -- "--exp_dir <exp_dir> required\n"
@@ -88,6 +98,10 @@ if [[ "$FLUSH_MS" = "" ]]; then
     echo "need to specify flushms"
     exit 1
 fi
+if [[ "$SRC_FLUSH_MS" = "" ]]; then
+    echo "need to specify src flushms"
+    exit 1
+fi
 if [[ "$APP_NAME" = "" ]]; then
     echo "need to specify app name"
     exit 1
@@ -101,11 +115,23 @@ if [[ "$NUM_WORKER" = "" ]]; then
     exit 1
 fi
 
-echo "app: ${APP_NAME}, exp_dir: ${EXP_DIR}, guarantee: ${GUA}, duration: ${DURATION}, events_num: ${EVENTS_NUM}, tps: ${TPS}, warmup time: ${WARM_DURATION}, flushms: ${FLUSH_MS}"
 
-HELPER_SCRIPT=/mnt/efs/workspace/research-helper-scripts/microservice_helper
+echo "app: ${APP_NAME}, exp_dir: ${EXP_DIR}, guarantee: ${GUA}, duration: ${DURATION}, \
+    events_num: ${EVENTS_NUM}, tps: ${TPS}, warmup time: ${WARM_DURATION}, flushms: ${FLUSH_MS}, \
+    src_flushms: ${SRC_FLUSH_MS}, num_worker: ${NUM_WORKER}, fail_spec: ${FAIL_SPEC}"
+
+SOURCE=${BASH_SOURCE[0]}
+while [ -L "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
+  SOURCE=$(readlink "$SOURCE")
+  [[ $SOURCE != /* ]] && SOURCE=$DIR/$SOURCE # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+SCRIPT_DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
+
 BASE_DIR=$(realpath $(dirname $0))
-SRC_DIR=/mnt/efs/workspace/sharedlog-stream
+WORKSPACE_DIR=$(realpath $SCRIPT_DIR/../../)
+HELPER_SCRIPT=$WORKSPACE_DIR/research-helper-scripts/microservice_helper
+SRC_DIR=$WORKSPACE_DIR/sharedlog-stream
 MANAGER_HOST=$($HELPER_SCRIPT get-docker-manager-host --base-dir=$BASE_DIR)
 CLIENT_HOST=$($HELPER_SCRIPT get-client-host --base-dir=$BASE_DIR)
 ENTRY_HOST=$($HELPER_SCRIPT get-service-host --base-dir=$BASE_DIR --service=faas-gateway)
@@ -117,16 +143,22 @@ mkdir -p $EXP_DIR
 
 ssh -q $MANAGER_HOST -- cat /proc/cmdline >>$EXP_DIR/kernel_cmdline
 ssh -q $MANAGER_HOST -- uname -a >>$EXP_DIR/kernel_version
+FAIL_SPEC_ARG=""
+if [[ "$FAIL" = "true" ]]; then
+    FAIL_SPEC_ARG="-fail_spec=$SRC_DIR/workload_config/${NUM_WORKER}_ins/failure_config/${APP_NAME}.json"
+fi
 
 ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name ${APP_NAME} \
     -faas_gateway $ENTRY_HOST:8080 -duration ${DURATION} -serde msgp \
-    -guarantee $GUA -comm_everyMS ${FLUSH_MS} -flushms ${FLUSH_MS} -events_num ${EVENTS_NUM} \
-    -wconfig $SRC_DIR/workload_config/${NUM_WORKER}_ins/${APP_NAME}.json -tab_type mem \
-    -stat_dir /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats \
-    -tps $TPS -warmup_time $WARM_DURATION >$EXP_DIR/results.log 2>&1
+    -guarantee $GUA -comm_everyMS ${FLUSH_MS} -flushms ${FLUSH_MS} \
+    -src_flushms ${SRC_FLUSH_MS} -events_num ${EVENTS_NUM} \
+    -wconfig $SRC_DIR/workload_config/${NUM_WORKER}_ins/${APP_NAME}.json \
+    -stat_dir /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats -waitForLast=true \
+    -tps $TPS -warmup_time $WARM_DURATION $FAIL_SPEC_ARG >$EXP_DIR/results.log 2>&1
 
-ssh -q $CLIENT_HOST -- "/mnt/efs/experiments/nexmark_sharedlog/zip_files.sh /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats"
+ssh -q $CLIENT_HOST -- "$WORKSPACE_DIR/sharedlog-stream-experiments/nexmark_sharedlog/zip_files.sh /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats"
 
 scp -r $CLIENT_HOST:/home/ubuntu/${APP_NAME}/${EXP_DIR}/stats ${EXP_DIR}
 
+# $HELPER_SCRIPT collect-func-output --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
 $HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs

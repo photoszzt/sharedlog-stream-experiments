@@ -60,7 +60,7 @@ services:
       - --zookeeper_host=zookeeper:2181
       - --listen_iface=eth0
       - --root_path_for_ipc=/tmp/faas/ipc
-      - --func_config_file=/exp/nexmark_sharedlog/specs/q4.json
+      - --func_config_file=/exp/nexmark_sharedlog/specs/q6.json
       - --num_io_workers=4
       - --socket_listen_backlog=1024
       - --instant_rps_p_norm=0.8
@@ -114,7 +114,7 @@ services:
       - --zookeeper_host=zookeeper:2181
       - --listen_iface=eth0
       - --http_port=8080
-      - --func_config_file=/exp/nexmark_sharedlog/specs/q4.json
+      - --func_config_file=/exp/nexmark_sharedlog/specs/q6.json
       - --num_io_workers=8
       - --socket_listen_backlog=1024
       - --io_uring_entries=2048
@@ -241,7 +241,7 @@ services:
 
   q46GroupBy:
     image: ubuntu:focal
-    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler_debug", "30"]
+    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "30"]
     volumes:
       - ${SRC_DIR:?}:/src
       - ${FAAS_DIR:?}:/faas
@@ -260,7 +260,7 @@ services:
 
   q6JoinTable:
     image: ubuntu:focal
-    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler_debug", "40"]
+    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "40"]
     volumes:
       - ${SRC_DIR:?}:/src
       - ${FAAS_DIR:?}:/faas
@@ -273,13 +273,14 @@ services:
        - MEASURE_SRC=1
        - MEASURE_SINK=1
        - BUFPUSH=1
+       - USE_CACHE=1
     depends_on:
        - faas-engine
     restart: always
 
   q6MaxBid:
     image: ubuntu:focal
-    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler_debug", "50"]
+    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "50"]
     volumes:
       - ${SRC_DIR:?}:/src
       - ${FAAS_DIR:?}:/faas
@@ -292,13 +293,14 @@ services:
        - MEASURE_SRC=1
        - MEASURE_SINK=1
        - BUFPUSH=1
+       - USE_CACHE=1
     depends_on:
        - faas-engine
     restart: always
 
   q6Avg:
     image: ubuntu:focal
-    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler_debug", "50"]
+    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "60"]
     volumes:
       - ${SRC_DIR:?}:/src
       - ${FAAS_DIR:?}:/faas
@@ -311,6 +313,7 @@ services:
        - MEASURE_SRC=1
        - MEASURE_SINK=1
        - BUFPUSH=1
+       - USE_CACHE=1
     depends_on:
        - faas-engine
     restart: always

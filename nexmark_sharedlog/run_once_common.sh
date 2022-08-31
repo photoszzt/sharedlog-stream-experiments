@@ -1,13 +1,22 @@
 #!/bin/bash
 set -x
+SOURCE=${BASH_SOURCE[0]}
+while [ -L "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
+  SOURCE=$(readlink "$SOURCE")
+  [[ $SOURCE != /* ]] && SOURCE=$DIR/$SOURCE # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+SCRIPT_DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
 
 BASE_DIR=$(realpath $(dirname $0))
-SRC_DIR=/mnt/efs/workspace/sharedlog-stream
-EXP_DIR=/mnt/efs/workspace/sharedlog-stream-experiments
-FAAS_DIR=/mnt/efs/workspace/boki
+WORKSPACE_DIR=$(realpath $SCRIPT_DIR/../../)
+SRC_DIR=$WORKSPACE_DIR/sharedlog-stream
+EXP_DIR=$WORKSPACE_DIR/sharedlog-stream-experiments
+FAAS_DIR=$WORKSPACE_DIR/boki
 FAAS_BUILD_TYPE=release
 # FAAS_BUILD_TYPE=debug
-HELPER_SCRIPT=/mnt/efs/workspace/research-helper-scripts/microservice_helper
+HELPER_SCRIPT=$WORKSPACE_DIR/research-helper-scripts/microservice_helper
+USE_CACHE=1
 
 MANAGER_HOST=$($HELPER_SCRIPT get-docker-manager-host --base-dir=$BASE_DIR)
 ALL_HOSTS=$($HELPER_SCRIPT get-all-server-hosts --base-dir=$BASE_DIR)
@@ -48,7 +57,7 @@ for HOST in $ALL_STORAGE_HOSTS; do
 done
 
 ssh -q $MANAGER_HOST -- docker network rm faas-test_default
-ssh -q $MANAGER_HOST -- SRC_DIR=$SRC_DIR FAAS_DIR=$FAAS_DIR EXP_DIR=$EXP_DIR FAAS_BUILD_TYPE=$FAAS_BUILD_TYPE \
+ssh -q $MANAGER_HOST -- SRC_DIR=$SRC_DIR FAAS_DIR=$FAAS_DIR EXP_DIR=$EXP_DIR USE_CACHE=${USE_CACHE} FAAS_BUILD_TYPE=$FAAS_BUILD_TYPE \
     docker stack deploy \
     -c ~/docker-compose-base.yml -c ~/docker-compose.yml faas-test
 sleep 80

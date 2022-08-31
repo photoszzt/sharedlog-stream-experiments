@@ -3,7 +3,7 @@ set -x
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 WORKSPACE_DIR=$(realpath $SCRIPT_DIR/../../)
 
-cd q4_boki
+cd q6_boki
 $WORKSPACE_DIR/research-helper-scripts/microservice_helper start-machines --use-spot-instances
 cd ..
 
@@ -11,8 +11,8 @@ TPS_PER_WORKER=(1000 2000 4000)
 NUM_WORKER=(4)
 DURATION=180
 WARM_DURATION=0
-APP=(q4)
-DIR=(q4_boki)
+APP=(q6)
+DIR=(q6_boki)
 FLUSH_MS=100
 SRC_FLUSH_MS=100
 
@@ -38,6 +38,6 @@ for ((k = 0; k < ${#APP[@]}; ++k)); do
 	cd -
 done
 
-cd q4_boki
+cd q6_boki
 $WORKSPACE_DIR/research-helper-scripts/microservice_helper stop-machines
 cd ..
