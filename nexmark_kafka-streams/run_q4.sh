@@ -4,12 +4,13 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 WORKSPACE_DIR=$(realpath $SCRIPT_DIR/../../)
 $WORKSPACE_DIR/research-helper-scripts/microservice_helper start-machines --use-spot-instances
 
-TPS_PER_WORKER=(125 250 500)
+TPS_PER_WORKER=(1000 2000 4000)
 DURATION=180
 WARM_DURATION=0
-APP=(q6)
+APP=(q4 q6)
 FLUSH_MS=100
 NUM_INS=4
+SRC_FLUSH_MS=100
 
 for ((j=0; j<${#APP[@]}; ++j)); do
     for ((idx=0; idx<${#TPS_PER_WORKER[@]}; ++idx)); do
@@ -20,11 +21,11 @@ for ((j=0; j<${#APP[@]}; ++j)); do
     	./nexmark.sh --app ${APP[j]} \
     	    --exp_dir ./${APP[j]}/4src_ets/$subdir/${TPS_PER_WORKER[idx]}tps_${EVENTS}_alo/ \
     	    --nins 4 --nsrc 4 --serde msgp --duration $DURATION --nevents ${EVENTS} \
-    	    --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --gua alo
+    	    --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms ${SRC_FLUSH_MS} --gua alo
     	./nexmark.sh --app ${APP[j]} \
     	    --exp_dir ./${APP[j]}/4src_ets/$subdir/${TPS_PER_WORKER[idx]}tps_${EVENTS}_eo/ \
     	    --nins 4 --nsrc 4 --serde msgp --duration $DURATION --nevents ${EVENTS} \
-    	    --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --gua eo
+    	    --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms ${SRC_FLUSH_MS} --gua eo
     done
 done
 
