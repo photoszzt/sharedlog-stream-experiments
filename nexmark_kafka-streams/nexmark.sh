@@ -174,7 +174,7 @@ sleep 40
 
 ALL_BROKER_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=broker_node)
 FIRST_BROKER=""
-for HOST in $ALL_BROKER_HOSTS; do
+for HOST in ${ALL_BROKER_HOSTS[@]}; do
     if [ "$FIRST_BROKER" = "" ]; then
         FIRST_BROKER=$HOST
     fi
@@ -189,7 +189,8 @@ ssh -q $MANAGER_HOST -oStrictHostKeyChecking=no -- docker stack deploy \
 sleep 40
 
 FIRST_BROKER_CONTAINER_IP=""
-for HOST in $ALL_BROKER_HOSTS; do
+for HOST in ${ALL_BROKER_HOSTS[@]}; do
+    echo $HOST
     container_id=$(ssh -q $HOST -oStrictHostKeyChecking=no -- "docker ps -f name=kstreams-test_broker --format "{{.ID}}"")
     docker_ip_outside=$(ssh -q $HOST -oStrictHostKeyChecking=no -- "docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $container_id")
     docker_ip_inside=$(ssh -q $HOST -oStrictHostKeyChecking=no -- "docker exec $container_id hostname -i")
