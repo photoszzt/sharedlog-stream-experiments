@@ -265,4 +265,12 @@ for pid in ${pids[*]}; do
     wait $pid
 done
 
+mkdir $EXP_DIR/broker_netstats
+for HOST in ${ALL_BROKER_HOSTS[@]}; do
+	NETDEVS=$(ssh -q $HOST -oStrictHostKeyChecking=no -- ls /sys/class/net | grep -e ^e)
+	for NETDEV in $NETDEVS; do
+		ssh -q $HOST -oStrictHostKeyChecking=no -- ethtool -S $NETDEV >>$EXP_DIR/broker_netstats/$HOST
+	done
+done
+
 $HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs

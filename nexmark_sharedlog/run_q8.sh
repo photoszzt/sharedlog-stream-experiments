@@ -7,7 +7,7 @@ WORKSPACE_DIR=$(realpath $SCRIPT_DIR/../../)
 # $WORKSPACE_DIR/research-helper-scripts/microservice_helper start-machines --use-spot-instances
 # cd ../..
 
-TPS_PER_WORKER=(8000)
+TPS_PER_WORKER=(4000)
 NUM_WORKER=(4)
 DURATION=180
 WARM_DURATION=0
