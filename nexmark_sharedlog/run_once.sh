@@ -156,9 +156,36 @@ ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name ${APP_NAME} \
     -stat_dir /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats -waitForLast=true \
     -tps $TPS -warmup_time $WARM_DURATION $FAIL_SPEC_ARG >$EXP_DIR/results.log 2>&1
 
+mkdir $EXP_DIR/sequencer_netstats
+ALL_SEQUENCER_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=sequencer_node)
+for HOST in $ALL_SEQUENCER_HOSTS; do
+	NETDEVS=$(ssh -q $HOST -oStrictHostKeyChecking=no -- ls /sys/class/net | grep -e ^e)
+	for NETDEV in $NETDEVS; do
+		ssh -q $HOST -oStrictHostKeyChecking=no -- ethtool -S $NETDEV >>$EXP_DIR/sequencer_netstats/$HOST
+	done
+done
+
+mkdir $EXP_DIR/engine_netstats
+ALL_ENGINE_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=engine_node)
+for HOST in $ALL_ENGINE_HOSTS; do
+	NETDEVS=$(ssh -q $HOST -oStrictHostKeyChecking=no -- ls /sys/class/net | grep -e ^e)
+	for NETDEV in $NETDEVS; do
+		ssh -q $HOST -oStrictHostKeyChecking=no -- ethtool -S $NETDEV >>$EXP_DIR/engine_netstats/$HOST
+	done
+done
+
+mkdir $EXP_DIR/storage_netstats
+ALL_STORAGE_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=storage_node)
+for HOST in $ALL_STORAGE_HOSTS; do
+	NETDEVS=$(ssh -q $HOST -oStrictHostKeyChecking=no -- ls /sys/class/net | grep -e ^e)
+	for NETDEV in $NETDEVS; do
+		ssh -q $HOST -oStrictHostKeyChecking=no -- ethtool -S $NETDEV >>$EXP_DIR/storage_netstats/$HOST
+	done
+done
+
 ssh -q $CLIENT_HOST -- "$WORKSPACE_DIR/sharedlog-stream-experiments/nexmark_sharedlog/zip_files.sh /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats"
 
 scp -r $CLIENT_HOST:/home/ubuntu/${APP_NAME}/${EXP_DIR}/stats ${EXP_DIR}
 
-# $HELPER_SCRIPT collect-func-output --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
-$HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
+$HELPER_SCRIPT collect-func-output --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
+# $HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs

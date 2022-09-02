@@ -7,7 +7,7 @@ cd q3_boki/mem
 $WORKSPACE_DIR/research-helper-scripts/microservice_helper start-machines --use-spot-instances
 cd ../..
 
-TPS_PER_WORKER=(1000 4000 16000 64000)
+TPS_PER_WORKER=(100000)
 NUM_WORKER=(4)
 DURATION=180
 WARM_DURATION=0
