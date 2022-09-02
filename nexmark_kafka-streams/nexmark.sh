@@ -241,6 +241,21 @@ done
 
 sleep 20
 
+ALL_SOURCE_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=source_node)
+ALL_APP_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=app_node)
+
+for HOST in $ALL_BROKER_HOSTS; do
+	ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
+done
+
+for HOST in $ALL_SOURCE_HOSTS; do
+	ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
+done
+
+for HOST in $ALL_APP_HOSTS; do
+	ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
+done
+
 pids=()
 i=0
 for ((j=0; j<$NUM_SRC_INSTANCE; j++)); do
@@ -265,11 +280,48 @@ for pid in ${pids[*]}; do
     wait $pid
 done
 
+for HOST in $ALL_BROKER_HOSTS; do
+	ssh -q $HOST -oStrictHostKeyChecking=no -- pkill sar
+	mkdir -p $EXP_DIR/broker_sar/$HOST
+	scp $HOST:/home/ubuntu/sar_st $EXP_DIR/broker_sar/$HOST
+	ssh -q $HOST -oStrictHostKeyChecking=no -- rm /home/ubuntu/sar_st
+done
+
+for HOST in $ALL_SOURCE_HOSTS; do
+	ssh -q $HOST -oStrictHostKeyChecking=no -- pkill sar
+	mkdir -p $EXP_DIR/source_sar/$HOST
+	scp $HOST:/home/ubuntu/sar_st $EXP_DIR/source_sar/$HOST
+	ssh -q $HOST -oStrictHostKeyChecking=no -- rm /home/ubuntu/sar_st
+done
+
+for HOST in $ALL_APP_HOSTS; do
+	ssh -q $HOST -oStrictHostKeyChecking=no -- pkill sar
+	mkdir -p $EXP_DIR/app_sar/$HOST
+	scp $HOST:/home/ubuntu/sar_st $EXP_DIR/app_sar/$HOST
+	ssh -q $HOST -oStrictHostKeyChecking=no -- rm /home/ubuntu/sar_st
+done
+
 mkdir $EXP_DIR/broker_netstats
 for HOST in ${ALL_BROKER_HOSTS[@]}; do
 	NETDEVS=$(ssh -q $HOST -oStrictHostKeyChecking=no -- ls /sys/class/net | grep -e ^e)
 	for NETDEV in $NETDEVS; do
 		ssh -q $HOST -oStrictHostKeyChecking=no -- ethtool -S $NETDEV >>$EXP_DIR/broker_netstats/$HOST
+	done
+done
+
+mkdir $EXP_DIR/source_netstats
+for HOST in ${ALL_SOURCE_HOSTS[@]}; do
+	NETDEVS=$(ssh -q $HOST -oStrictHostKeyChecking=no -- ls /sys/class/net | grep -e ^e)
+	for NETDEV in $NETDEVS; do
+		ssh -q $HOST -oStrictHostKeyChecking=no -- ethtool -S $NETDEV >>$EXP_DIR/source_netstats/$HOST
+	done
+done
+
+mkdir $EXP_DIR/app_netstats
+for HOST in ${ALL_SOURCE_HOSTS[@]}; do
+	NETDEVS=$(ssh -q $HOST -oStrictHostKeyChecking=no -- ls /sys/class/net | grep -e ^e)
+	for NETDEV in $NETDEVS; do
+		ssh -q $HOST -oStrictHostKeyChecking=no -- ethtool -S $NETDEV >>$EXP_DIR/app_netstats/$HOST
 	done
 done
 

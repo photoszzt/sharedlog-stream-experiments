@@ -161,7 +161,6 @@ ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name ${APP_NAME} \
     -stat_dir /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats -waitForLast=true \
     -tps $TPS -warmup_time $WARM_DURATION $FAIL_SPEC_ARG >$EXP_DIR/results.log 2>&1
 
-ALL_ENGINE_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=engine_node)
 for HOST in $ALL_ENGINE_HOSTS; do
 	ssh -q $HOST -oStrictHostKeyChecking=no -- pkill sar
 	mkdir -p $EXP_DIR/engine_sar/$HOST
