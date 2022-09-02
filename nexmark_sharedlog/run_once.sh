@@ -148,6 +148,11 @@ if [[ "$FAIL" = "true" ]]; then
     FAIL_SPEC_ARG="-fail_spec=$SRC_DIR/workload_config/${NUM_WORKER}_ins/failure_config/${APP_NAME}.json"
 fi
 
+ALL_ENGINE_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=engine_node)
+for HOST in $ALL_ENGINE_HOSTS; do
+	ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
+done
+
 ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name ${APP_NAME} \
     -faas_gateway $ENTRY_HOST:8080 -duration ${DURATION} -serde msgp \
     -guarantee $GUA -comm_everyMS ${FLUSH_MS} -flushms ${FLUSH_MS} \
@@ -155,6 +160,14 @@ ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name ${APP_NAME} \
     -wconfig $SRC_DIR/workload_config/${NUM_WORKER}_ins/${APP_NAME}.json \
     -stat_dir /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats -waitForLast=true \
     -tps $TPS -warmup_time $WARM_DURATION $FAIL_SPEC_ARG >$EXP_DIR/results.log 2>&1
+
+ALL_ENGINE_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=engine_node)
+for HOST in $ALL_ENGINE_HOSTS; do
+	ssh -q $HOST -oStrictHostKeyChecking=no -- pkill sar
+	mkdir -p $EXP_DIR/engine_sar/$HOST
+	scp $HOST:/home/ubuntu/sar_st $EXP_DIR/engine_sar/$HOST
+	ssh -q $HOST -oStrictHostKeyChecking=no -- rm /home/ubuntu/sar_st
+done
 
 mkdir $EXP_DIR/sequencer_netstats
 ALL_SEQUENCER_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=sequencer_node)
