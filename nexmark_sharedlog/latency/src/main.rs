@@ -1,5 +1,6 @@
 use std::fs::File;
 use std::io;
+use std::io::BufRead;
 use std::io::Read;
 use std::io::Write;
 use std::iter;
@@ -63,24 +64,48 @@ fn main() -> anyhow::Result<()> {
             }
             .map(|file| flate2::write::GzEncoder::new(file, flate2::Compression::default()))?;
 
+            let mut buffer = Vec::new();
+
             for input in inputs {
-                File::open(&input)
+                let mut reader = File::open(&input)
                     .map(flate2::read::GzDecoder::new)
-                    // Shouldn't need to parse entire JSON object here
-                    .map(serde_json::from_reader::<_, serde_json::Value>)
-                    .with_context(|| anyhow!("Could not open input file: {}", input.display()))??
-                    .get_mut("Latencies")
-                    .expect("Expected 'Latencies' key in metrics JSON")
-                    .get_mut("eventTimeLatency_sink")
-                    .expect("Expected 'eventTimeLatency_sink' key in metrics JSON")
-                    .as_array_mut()
-                    .map(|array| array.drain(..))
-                    .expect("Expected .Latencies.eventTimeLatency_sink to be an array")
-                    .map(|time| time.as_u64().expect("Expected latencies to be integers"))
-                    .map(|time| {
-                        u32::try_from(time).expect("Expected latencies to be below u32::MAX")
-                    })
-                    .try_for_each(|time| output.write_all(time.to_le_bytes().as_slice()))?;
+                    .map(io::BufReader::new)?;
+
+                reader.read_until(b'[', &mut buffer).expect("Expected '['");
+                buffer.clear();
+
+                let mut r#continue = true;
+
+                while r#continue {
+                    match reader.read_until(b',', &mut buffer) {
+                        Ok(_) => (),
+                        Err(error) if error.kind() == io::ErrorKind::UnexpectedEof => (),
+                        Err(error) => return Err(anyhow::Error::from(error)),
+                    };
+
+                    // Remove trailing delimiter (,)
+                    buffer.pop();
+
+                    // Remove non-numeric characters
+                    loop {
+                        match buffer.last() {
+                            None | Some(b'0'..=b'9') => break,
+                            Some(_) => {
+                                r#continue = false;
+                                buffer.pop();
+                            }
+                        }
+                    }
+
+                    let time = std::str::from_utf8(&buffer)
+                        .expect("Expected valid UTF-8")
+                        .parse::<u32>()
+                        .expect("Expected unsigned integer")
+                        .to_le_bytes();
+
+                    buffer.clear();
+                    output.write_all(&time)?;
+                }
             }
         }
 
