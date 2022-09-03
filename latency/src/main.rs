@@ -1,6 +1,5 @@
 use std::fs::File;
 use std::io;
-use std::io::BufRead;
 use std::iter;
 use std::path::PathBuf;
 
@@ -40,52 +39,18 @@ fn main() -> anyhow::Result<()> {
 
     match command {
         Command::Compress { inputs, output } => {
-            let mut output = latency::writer(output.as_deref())
-                .map(|file| flate2::write::GzEncoder::new(file, flate2::Compression::default()))?;
-
-            let mut buffer = Vec::new();
-            let mut histogram = Histogram::<u32>::new_with_max(u32::MAX as u64, 3)?;
+            let mut histogram = Histogram::new_with_max(u32::MAX as u64, 3)?;
 
             for input in inputs {
                 let mut reader = File::open(&input)
                     .map(flate2::read::GzDecoder::new)
                     .map(io::BufReader::new)?;
 
-                reader.read_until(b'[', &mut buffer).expect("Expected '['");
-                buffer.clear();
-
-                let mut r#continue = true;
-
-                while r#continue {
-                    match reader.read_until(b',', &mut buffer) {
-                        Ok(_) => (),
-                        Err(error) if error.kind() == io::ErrorKind::UnexpectedEof => (),
-                        Err(error) => return Err(anyhow::Error::from(error)),
-                    };
-
-                    // Remove trailing delimiter (,)
-                    buffer.pop();
-
-                    // Remove non-numeric characters
-                    loop {
-                        match buffer.last() {
-                            None | Some(b'0'..=b'9') => break,
-                            Some(_) => {
-                                r#continue = false;
-                                buffer.pop();
-                            }
-                        }
-                    }
-
-                    let time = std::str::from_utf8(&buffer)
-                        .expect("Expected valid UTF-8")
-                        .parse::<u32>()
-                        .expect("Expected unsigned integer");
-
-                    buffer.clear();
-                    histogram.record(time as u64)?;
-                }
+                latency::compress(&mut reader, &mut histogram)?;
             }
+
+            let mut output = latency::writer(output.as_deref())
+                .map(|file| flate2::write::GzEncoder::new(file, flate2::Compression::default()))?;
 
             V2Serializer::new().serialize(&histogram, &mut output)?;
         }
