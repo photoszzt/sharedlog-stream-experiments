@@ -60,25 +60,19 @@ fn main() -> anyhow::Result<()> {
 
         Command::Query(input) => {
             let mut histogram = Histogram::<u32>::new_with_max(u32::MAX as u64, 3)?;
-            let mut input = fs::File::open(&input).map(flate2::read::GzDecoder::new)?;
-            let mut buffer = [0u8; 1024];
-            let mut total = 0;
+            let mut input = File::open(&input)
+                .map(flate2::read::GzDecoder::new)
+                .with_context(|| anyhow!("Could not open input file: {}", input.display()))?;
 
+            let mut buffer = [0u8; 4];
             loop {
-                match input.read(&mut buffer)? {
-                    0 => break,
-                    length => {
-                        total += length;
-                        buffer
-                            .chunks(4)
-                            .take(length >> 2)
-                            .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
-                            .try_for_each(|time| histogram.record(time as u64))?;
-                    }
+                match input.read_exact(&mut buffer) {
+                    Ok(()) => histogram.record(u32::from_le_bytes(buffer) as u64)?,
+                    Err(error) if error.kind() == io::ErrorKind::UnexpectedEof => break,
+                    Err(error) => return Err(anyhow::Error::from(error)),
                 }
             }
 
-            assert_eq!(total % 4, 0);
             println!("mean:  {:.03}ms", histogram.mean());
             println!("stdev: {:.03}ms", histogram.stdev());
             println!("min:   {}ms", histogram.min());
