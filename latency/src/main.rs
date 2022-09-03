@@ -18,6 +18,7 @@ enum Command {
     },
     Query {
         inputs: Vec<PathBuf>,
+        merge: bool,
         pretty: bool,
     },
     Scan {
@@ -43,8 +44,15 @@ fn main() -> anyhow::Result<()> {
         },
         Some("query") => Command::Query {
             pretty: arguments.contains("--pretty"),
+            merge: arguments.contains("--merge"),
             inputs: iter::from_fn(|| arguments.opt_free_from_str().transpose())
-                .collect::<Result<Vec<_>, _>>()?,
+                .collect::<Result<Vec<_>, _>>()
+                .map(|mut inputs| {
+                    if inputs.is_empty() {
+                        inputs.push(PathBuf::from("-"));
+                    }
+                    inputs
+                })?,
         },
         None | Some(_) => return Err(anyhow!("Expected one of [compress, scan, query]")),
     };
@@ -132,11 +140,32 @@ fn main() -> anyhow::Result<()> {
             }
         }
 
-        Command::Query { mut inputs, pretty } => {
-            if inputs.is_empty() {
-                inputs.push(PathBuf::from("-"));
-            }
+        Command::Query {
+            inputs,
+            merge: false,
+            pretty,
+        } => {
+            for input in inputs {
+                let histogram = read_histogram(latency::reader(Some(&input))?)?;
 
+                let input = input.to_string_lossy();
+                let (delivery, tps) = input
+                    .split_once('-')
+                    .and_then(|(delivery, next)| {
+                        let (tps, _) = next.split_once('-')?;
+                        Some((delivery, tps))
+                    })
+                    .unwrap_or(("?", "?"));
+
+                report_histogram(&histogram, delivery, tps, pretty);
+            }
+        }
+
+        Command::Query {
+            inputs,
+            merge: true,
+            pretty,
+        } => {
             let mut histogram = new_histogram()?;
             let mut delivery = None;
             let mut tps = None;
