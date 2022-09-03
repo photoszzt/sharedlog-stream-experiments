@@ -81,7 +81,7 @@ fn main() -> anyhow::Result<()> {
                 let name = name.to_string_lossy();
                 let time = entry
                     .metadata()?
-                    .created()?
+                    .modified()?
                     .duration_since(time::UNIX_EPOCH)?
                     .as_secs();
 
@@ -100,10 +100,12 @@ fn main() -> anyhow::Result<()> {
                 let cache = match output.as_deref() {
                     None => None,
                     Some(path) => {
+                        let path = path.join(format!("{}-{}-{}.hist.gz", delivery, tps, time));
                         let file = File::options()
+                            .read(true)
                             .create(true)
                             .write(true)
-                            .open(path.join(format!("{}-{}-{}.hist.gz", delivery, tps, time)))?;
+                            .open(path)?;
 
                         // Short-circuit with cached histogram
                         if file.metadata()?.len() > 0 {
