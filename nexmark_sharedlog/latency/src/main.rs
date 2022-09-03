@@ -1,4 +1,5 @@
-use std::fs;
+use std::fs::File;
+use std::io;
 use std::io::Read;
 use std::io::Write;
 use std::iter;
@@ -11,9 +12,30 @@ use hdrhistogram::Histogram;
 enum Command {
     Compress {
         inputs: Vec<PathBuf>,
-        output: PathBuf,
+        output: Option<String>,
     },
     Query(PathBuf),
+}
+
+enum Or<L, R> {
+    L(L),
+    R(R),
+}
+
+impl<L: Write, R: Write> Write for Or<L, R> {
+    fn write(&mut self, buffer: &[u8]) -> io::Result<usize> {
+        match self {
+            Or::L(left) => left.write(buffer),
+            Or::R(right) => right.write(buffer),
+        }
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        match self {
+            Or::L(left) => left.flush(),
+            Or::R(right) => right.flush(),
+        }
+    }
 }
 
 fn main() -> anyhow::Result<()> {
@@ -21,7 +43,7 @@ fn main() -> anyhow::Result<()> {
 
     let command = match arguments.subcommand()?.as_deref() {
         Some("compress") => Command::Compress {
-            output: arguments.value_from_str("--output")?,
+            output: arguments.opt_value_from_str("--output")?,
             inputs: iter::from_fn(|| arguments.opt_free_from_str().transpose())
                 .collect::<Result<Vec<_>, _>>()?,
         },
@@ -31,18 +53,22 @@ fn main() -> anyhow::Result<()> {
 
     match command {
         Command::Compress { inputs, output } => {
-            let mut output = fs::File::options()
-                .write(true)
-                .create_new(true)
-                .open(output)
-                .map(|file| flate2::write::GzEncoder::new(file, flate2::Compression::default()))?;
+            let mut output = match output.as_deref() {
+                None | Some("-") => Ok(Or::L(io::stdout().lock())),
+                Some(path) => File::options()
+                    .write(true)
+                    .create_new(true)
+                    .open(path)
+                    .map(Or::R),
+            }
+            .map(|file| flate2::write::GzEncoder::new(file, flate2::Compression::default()))?;
 
             for input in inputs {
-                fs::File::open(&input)
+                File::open(&input)
                     .map(flate2::read::GzDecoder::new)
                     // Shouldn't need to parse entire JSON object here
                     .map(serde_json::from_reader::<_, serde_json::Value>)
-                    .with_context(|| anyhow!("Could not open input file: `{}`", input.display()))??
+                    .with_context(|| anyhow!("Could not open input file: {}", input.display()))??
                     .get_mut("Latencies")
                     .expect("Expected 'Latencies' key in metrics JSON")
                     .get_mut("eventTimeLatency_sink")
