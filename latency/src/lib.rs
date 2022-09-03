@@ -1,6 +1,6 @@
 mod compress;
 
-pub use compress::compress;
+pub use compress::compress_file;
 
 use std::fs::File;
 use std::io;

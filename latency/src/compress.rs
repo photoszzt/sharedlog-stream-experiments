@@ -1,11 +1,20 @@
+use std::fs::File;
 use std::io;
 use std::io::BufRead;
+use std::path::Path;
 
 use anyhow::Context as _;
 use hdrhistogram::Histogram;
 
+pub fn compress_file<P: AsRef<Path>>(input: P, output: &mut Histogram<u32>) -> anyhow::Result<()> {
+    File::open(input)
+        .map(flate2::read::GzDecoder::new)
+        .map(io::BufReader::new)
+        .map(|reader| compress_reader(reader, output))?
+}
+
 /// Parse Sys/Boki raw latency output and compress it into an HDR histogram.
-pub fn compress<R: BufRead>(mut input: R, output: &mut Histogram<u32>) -> anyhow::Result<()> {
+fn compress_reader<R: BufRead>(mut input: R, output: &mut Histogram<u32>) -> anyhow::Result<()> {
     let mut buffer = Vec::new();
 
     input
