@@ -1,7 +1,6 @@
 use std::fs::File;
 use std::io;
 use std::io::BufRead;
-use std::io::Write;
 use std::iter;
 use std::path::PathBuf;
 
@@ -15,33 +14,12 @@ use hdrhistogram::Histogram;
 enum Command {
     Compress {
         inputs: Vec<PathBuf>,
-        output: Option<String>,
+        output: Option<PathBuf>,
     },
     Query {
-        input: PathBuf,
+        input: Option<PathBuf>,
         pretty: bool,
     },
-}
-
-enum Or<L, R> {
-    L(L),
-    R(R),
-}
-
-impl<L: Write, R: Write> Write for Or<L, R> {
-    fn write(&mut self, buffer: &[u8]) -> io::Result<usize> {
-        match self {
-            Or::L(left) => left.write(buffer),
-            Or::R(right) => right.write(buffer),
-        }
-    }
-
-    fn flush(&mut self) -> io::Result<()> {
-        match self {
-            Or::L(left) => left.flush(),
-            Or::R(right) => right.flush(),
-        }
-    }
 }
 
 fn main() -> anyhow::Result<()> {
@@ -55,22 +33,15 @@ fn main() -> anyhow::Result<()> {
         },
         Some("query") => Command::Query {
             pretty: arguments.contains("--pretty"),
-            input: arguments.free_from_str()?,
+            input: arguments.opt_free_from_str()?,
         },
         None | Some(_) => return Err(anyhow!("Expected one of [compress, decompress]")),
     };
 
     match command {
         Command::Compress { inputs, output } => {
-            let mut output = match output.as_deref() {
-                None | Some("-") => Ok(Or::L(io::stdout().lock())),
-                Some(path) => File::options()
-                    .write(true)
-                    .create_new(true)
-                    .open(path)
-                    .map(Or::R),
-            }
-            .map(|file| flate2::write::GzEncoder::new(file, flate2::Compression::default()))?;
+            let mut output = latency::writer(output.as_deref())
+                .map(|file| flate2::write::GzEncoder::new(file, flate2::Compression::default()))?;
 
             let mut buffer = Vec::new();
             let mut histogram = Histogram::<u32>::new_with_max(u32::MAX as u64, 3)?;
@@ -120,9 +91,9 @@ fn main() -> anyhow::Result<()> {
         }
 
         Command::Query { input, pretty } => {
-            let mut input = File::open(&input)
+            let mut input = latency::reader(input.as_deref())
                 .map(flate2::read::GzDecoder::new)
-                .with_context(|| anyhow!("Could not open input file: {}", input.display()))?;
+                .with_context(|| anyhow!("Could not open input file: {:?}", input))?;
 
             let histogram = Deserializer::new().deserialize::<u32, _>(&mut input)?;
 
