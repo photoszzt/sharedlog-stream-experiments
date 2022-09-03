@@ -1,8 +1,12 @@
+use std::fs::File;
+use std::io::Read;
+use std::io::Write;
 use std::iter;
+use std::path::Path;
 use std::path::PathBuf;
+use std::time;
 
 use anyhow::anyhow;
-use anyhow::Context;
 use hdrhistogram::serialization::Deserializer;
 use hdrhistogram::serialization::Serializer as _;
 use hdrhistogram::serialization::V2Serializer;
@@ -71,6 +75,11 @@ fn main() -> anyhow::Result<()> {
             for entry in input.read_dir()?.filter_map(Result::ok) {
                 let name = entry.file_name();
                 let name = name.to_string_lossy();
+                let time = entry
+                    .metadata()?
+                    .created()?
+                    .duration_since(time::UNIX_EPOCH)?
+                    .as_secs();
 
                 let delivery = if name.ends_with("alo") {
                     "alo"
@@ -81,7 +90,27 @@ fn main() -> anyhow::Result<()> {
                 };
 
                 let (tps, _) = name.split_once("tps_").expect("Expected `tps_` delimiter");
+
                 let mut histogram = Histogram::new_with_max(MAX_LATENCY, SIG_FIGURES)?;
+
+                let cache = match output.as_deref() {
+                    None => None,
+                    Some(path) => {
+                        let file = File::options()
+                            .create(true)
+                            .write(true)
+                            .open(path.join(format!("{}-{}-{}.hist.gz", delivery, tps, time)))?;
+
+                        // Short-circuit with cached histogram
+                        if file.metadata()?.len() > 0 {
+                            let histogram = read_histogram(file)?;
+                            report_histogram(&histogram, delivery, tps, false);
+                            continue;
+                        }
+
+                        Some(file)
+                    }
+                };
 
                 for entry in entry
                     .path()
@@ -99,27 +128,49 @@ fn main() -> anyhow::Result<()> {
                     latency::compress_file(entry.path(), &mut histogram)?;
                 }
 
-                print!("{},{},", delivery, tps);
-                report(&histogram, false);
+                report_histogram(&histogram, delivery, tps, false);
+
+                if let Some(file) = cache {
+                    write_histogram(file, &histogram)?;
+                }
             }
         }
 
         Command::Query { input, pretty } => {
-            let mut input = latency::reader(input.as_deref())
-                .map(flate2::read::GzDecoder::new)
-                .with_context(|| anyhow!("Could not open input file: {:?}", input))?;
+            let path = input.as_deref().unwrap_or_else(|| Path::new(""));
+            let path = path.to_string_lossy();
+            let (delivery, tps) = path
+                .split_once('-')
+                .and_then(|(delivery, next)| {
+                    let (tps, _) = next.split_once('-')?;
+                    Some((delivery, tps))
+                })
+                .unwrap_or(("?", "?"));
 
-            let histogram = Deserializer::new().deserialize::<u32, _>(&mut input)?;
-
-            report(&histogram, pretty);
+            let histogram = read_histogram(latency::reader(input.as_deref())?)?;
+            report_histogram(&histogram, delivery, tps, pretty);
         }
     }
 
     Ok(())
 }
 
-fn report(histogram: &Histogram<u32>, pretty: bool) {
+fn read_histogram<R: Read>(reader: R) -> anyhow::Result<Histogram<u32>> {
+    let mut reader = flate2::read::GzDecoder::new(reader);
+    let histogram = Deserializer::new().deserialize(&mut reader)?;
+    Ok(histogram)
+}
+
+fn write_histogram<W: Write>(writer: W, histogram: &Histogram<u32>) -> anyhow::Result<()> {
+    let mut writer = flate2::write::GzEncoder::new(writer, flate2::Compression::default());
+    V2Serializer::new().serialize(histogram, &mut writer)?;
+    Ok(())
+}
+
+fn report_histogram(histogram: &Histogram<u32>, delivery: &str, tps: &str, pretty: bool) {
     if pretty {
+        println!("del: {}", delivery);
+        println!("tps: {}", tps);
         println!("avg: {:.03}ms", histogram.mean());
         println!("std: {:.03}ms", histogram.stdev());
         println!("min: {}ms", histogram.min());
@@ -131,7 +182,9 @@ fn report(histogram: &Histogram<u32>, pretty: bool) {
         println!("max: {}ms", histogram.max());
     } else {
         println!(
-            "{:.03},{:.03},{},{},{},{},{},{},{}",
+            "{},{},{:.03},{:.03},{},{},{},{},{},{},{}",
+            delivery,
+            tps,
             histogram.mean(),
             histogram.stdev(),
             histogram.min(),
