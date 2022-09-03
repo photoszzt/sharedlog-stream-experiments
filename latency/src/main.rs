@@ -230,15 +230,16 @@ fn report_histogram(histogram: &Histogram<u32>, delivery: &str, tps: &str, prett
     if pretty {
         println!("del: {}", delivery);
         println!("tps: {}", tps);
-        println!("avg: {:.03}ms", histogram.mean());
-        println!("std: {:.03}ms", histogram.stdev());
-        println!("min: {}ms", histogram.min());
-        println!("p25: {}ms", histogram.value_at_quantile(0.25));
-        println!("p50: {}ms", histogram.value_at_quantile(0.50));
-        println!("p75: {}ms", histogram.value_at_quantile(0.75));
-        println!("p90: {}ms", histogram.value_at_quantile(0.90));
-        println!("p99: {}ms", histogram.value_at_quantile(0.99));
-        println!("max: {}ms", histogram.max());
+        println!("\tavg: {:.03}ms", histogram.mean());
+        println!("\tstd: {:.03}ms", histogram.stdev());
+        println!("\tmin: {}ms", histogram.min());
+        println!("\tp25: {}ms", histogram.value_at_quantile(0.25));
+        println!("\tp50: {}ms", histogram.value_at_quantile(0.50));
+        println!("\tp75: {}ms", histogram.value_at_quantile(0.75));
+        println!("\tp90: {}ms", histogram.value_at_quantile(0.90));
+        println!("\tp99: {}ms", histogram.value_at_quantile(0.99));
+        println!("\tmax: {}ms", histogram.max());
+        println!();
     } else {
         println!(
             "{},{},{:.03},{:.03},{},{},{},{},{},{},{}",
