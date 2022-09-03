@@ -2,7 +2,6 @@ use std::fs::File;
 use std::io::Read;
 use std::io::Write;
 use std::iter;
-use std::path::Path;
 use std::path::PathBuf;
 use std::time;
 
@@ -18,7 +17,7 @@ enum Command {
         output: Option<PathBuf>,
     },
     Query {
-        input: Option<PathBuf>,
+        inputs: Vec<PathBuf>,
         pretty: bool,
     },
     Scan {
@@ -27,10 +26,6 @@ enum Command {
         prefix: String,
     },
 }
-
-// Note: maximum latency should definitely be below 15 minutes
-const MAX_LATENCY: u64 = 1_000 * 60 * 15;
-const SIG_FIGURES: u8 = 3;
 
 fn main() -> anyhow::Result<()> {
     let mut arguments = pico_args::Arguments::from_env();
@@ -48,14 +43,15 @@ fn main() -> anyhow::Result<()> {
         },
         Some("query") => Command::Query {
             pretty: arguments.contains("--pretty"),
-            input: arguments.opt_free_from_str()?,
+            inputs: iter::from_fn(|| arguments.opt_free_from_str().transpose())
+                .collect::<Result<Vec<_>, _>>()?,
         },
         None | Some(_) => return Err(anyhow!("Expected one of [compress, scan, query]")),
     };
 
     match command {
         Command::Compress { inputs, output } => {
-            let mut histogram = Histogram::new_with_max(MAX_LATENCY, SIG_FIGURES)?;
+            let mut histogram = new_histogram()?;
 
             for input in inputs {
                 latency::compress_file(input, &mut histogram)?;
@@ -91,7 +87,7 @@ fn main() -> anyhow::Result<()> {
 
                 let (tps, _) = name.split_once("tps_").expect("Expected `tps_` delimiter");
 
-                let mut histogram = Histogram::new_with_max(MAX_LATENCY, SIG_FIGURES)?;
+                let mut histogram = new_histogram()?;
 
                 let cache = match output.as_deref() {
                     None => None,
@@ -136,23 +132,55 @@ fn main() -> anyhow::Result<()> {
             }
         }
 
-        Command::Query { input, pretty } => {
-            let path = input.as_deref().unwrap_or_else(|| Path::new(""));
-            let path = path.to_string_lossy();
-            let (delivery, tps) = path
-                .split_once('-')
-                .and_then(|(delivery, next)| {
+        Command::Query { mut inputs, pretty } => {
+            if inputs.is_empty() {
+                inputs.push(PathBuf::from("-"));
+            }
+
+            let mut histogram = new_histogram()?;
+            let mut delivery = None;
+            let mut tps = None;
+
+            for input in inputs {
+                let partial_histogram = read_histogram(latency::reader(Some(&input))?)?;
+
+                let input = input.to_string_lossy();
+                let metadata = input.split_once('-').and_then(|(delivery, next)| {
                     let (tps, _) = next.split_once('-')?;
                     Some((delivery, tps))
-                })
-                .unwrap_or(("?", "?"));
+                });
 
-            let histogram = read_histogram(latency::reader(input.as_deref())?)?;
-            report_histogram(&histogram, delivery, tps, pretty);
+                // Sanity check: all partial histograms should have the same
+                // delivery semantics and TPS.
+                if let Some((partial_delivery, partial_tps)) = metadata {
+                    assert_eq!(
+                        delivery.get_or_insert_with(|| partial_delivery.to_owned()),
+                        partial_delivery,
+                    );
+                    assert_eq!(
+                        tps.get_or_insert_with(|| partial_tps.to_owned()),
+                        partial_tps,
+                    );
+                }
+
+                histogram.add(&partial_histogram)?;
+            }
+
+            report_histogram(
+                &histogram,
+                delivery.as_deref().unwrap_or("?"),
+                tps.as_deref().unwrap_or("?"),
+                pretty,
+            );
         }
     }
 
     Ok(())
+}
+
+fn new_histogram() -> anyhow::Result<Histogram<u32>> {
+    // Note: maximum latency should definitely be below 15 minutes
+    Histogram::new_with_max(1_000 * 60 * 15, 3).map_err(anyhow::Error::from)
 }
 
 fn read_histogram<R: Read>(reader: R) -> anyhow::Result<Histogram<u32>> {
