@@ -65,10 +65,7 @@ fn main() -> anyhow::Result<()> {
                 latency::compress_file(input, &mut histogram)?;
             }
 
-            let mut output = latency::writer(output.as_deref())
-                .map(|file| flate2::write::GzEncoder::new(file, flate2::Compression::default()))?;
-
-            V2Serializer::new().serialize(&histogram, &mut output)?;
+            write_histogram(latency::writer(output.as_deref())?, &histogram)?;
         }
 
         Command::Scan {
