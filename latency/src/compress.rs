@@ -47,6 +47,7 @@ fn compress_reader<R: BufRead>(mut input: R, output: &mut Histogram<u32>) -> any
 
         let time = std::str::from_utf8(&buffer)
             .context("Expected valid UTF-8")?
+            .trim()
             .parse::<u32>()
             .context("Expected unsigned integer")?;
 
