@@ -1,13 +1,15 @@
 use std::fs::File;
 use std::io;
 use std::io::BufRead;
-use std::io::Read;
 use std::io::Write;
 use std::iter;
 use std::path::PathBuf;
 
 use anyhow::anyhow;
 use anyhow::Context;
+use hdrhistogram::serialization::Deserializer;
+use hdrhistogram::serialization::Serializer as _;
+use hdrhistogram::serialization::V2Serializer;
 use hdrhistogram::Histogram;
 
 enum Command {
@@ -71,6 +73,7 @@ fn main() -> anyhow::Result<()> {
             .map(|file| flate2::write::GzEncoder::new(file, flate2::Compression::default()))?;
 
             let mut buffer = Vec::new();
+            let mut histogram = Histogram::<u32>::new_with_max(u32::MAX as u64, 3)?;
 
             for input in inputs {
                 let mut reader = File::open(&input)
@@ -106,29 +109,22 @@ fn main() -> anyhow::Result<()> {
                     let time = std::str::from_utf8(&buffer)
                         .expect("Expected valid UTF-8")
                         .parse::<u32>()
-                        .expect("Expected unsigned integer")
-                        .to_le_bytes();
+                        .expect("Expected unsigned integer");
 
                     buffer.clear();
-                    output.write_all(&time)?;
+                    histogram.record(time as u64)?;
                 }
             }
+
+            V2Serializer::new().serialize(&histogram, &mut output)?;
         }
 
         Command::Query { input, pretty } => {
-            let mut histogram = Histogram::<u32>::new_with_max(u32::MAX as u64, 3)?;
             let mut input = File::open(&input)
                 .map(flate2::read::GzDecoder::new)
                 .with_context(|| anyhow!("Could not open input file: {}", input.display()))?;
 
-            let mut buffer = [0u8; 4];
-            loop {
-                match input.read_exact(&mut buffer) {
-                    Ok(()) => histogram.record(u32::from_le_bytes(buffer) as u64)?,
-                    Err(error) if error.kind() == io::ErrorKind::UnexpectedEof => break,
-                    Err(error) => return Err(anyhow::Error::from(error)),
-                }
-            }
+            let histogram = Deserializer::new().deserialize::<u32, _>(&mut input)?;
 
             if pretty {
                 println!("avg: {:.03}ms", histogram.mean());
