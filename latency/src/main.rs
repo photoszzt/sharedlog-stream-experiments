@@ -39,7 +39,8 @@ fn main() -> anyhow::Result<()> {
 
     match command {
         Command::Compress { inputs, output } => {
-            let mut histogram = Histogram::new_with_max(u32::MAX as u64, 3)?;
+            // Note: maximum latency should definitely be below 15 minutes
+            let mut histogram = Histogram::new_with_max(1_000 * 60 * 15, 3)?;
 
             for input in inputs {
                 let mut reader = File::open(&input)
