@@ -11,53 +11,8 @@ use hdrhistogram::serialization::Serializer as _;
 use hdrhistogram::serialization::V2Serializer;
 use hdrhistogram::Histogram;
 
-enum Command {
-    Compress {
-        inputs: Vec<PathBuf>,
-        output: Option<PathBuf>,
-    },
-    Query {
-        inputs: Vec<PathBuf>,
-        merge: bool,
-        pretty: bool,
-    },
-    Scan {
-        input: PathBuf,
-        output: Option<PathBuf>,
-        prefix: String,
-    },
-}
-
 fn main() -> anyhow::Result<()> {
-    let mut arguments = pico_args::Arguments::from_env();
-
-    let command = match arguments.subcommand()?.as_deref() {
-        Some("compress") => Command::Compress {
-            output: arguments.opt_value_from_str("--output")?,
-            inputs: iter::from_fn(|| arguments.opt_free_from_str().transpose())
-                .collect::<Result<Vec<_>, _>>()?,
-        },
-        Some("scan") => Command::Scan {
-            output: arguments.opt_value_from_str("--output")?,
-            prefix: arguments.value_from_str("--prefix")?,
-            input: arguments.free_from_str()?,
-        },
-        Some("query") => Command::Query {
-            pretty: arguments.contains("--pretty"),
-            merge: arguments.contains("--merge"),
-            inputs: iter::from_fn(|| arguments.opt_free_from_str().transpose())
-                .collect::<Result<Vec<_>, _>>()
-                .map(|mut inputs| {
-                    if inputs.is_empty() {
-                        inputs.push(PathBuf::from("-"));
-                    }
-                    inputs
-                })?,
-        },
-        None | Some(_) => return Err(anyhow!("Expected one of [compress, scan, query]")),
-    };
-
-    match command {
+    match Command::parse()? {
         Command::Compress { inputs, output } => {
             let mut histogram = new_histogram()?;
 
@@ -204,6 +159,65 @@ fn main() -> anyhow::Result<()> {
     }
 
     Ok(())
+}
+
+enum Command {
+    /// Compress raw gzipped logs into gzipped HDR histograms.
+    Compress {
+        inputs: Vec<PathBuf>,
+        output: Option<PathBuf>,
+    },
+
+    /// Print aggregate statistics from a gzipped HDR histogram.
+    Query {
+        inputs: Vec<PathBuf>,
+        merge: bool,
+        pretty: bool,
+    },
+
+    /// Compress and report all aggregate statistics from experiment directory `input`.
+    ///
+    /// Only collects statistics from log files beginning with `prefix`.
+    /// Optionally cache histograms under directory `output`.
+    Scan {
+        input: PathBuf,
+        output: Option<PathBuf>,
+        prefix: String,
+    },
+}
+
+impl Command {
+    pub fn parse() -> anyhow::Result<Self> {
+        let mut arguments = pico_args::Arguments::from_env();
+
+        let command = match arguments.subcommand()?.as_deref() {
+            Some("compress") => Command::Compress {
+                output: arguments.opt_value_from_str("--output")?,
+                inputs: iter::from_fn(|| arguments.opt_free_from_str().transpose())
+                    .collect::<Result<Vec<_>, _>>()?,
+            },
+            Some("scan") => Command::Scan {
+                output: arguments.opt_value_from_str("--output")?,
+                prefix: arguments.value_from_str("--prefix")?,
+                input: arguments.free_from_str()?,
+            },
+            Some("query") => Command::Query {
+                pretty: arguments.contains("--pretty"),
+                merge: arguments.contains("--merge"),
+                inputs: iter::from_fn(|| arguments.opt_free_from_str().transpose())
+                    .collect::<Result<Vec<_>, _>>()
+                    .map(|mut inputs| {
+                        if inputs.is_empty() {
+                            inputs.push(PathBuf::from("-"));
+                        }
+                        inputs
+                    })?,
+            },
+            None | Some(_) => return Err(anyhow!("Expected one of [compress, scan, query]")),
+        };
+
+        Ok(command)
+    }
 }
 
 fn new_histogram() -> anyhow::Result<Histogram<u32>> {
