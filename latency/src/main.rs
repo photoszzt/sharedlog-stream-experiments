@@ -15,7 +15,10 @@ enum Command {
         inputs: Vec<PathBuf>,
         output: Option<String>,
     },
-    Query(PathBuf),
+    Query {
+        input: PathBuf,
+        pretty: bool,
+    },
 }
 
 enum Or<L, R> {
@@ -48,7 +51,10 @@ fn main() -> anyhow::Result<()> {
             inputs: iter::from_fn(|| arguments.opt_free_from_str().transpose())
                 .collect::<Result<Vec<_>, _>>()?,
         },
-        Some("query") => Command::Query(arguments.free_from_str()?),
+        Some("query") => Command::Query {
+            pretty: arguments.contains("--pretty"),
+            input: arguments.free_from_str()?,
+        },
         None | Some(_) => return Err(anyhow!("Expected one of [compress, decompress]")),
     };
 
@@ -109,7 +115,7 @@ fn main() -> anyhow::Result<()> {
             }
         }
 
-        Command::Query(input) => {
+        Command::Query { input, pretty } => {
             let mut histogram = Histogram::<u32>::new_with_max(u32::MAX as u64, 3)?;
             let mut input = File::open(&input)
                 .map(flate2::read::GzDecoder::new)
@@ -124,15 +130,30 @@ fn main() -> anyhow::Result<()> {
                 }
             }
 
-            println!("mean:  {:.03}ms", histogram.mean());
-            println!("stdev: {:.03}ms", histogram.stdev());
-            println!("min:   {}ms", histogram.min());
-            println!("p25:   {}ms", histogram.value_at_quantile(0.25));
-            println!("p50:   {}ms", histogram.value_at_quantile(0.50));
-            println!("p75:   {}ms", histogram.value_at_quantile(0.75));
-            println!("p90:   {}ms", histogram.value_at_quantile(0.90));
-            println!("p99:   {}ms", histogram.value_at_quantile(0.99));
-            println!("max:   {}ms", histogram.max());
+            if pretty {
+                println!("avg: {:.03}ms", histogram.mean());
+                println!("std: {:.03}ms", histogram.stdev());
+                println!("min: {}ms", histogram.min());
+                println!("p25: {}ms", histogram.value_at_quantile(0.25));
+                println!("p50: {}ms", histogram.value_at_quantile(0.50));
+                println!("p75: {}ms", histogram.value_at_quantile(0.75));
+                println!("p90: {}ms", histogram.value_at_quantile(0.90));
+                println!("p99: {}ms", histogram.value_at_quantile(0.99));
+                println!("max: {}ms", histogram.max());
+            } else {
+                println!(
+                    "{:.03},{:.03},{},{},{},{},{},{},{}",
+                    histogram.mean(),
+                    histogram.stdev(),
+                    histogram.min(),
+                    histogram.value_at_quantile(0.25),
+                    histogram.value_at_quantile(0.50),
+                    histogram.value_at_quantile(0.75),
+                    histogram.value_at_quantile(0.90),
+                    histogram.value_at_quantile(0.99),
+                    histogram.max(),
+                );
+            }
         }
     }
 
