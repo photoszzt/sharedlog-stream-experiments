@@ -248,6 +248,7 @@ fn report_histogram(histogram: &Histogram<u32>, delivery: &str, tps: &str, prett
     if pretty {
         println!("del: {}", delivery);
         println!("tps: {}", tps);
+        println!("\tlen: {}", histogram.len());
         println!("\tavg: {:.03}ms", histogram.mean());
         println!("\tstd: {:.03}ms", histogram.stdev());
         println!("\tmin: {}ms", histogram.min());
@@ -260,9 +261,10 @@ fn report_histogram(histogram: &Histogram<u32>, delivery: &str, tps: &str, prett
         println!();
     } else {
         println!(
-            "{},{},{:.03},{:.03},{},{},{},{},{},{},{}",
+            "{},{},{},{:.03},{:.03},{},{},{},{},{},{},{}",
             delivery,
             tps,
+            histogram.len(),
             histogram.mean(),
             histogram.stdev(),
             histogram.min(),
