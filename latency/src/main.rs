@@ -6,6 +6,7 @@ use std::path::PathBuf;
 use std::time;
 
 use anyhow::anyhow;
+use anyhow::Context as _;
 use hdrhistogram::serialization::Deserializer;
 use hdrhistogram::serialization::Serializer as _;
 use hdrhistogram::serialization::V2Serializer;
@@ -57,7 +58,8 @@ fn main() -> anyhow::Result<()> {
                             .read(true)
                             .create(true)
                             .write(true)
-                            .open(path)?;
+                            .open(&path)
+                            .with_context(|| anyhow!("Failed to open file: {}", path.display()))?;
 
                         // Short-circuit with cached histogram
                         if file.metadata()?.len() > 0 {
@@ -70,10 +72,11 @@ fn main() -> anyhow::Result<()> {
                     }
                 };
 
-                for entry in entry
-                    .path()
-                    .join("stats")
-                    .read_dir()?
+                let stats = entry.path().join("stats");
+
+                for entry in stats
+                    .read_dir()
+                    .with_context(|| anyhow!("Failed to read directory: {}", stats.display()))?
                     .filter_map(Result::ok)
                 {
                     let name = entry.file_name();
@@ -227,13 +230,17 @@ fn new_histogram() -> anyhow::Result<Histogram<u32>> {
 
 fn read_histogram<R: Read>(reader: R) -> anyhow::Result<Histogram<u32>> {
     let mut reader = flate2::read::GzDecoder::new(reader);
-    let histogram = Deserializer::new().deserialize(&mut reader)?;
+    let histogram = Deserializer::new()
+        .deserialize(&mut reader)
+        .context("Failed to deserialize histogram")?;
     Ok(histogram)
 }
 
 fn write_histogram<W: Write>(writer: W, histogram: &Histogram<u32>) -> anyhow::Result<()> {
     let mut writer = flate2::write::GzEncoder::new(writer, flate2::Compression::default());
-    V2Serializer::new().serialize(histogram, &mut writer)?;
+    V2Serializer::new()
+        .serialize(histogram, &mut writer)
+        .context("Failed to serialize histogram")?;
     Ok(())
 }
 

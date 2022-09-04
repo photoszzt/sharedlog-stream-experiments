@@ -8,22 +8,29 @@ use std::io::Read;
 use std::io::Write;
 use std::path::Path;
 
+use anyhow::anyhow;
+use anyhow::Context as _;
+
 enum Or<L, R> {
     L(L),
     R(R),
 }
 
-pub fn reader(path: Option<&Path>) -> io::Result<impl Read> {
+pub fn reader(path: Option<&Path>) -> anyhow::Result<impl Read> {
     match path {
         None => (),
         Some(path) if path == Path::new("-") => (),
-        Some(path) => return File::open(path).map(Or::R),
+        Some(path) => {
+            return File::open(path)
+                .map(Or::R)
+                .with_context(|| anyhow!("Failed to open file: {}", path.display()))
+        }
     }
 
     Ok(Or::L(io::stdin().lock()))
 }
 
-pub fn writer(path: Option<&Path>) -> io::Result<impl Write> {
+pub fn writer(path: Option<&Path>) -> anyhow::Result<impl Write> {
     match path {
         None => (),
         Some(path) if path == Path::new("-") => (),
@@ -32,7 +39,8 @@ pub fn writer(path: Option<&Path>) -> io::Result<impl Write> {
                 .create_new(true)
                 .write(true)
                 .open(path)
-                .map(Or::R);
+                .map(Or::R)
+                .with_context(|| anyhow!("Failed to open file: {}", path.display()));
         }
     }
 
