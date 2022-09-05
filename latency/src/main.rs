@@ -47,14 +47,15 @@ fn main() -> anyhow::Result<()> {
                     panic!("Expected `alo` or `epoch`, but got: {}", name);
                 };
 
-                let (tps, _) = name.split_once("tps_").expect("Expected `tps_` delimiter");
+                let (throughput, _) = name.split_once("tps_").expect("Expected `tps_` delimiter");
 
                 let mut histogram = new_histogram()?;
 
                 let cache = match output.as_deref() {
                     None => None,
                     Some(path) => {
-                        let path = path.join(format!("{}-{}-{}.hist.gz", delivery, tps, time));
+                        let path =
+                            path.join(format!("{}-{}-{}.hist.gz", delivery, throughput, time));
                         let file = File::options()
                             .read(true)
                             .create(true)
@@ -65,7 +66,7 @@ fn main() -> anyhow::Result<()> {
                         // Short-circuit with cached histogram
                         if file.metadata()?.len() > 0 {
                             let histogram = read_histogram(file)?;
-                            report_histogram(&histogram, delivery, tps, false);
+                            report_histogram(&histogram, delivery, throughput, 1, false);
                             continue;
                         }
 
@@ -77,7 +78,7 @@ fn main() -> anyhow::Result<()> {
                 let stats = match stats.read_dir() {
                     Ok(stats) => stats,
                     Err(error) if error.kind() == io::ErrorKind::NotFound => {
-                        println!("{},{},x,x,x,x,x,x,x,x,x,x", delivery, tps);
+                        println!("{},{},x,x,x,x,x,x,x,x,x,x,x", delivery, throughput);
                         continue;
                     }
                     Err(error) => {
@@ -96,7 +97,7 @@ fn main() -> anyhow::Result<()> {
                     })
                     .try_for_each(|entry| latency::compress_file(entry.path(), &mut histogram))?;
 
-                report_histogram(&histogram, delivery, tps, false);
+                report_histogram(&histogram, delivery, throughput, 1, false);
 
                 if let Some(file) = cache {
                     write_histogram(file, &histogram)?;
@@ -113,15 +114,15 @@ fn main() -> anyhow::Result<()> {
                 let histogram = read_histogram(latency::reader(Some(&input))?)?;
 
                 let input = input.to_string_lossy();
-                let (delivery, tps) = input
+                let (delivery, throughput) = input
                     .split_once('-')
                     .and_then(|(delivery, next)| {
-                        let (tps, _) = next.split_once('-')?;
-                        Some((delivery, tps))
+                        let (throughput, _) = next.split_once('-')?;
+                        Some((delivery, throughput))
                     })
                     .unwrap_or(("?", "?"));
 
-                report_histogram(&histogram, delivery, tps, pretty);
+                report_histogram(&histogram, delivery, throughput, 1, pretty);
             }
         }
 
@@ -132,27 +133,27 @@ fn main() -> anyhow::Result<()> {
         } => {
             let mut histogram = new_histogram()?;
             let mut delivery = None;
-            let mut tps = None;
+            let mut throughput = None;
 
             for input in inputs {
                 let partial_histogram = read_histogram(latency::reader(Some(&input))?)?;
 
                 let input = input.to_string_lossy();
                 let metadata = input.split_once('-').and_then(|(delivery, next)| {
-                    let (tps, _) = next.split_once('-')?;
-                    Some((delivery, tps))
+                    let (throughput, _) = next.split_once('-')?;
+                    Some((delivery, throughput))
                 });
 
                 // Sanity check: all partial histograms should have the same
                 // delivery semantics and TPS.
-                if let Some((partial_delivery, partial_tps)) = metadata {
+                if let Some((partial_delivery, partial_throughput)) = metadata {
                     assert_eq!(
                         delivery.get_or_insert_with(|| partial_delivery.to_owned()),
                         partial_delivery,
                     );
                     assert_eq!(
-                        tps.get_or_insert_with(|| partial_tps.to_owned()),
-                        partial_tps,
+                        throughput.get_or_insert_with(|| partial_throughput.to_owned()),
+                        partial_throughput,
                     );
                 }
 
@@ -162,7 +163,9 @@ fn main() -> anyhow::Result<()> {
             report_histogram(
                 &histogram,
                 delivery.as_deref().unwrap_or("?"),
-                tps.as_deref().unwrap_or("?"),
+                throughput.as_deref().unwrap_or("?"),
+                // FIXME
+                1,
                 pretty,
             );
         }
@@ -251,26 +254,34 @@ fn write_histogram<W: Write>(writer: W, histogram: &Histogram<u32>) -> anyhow::R
     Ok(())
 }
 
-fn report_histogram(histogram: &Histogram<u32>, delivery: &str, tps: &str, pretty: bool) {
+fn report_histogram(
+    histogram: &Histogram<u32>,
+    delivery: &str,
+    throughput: &str,
+    trials: usize,
+    pretty: bool,
+) {
     if pretty {
-        println!("del: {}", delivery);
-        println!("tps: {}", tps);
-        println!("\tlen: {}", histogram.len());
-        println!("\tavg: {:.03}ms", histogram.mean());
-        println!("\tstd: {:.03}ms", histogram.stdev());
-        println!("\tmin: {}ms", histogram.min());
-        println!("\tp25: {}ms", histogram.value_at_quantile(0.25));
-        println!("\tp50: {}ms", histogram.value_at_quantile(0.50));
-        println!("\tp75: {}ms", histogram.value_at_quantile(0.75));
-        println!("\tp90: {}ms", histogram.value_at_quantile(0.90));
-        println!("\tp99: {}ms", histogram.value_at_quantile(0.99));
-        println!("\tmax: {}ms", histogram.max());
+        println!("delivery: {}", delivery);
+        println!("throughput/sec/worker: {}", throughput);
+        println!("\ttrials: {}", trials);
+        println!("\tpoints: {}", histogram.len());
+        println!("\tavg (ms): {:.03}", histogram.mean());
+        println!("\tstd (ms): {:.03}", histogram.stdev());
+        println!("\tmin (ms): {}", histogram.min());
+        println!("\tp25 (ms): {}", histogram.value_at_quantile(0.25));
+        println!("\tp50 (ms): {}", histogram.value_at_quantile(0.50));
+        println!("\tp75 (ms): {}", histogram.value_at_quantile(0.75));
+        println!("\tp90 (ms): {}", histogram.value_at_quantile(0.90));
+        println!("\tp99 (ms): {}", histogram.value_at_quantile(0.99));
+        println!("\tmax (ms): {}", histogram.max());
         println!();
     } else {
         println!(
-            "{},{},{},{:.03},{:.03},{},{},{},{},{},{},{}",
+            "{},{},{},{},{:.03},{:.03},{},{},{},{},{},{},{}",
             delivery,
-            tps,
+            throughput,
+            trials,
             histogram.len(),
             histogram.mean(),
             histogram.stdev(),
