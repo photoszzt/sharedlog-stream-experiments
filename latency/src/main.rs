@@ -76,12 +76,21 @@ fn main() -> anyhow::Result<()> {
                 };
 
                 let stats = entry.path().join("stats");
-                let stats = match stats.read_dir() {
-                    Ok(stats) => stats,
-                    Err(error) if error.kind() == io::ErrorKind::NotFound => {
-                        println!("{},{},x,x,x,x,x,x,x,x,x,x,x", delivery, throughput);
-                        continue;
+
+                match stats.read_dir() {
+                    Ok(stats) => {
+                        stats
+                            .filter_map(Result::ok)
+                            .filter(|entry| {
+                                let name = entry.file_name();
+                                let name = name.to_string_lossy();
+                                name.starts_with(&prefix)
+                            })
+                            .try_for_each(|entry| {
+                                latency::compress_file(entry.path(), &mut histogram)
+                            })?;
                     }
+                    Err(error) if error.kind() == io::ErrorKind::NotFound => (),
                     Err(error) => {
                         return Err(error).with_context(|| {
                             anyhow!("Failed to read directory: {}", stats.display())
@@ -89,14 +98,10 @@ fn main() -> anyhow::Result<()> {
                     }
                 };
 
-                stats
-                    .filter_map(Result::ok)
-                    .filter(|entry| {
-                        let name = entry.file_name();
-                        let name = name.to_string_lossy();
-                        name.starts_with(&prefix)
-                    })
-                    .try_for_each(|entry| latency::compress_file(entry.path(), &mut histogram))?;
+                if histogram.is_empty() {
+                    println!("{},{},x,x,x,x,x,x,x,x,x,x,x", delivery, throughput);
+                    continue;
+                }
 
                 report_histogram(&histogram, delivery, throughput, 1, false);
 
