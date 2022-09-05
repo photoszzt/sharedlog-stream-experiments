@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::fs;
 use std::fs::File;
 use std::io;
 use std::io::Read;
@@ -57,6 +58,7 @@ fn main() -> anyhow::Result<()> {
                     Some(path) => {
                         let path =
                             path.join(format!("{}-{}-{}.hist.gz", delivery, throughput, time));
+
                         let file = File::options()
                             .read(true)
                             .create(true)
@@ -71,7 +73,7 @@ fn main() -> anyhow::Result<()> {
                             continue;
                         }
 
-                        Some(file)
+                        Some((path, file))
                     }
                 };
 
@@ -98,15 +100,18 @@ fn main() -> anyhow::Result<()> {
                     }
                 };
 
-                if histogram.is_empty() {
-                    println!("{},{},x,x,x,x,x,x,x,x,x,x,x", delivery, throughput);
-                    continue;
+                match histogram.is_empty() {
+                    true => println!("{},{},x,x,x,x,x,x,x,x,x,x,x", delivery, throughput),
+                    false => report_histogram(&histogram, delivery, throughput, 1, false),
                 }
 
-                report_histogram(&histogram, delivery, throughput, 1, false);
-
-                if let Some(file) = cache {
-                    write_histogram(file, &histogram)?;
+                match cache {
+                    None => (),
+                    Some((path, file)) if histogram.is_empty() => {
+                        drop(file);
+                        fs::remove_file(path)?;
+                    }
+                    Some((_, file)) => write_histogram(file, &histogram)?,
                 }
             }
         }
@@ -115,8 +120,6 @@ fn main() -> anyhow::Result<()> {
             let mut histograms = BTreeMap::default();
 
             for input in inputs {
-                let partial = read_histogram(latency::reader(Some(&input))?)?;
-
                 let (delivery, throughput) =
                     match input
                         .to_string_lossy()
@@ -127,10 +130,17 @@ fn main() -> anyhow::Result<()> {
                         }) {
                         Some((delivery, throughput)) => (delivery, throughput),
                         None => {
-                            eprintln!("Ignoring unrecognized file: {}", input.display());
+                            eprintln!("Ignoring unrecognized file name: {}", input.display());
                             continue;
                         }
                     };
+
+                let partial = read_histogram(latency::reader(Some(&input))?)?;
+
+                if partial.is_empty() {
+                    eprintln!("Ignoring empty histogram: {}", input.display());
+                    continue;
+                }
 
                 let (trials, total) = histograms
                     .entry((delivery, throughput))
