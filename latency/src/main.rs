@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::fs::File;
 use std::io;
 use std::io::Read;
@@ -16,7 +17,7 @@ use hdrhistogram::Histogram;
 fn main() -> anyhow::Result<()> {
     match Command::parse()? {
         Command::Compress { inputs, output } => {
-            let mut histogram = new_histogram()?;
+            let mut histogram = new_histogram();
 
             for input in inputs {
                 latency::compress_file(input, &mut histogram)?;
@@ -49,7 +50,7 @@ fn main() -> anyhow::Result<()> {
 
                 let (throughput, _) = name.split_once("tps_").expect("Expected `tps_` delimiter");
 
-                let mut histogram = new_histogram()?;
+                let mut histogram = new_histogram();
 
                 let cache = match output.as_deref() {
                     None => None,
@@ -105,69 +106,40 @@ fn main() -> anyhow::Result<()> {
             }
         }
 
-        Command::Query {
-            inputs,
-            merge: false,
-            pretty,
-        } => {
-            for input in inputs {
-                let histogram = read_histogram(latency::reader(Some(&input))?)?;
-
-                let input = input.to_string_lossy();
-                let (delivery, throughput) = input
-                    .split_once('-')
-                    .and_then(|(delivery, next)| {
-                        let (throughput, _) = next.split_once('-')?;
-                        Some((delivery, throughput))
-                    })
-                    .unwrap_or(("?", "?"));
-
-                report_histogram(&histogram, delivery, throughput, 1, pretty);
-            }
-        }
-
-        Command::Query {
-            inputs,
-            merge: true,
-            pretty,
-        } => {
-            let mut histogram = new_histogram()?;
-            let mut delivery = None;
-            let mut throughput = None;
+        Command::Query { inputs, pretty } => {
+            let mut histograms = BTreeMap::default();
 
             for input in inputs {
-                let partial_histogram = read_histogram(latency::reader(Some(&input))?)?;
+                let partial = read_histogram(latency::reader(Some(&input))?)?;
 
-                let input = input.to_string_lossy();
-                let metadata = input.split_once('-').and_then(|(delivery, next)| {
-                    let (throughput, _) = next.split_once('-')?;
-                    Some((delivery, throughput))
-                });
+                let (delivery, throughput) =
+                    match input
+                        .to_string_lossy()
+                        .split_once('-')
+                        .and_then(|(delivery, next)| {
+                            let (throughput, _) = next.split_once('-')?;
+                            Some((delivery.to_owned(), throughput.to_owned()))
+                        }) {
+                        Some((delivery, throughput)) => (delivery, throughput),
+                        None => {
+                            eprintln!("Ignoring unrecognized file: {}", input.display());
+                            continue;
+                        }
+                    };
 
-                // Sanity check: all partial histograms should have the same
-                // delivery semantics and TPS.
-                if let Some((partial_delivery, partial_throughput)) = metadata {
-                    assert_eq!(
-                        delivery.get_or_insert_with(|| partial_delivery.to_owned()),
-                        partial_delivery,
-                    );
-                    assert_eq!(
-                        throughput.get_or_insert_with(|| partial_throughput.to_owned()),
-                        partial_throughput,
-                    );
-                }
+                let (trials, total) = histograms
+                    .entry((delivery, throughput))
+                    .or_insert_with(|| (0, new_histogram()));
 
-                histogram.add(&partial_histogram)?;
+                *trials += 1;
+                *total += partial;
             }
 
-            report_histogram(
-                &histogram,
-                delivery.as_deref().unwrap_or("?"),
-                throughput.as_deref().unwrap_or("?"),
-                // FIXME
-                1,
-                pretty,
-            );
+            histograms
+                .into_iter()
+                .for_each(|((delivery, throughput), (trials, histogram))| {
+                    report_histogram(&histogram, &delivery, &throughput, trials, pretty);
+                })
         }
     }
 
@@ -182,11 +154,7 @@ enum Command {
     },
 
     /// Print aggregate statistics from a gzipped HDR histogram.
-    Query {
-        inputs: Vec<PathBuf>,
-        merge: bool,
-        pretty: bool,
-    },
+    Query { inputs: Vec<PathBuf>, pretty: bool },
 
     /// Compress and report all aggregate statistics from experiment directory `input`.
     ///
@@ -216,7 +184,6 @@ impl Command {
             },
             Some("query") => Command::Query {
                 pretty: arguments.contains("--pretty"),
-                merge: arguments.contains("--merge"),
                 inputs: iter::from_fn(|| arguments.opt_free_from_str().transpose())
                     .collect::<Result<Vec<_>, _>>()
                     .map(|mut inputs| {
@@ -233,9 +200,9 @@ impl Command {
     }
 }
 
-fn new_histogram() -> anyhow::Result<Histogram<u32>> {
+fn new_histogram() -> Histogram<u32> {
     // Note: maximum latency should definitely be below 15 minutes
-    Histogram::new_with_max(1_000 * 60 * 15, 3).map_err(anyhow::Error::from)
+    Histogram::new_with_max(1_000 * 60 * 15, 3).expect("Expected valid histogram configuration")
 }
 
 fn read_histogram<R: Read>(reader: R) -> anyhow::Result<Histogram<u32>> {
