@@ -1,4 +1,5 @@
 use std::fs::File;
+use std::io;
 use std::io::Read;
 use std::io::Write;
 use std::iter;
@@ -73,21 +74,27 @@ fn main() -> anyhow::Result<()> {
                 };
 
                 let stats = entry.path().join("stats");
-
-                for entry in stats
-                    .read_dir()
-                    .with_context(|| anyhow!("Failed to read directory: {}", stats.display()))?
-                    .filter_map(Result::ok)
-                {
-                    let name = entry.file_name();
-                    let name = name.to_string_lossy();
-
-                    if !name.starts_with(&prefix) {
+                let stats = match stats.read_dir() {
+                    Ok(stats) => stats,
+                    Err(error) if error.kind() == io::ErrorKind::NotFound => {
+                        println!("{},{},x,x,x,x,x,x,x,x,x,x", delivery, tps);
                         continue;
                     }
+                    Err(error) => {
+                        return Err(error).with_context(|| {
+                            anyhow!("Failed to read directory: {}", stats.display())
+                        })
+                    }
+                };
 
-                    latency::compress_file(entry.path(), &mut histogram)?;
-                }
+                stats
+                    .filter_map(Result::ok)
+                    .filter(|entry| {
+                        let name = entry.file_name();
+                        let name = name.to_string_lossy();
+                        name.starts_with(&prefix)
+                    })
+                    .try_for_each(|entry| latency::compress_file(entry.path(), &mut histogram))?;
 
                 report_histogram(&histogram, delivery, tps, false);
 
