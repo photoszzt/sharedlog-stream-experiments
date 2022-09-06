@@ -181,6 +181,10 @@ fn main() -> anyhow::Result<()> {
                 .map(|((_, throughput), (_, histogram))| (throughput, histogram))
                 .collect::<Vec<_>>();
 
+            if data.is_empty() {
+                return Err(anyhow!("No valid histograms found"));
+            }
+
             latency::plot(output, &data, linear)?;
         }
     }
