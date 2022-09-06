@@ -3,6 +3,7 @@ use std::path::Path;
 use hdrhistogram::Histogram;
 use plotters::chart::ChartBuilder;
 use plotters::chart::LabelAreaPosition;
+use plotters::chart::SeriesLabelPosition;
 use plotters::drawing::IntoDrawingArea as _;
 use plotters::element::Rectangle;
 use plotters::series::LineSeries;
@@ -31,17 +32,19 @@ where
     let mut chart = ChartBuilder::on(&root)
         .caption(
             "Latency Distribution At Different Throughputs",
-            ("sans-serif", 5.percent_height()),
+            ("sans-serif", 3.percent_height()),
         )
-        .set_label_area_size(LabelAreaPosition::Left, 5.percent_width())
-        .set_label_area_size(LabelAreaPosition::Bottom, 5.percent_height())
+        .set_label_area_size(LabelAreaPosition::Left, 6.percent_width())
+        .set_label_area_size(LabelAreaPosition::Bottom, 6.percent_height())
         .margin(1.percent())
         .build_cartesian_2d(0u32..100 + 1, 0..max_latency + 1)?;
 
     chart
         .configure_mesh()
         .x_desc("Percentile")
-        .y_desc("Latency (ms)");
+        .label_style(("sans-serif", 3.percent()))
+        .y_desc("Latency (ms)")
+        .draw()?;
 
     for (index, (throughput, histogram)) in data.iter().enumerate() {
         let color = Palette99::pick(index);
@@ -57,11 +60,14 @@ where
                 color.stroke_width(3),
             ))?
             .label(format!("{}", throughput))
-            .legend(move |(x, y)| Rectangle::new([(x, y - 5), (x + 10, y + 5)], color.filled()));
+            .legend(move |(x, y)| Rectangle::new([(x, y - 5), (x + 20, y + 5)], color.filled()));
     }
 
     chart
         .configure_series_labels()
+        .position(SeriesLabelPosition::UpperLeft)
+        .legend_area_size(25)
+        .label_font(("sans-serif", 3.percent()))
         .border_style(&BLACK)
         .draw()?;
 
