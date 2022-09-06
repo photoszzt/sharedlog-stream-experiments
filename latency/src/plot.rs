@@ -1,12 +1,17 @@
+use std::ops::Range;
 use std::path::Path;
 
 use hdrhistogram::Histogram;
 use plotters::chart::ChartBuilder;
 use plotters::chart::LabelAreaPosition;
 use plotters::chart::SeriesLabelPosition;
+use plotters::coord::combinators::IntoLogRange;
+use plotters::coord::ranged1d::AsRangedCoord;
+use plotters::coord::ranged1d::DefaultFormatting;
+use plotters::coord::ranged1d::Ranged;
+use plotters::coord::ranged1d::ValueFormatter;
 use plotters::drawing::IntoDrawingArea as _;
 use plotters::element::Rectangle;
-use plotters::prelude::IntoLogRange as _;
 use plotters::series::LineSeries;
 use plotters::style::AsRelative as _;
 use plotters::style::Color as _;
@@ -15,8 +20,26 @@ use plotters::style::Palette99;
 use plotters::style::BLACK;
 use plotters::style::WHITE;
 
-pub fn plot<P>(path: P, data: &[(u32, Histogram<u32>)]) -> anyhow::Result<()>
+pub fn plot<P: AsRef<Path>>(
+    path: P,
+    data: &[(u32, Histogram<u32>)],
+    linear: bool,
+) -> anyhow::Result<()> {
+    match linear {
+        true => plot_internal(path, data, std::convert::identity),
+        false => plot_internal(path, data, IntoLogRange::log_scale),
+    }
+}
+
+fn plot_internal<S, P>(
+    path: P,
+    data: &[(u32, Histogram<u32>)],
+    scale: fn(Range<u64>) -> S,
+) -> anyhow::Result<()>
 where
+    S: AsRangedCoord<Value = u64>,
+    S::CoordDescType: ValueFormatter<u64> + Ranged<FormatOption = DefaultFormatting>,
+    S::Value: std::fmt::Debug,
     P: AsRef<Path>,
 {
     let root = plotters::backend::SVGBackend::new(&path, (1920, 1080)).into_drawing_area();
@@ -38,7 +61,7 @@ where
         .set_label_area_size(LabelAreaPosition::Left, 6.percent_width())
         .set_label_area_size(LabelAreaPosition::Bottom, 6.percent_height())
         .margin(1.percent())
-        .build_cartesian_2d(0u32..100 + 1, (0..max_latency + 1).log_scale())?;
+        .build_cartesian_2d(0u32..100 + 1, scale(0..max_latency + 1))?;
 
     chart
         .configure_mesh()

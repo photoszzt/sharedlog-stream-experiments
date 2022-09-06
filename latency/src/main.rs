@@ -35,13 +35,16 @@ enum Command {
         delivery: String,
 
         /// Include distributions with maximum latency below `max_latency`.
-        latency: Option<u64>,
+        max_latency: Option<u64>,
 
         /// Exclude throughputs in `exclude`.
         exclude: Vec<u32>,
 
         /// Include throughputs in `include`.
         include: Vec<u32>,
+
+        /// Plot using a linear Y-axis instead of logarithmic.
+        linear: bool,
 
         /// Load histograms from paths in `inputs`.
         inputs: Vec<PathBuf>,
@@ -162,7 +165,8 @@ fn main() -> anyhow::Result<()> {
             inputs,
             output,
             delivery,
-            latency,
+            max_latency,
+            linear,
             include,
             exclude,
         } => {
@@ -172,12 +176,12 @@ fn main() -> anyhow::Result<()> {
                 .filter(|((_, throughput), _)| exclude.is_empty() || !exclude.contains(throughput))
                 .filter(|((_, throughput), _)| include.is_empty() || include.contains(throughput))
                 .filter(|(_, (_, histogram))| {
-                    latency.map_or(true, |latency| histogram.max() <= latency)
+                    max_latency.map_or(true, |max_latency| histogram.max() <= max_latency)
                 })
                 .map(|((_, throughput), (_, histogram))| (throughput, histogram))
                 .collect::<Vec<_>>();
 
-            latency::plot(output, &data)?;
+            latency::plot(output, &data, linear)?;
         }
     }
 
@@ -222,9 +226,9 @@ impl Command {
                 output: arguments
                     .value_from_str("-o")
                     .or_else(|_| arguments.value_from_str("--output"))?,
-                latency: match arguments.opt_value_from_str("-l")? {
-                    Some(latency) => Some(latency),
-                    None => arguments.opt_value_from_str("--latency")?,
+                max_latency: match arguments.opt_value_from_str("-m")? {
+                    Some(max_latency) => Some(max_latency),
+                    None => arguments.opt_value_from_str("--max-latency")?,
                 },
                 include: arguments
                     .values_from_str("--include")?
@@ -239,6 +243,7 @@ impl Command {
                 delivery: arguments
                     .value_from_str("-d")
                     .or_else(|_| arguments.value_from_str("--delivery"))?,
+                linear: arguments.contains(["-l", "--linear"]),
                 inputs: iter::from_fn(|| arguments.opt_free_from_str().transpose())
                     .collect::<Result<Vec<_>, _>>()
                     .map(|mut inputs| {
