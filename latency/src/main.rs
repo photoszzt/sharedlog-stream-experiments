@@ -32,7 +32,7 @@ enum Command {
     /// Plot distributions from gzipped HDR histograms.
     Plot {
         /// Include distributions with delivery semantics `delivery`.
-        delivery: Option<String>,
+        delivery: String,
 
         /// Include distributions with maximum latency below `max_latency`.
         latency: Option<u64>,
@@ -168,11 +168,7 @@ fn main() -> anyhow::Result<()> {
         } => {
             let data = histogram::read_all(&inputs)?
                 .into_iter()
-                .filter(|((semantics, _), _)| {
-                    delivery
-                        .as_ref()
-                        .map_or(true, |delivery| delivery == semantics)
-                })
+                .filter(|((delivery_, _), _)| delivery == *delivery_)
                 .filter(|((_, throughput), _)| exclude.is_empty() || !exclude.contains(throughput))
                 .filter(|((_, throughput), _)| include.is_empty() || include.contains(throughput))
                 .filter(|(_, (_, histogram))| {
@@ -194,19 +190,21 @@ impl Command {
 
         let command = match arguments.subcommand()?.as_deref() {
             Some("compress") => Command::Compress {
-                output: arguments
-                    .opt_value_from_str("--output")
-                    .or_else(|_| arguments.opt_value_from_str("-o"))?,
+                output: match arguments.opt_value_from_str("-o")? {
+                    Some(output) => Some(output),
+                    None => arguments.opt_value_from_str("--output")?,
+                },
                 inputs: iter::from_fn(|| arguments.opt_free_from_str().transpose())
                     .collect::<Result<Vec<_>, _>>()?,
             },
             Some("scan") => Command::Scan {
-                output: arguments
-                    .opt_value_from_str("--output")
-                    .or_else(|_| arguments.opt_value_from_str("-o"))?,
+                output: match arguments.opt_value_from_str("-o")? {
+                    Some(output) => Some(output),
+                    None => arguments.opt_value_from_str("--output")?,
+                },
                 prefix: arguments
-                    .value_from_str("--prefix")
-                    .or_else(|_| arguments.value_from_str("-p"))?,
+                    .value_from_str("-p")
+                    .or_else(|_| arguments.value_from_str("--prefix"))?,
                 input: arguments.free_from_str()?,
             },
             Some("query") => Command::Query {
@@ -222,11 +220,12 @@ impl Command {
             },
             Some("plot") => Command::Plot {
                 output: arguments
-                    .value_from_str("--output")
-                    .or_else(|_| arguments.value_from_str("-o"))?,
-                latency: arguments
-                    .opt_value_from_str("--latency")
-                    .or_else(|_| arguments.opt_value_from_str("-l"))?,
+                    .value_from_str("-o")
+                    .or_else(|_| arguments.value_from_str("--output"))?,
+                latency: match arguments.opt_value_from_str("-l")? {
+                    Some(latency) => Some(latency),
+                    None => arguments.opt_value_from_str("--latency")?,
+                },
                 include: arguments
                     .values_from_str("--include")?
                     .into_iter()
@@ -238,8 +237,8 @@ impl Command {
                     .chain(arguments.values_from_str("-e")?)
                     .collect(),
                 delivery: arguments
-                    .opt_value_from_str("--delivery")
-                    .or_else(|_| arguments.opt_value_from_str("-d"))?,
+                    .value_from_str("-d")
+                    .or_else(|_| arguments.value_from_str("--delivery"))?,
                 inputs: iter::from_fn(|| arguments.opt_free_from_str().transpose())
                     .collect::<Result<Vec<_>, _>>()
                     .map(|mut inputs| {
