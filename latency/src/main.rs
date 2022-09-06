@@ -201,17 +201,23 @@ impl Command {
 
         let command = match arguments.subcommand()?.as_deref() {
             Some("compress") => Command::Compress {
-                output: arguments.opt_value_from_str("--output")?,
+                output: arguments
+                    .opt_value_from_str("--output")
+                    .or_else(|_| arguments.opt_value_from_str("-o"))?,
                 inputs: iter::from_fn(|| arguments.opt_free_from_str().transpose())
                     .collect::<Result<Vec<_>, _>>()?,
             },
             Some("scan") => Command::Scan {
-                output: arguments.opt_value_from_str("--output")?,
-                prefix: arguments.value_from_str("--prefix")?,
+                output: arguments
+                    .opt_value_from_str("--output")
+                    .or_else(|_| arguments.opt_value_from_str("-o"))?,
+                prefix: arguments
+                    .value_from_str("--prefix")
+                    .or_else(|_| arguments.value_from_str("-p"))?,
                 input: arguments.free_from_str()?,
             },
             Some("query") => Command::Query {
-                pretty: arguments.contains("--pretty"),
+                pretty: arguments.contains(["-p", "--pretty"]),
                 inputs: iter::from_fn(|| arguments.opt_free_from_str().transpose())
                     .collect::<Result<Vec<_>, _>>()
                     .map(|mut inputs| {
@@ -222,11 +228,25 @@ impl Command {
                     })?,
             },
             Some("plot") => Command::Plot {
-                output: arguments.value_from_str("--output")?,
-                latency: arguments.opt_value_from_str("--latency")?,
-                include: arguments.values_from_str("--include")?,
-                exclude: arguments.values_from_str("--exclude")?,
-                delivery: arguments.opt_value_from_str("--delivery")?,
+                output: arguments
+                    .value_from_str("--output")
+                    .or_else(|_| arguments.value_from_str("-o"))?,
+                latency: arguments
+                    .opt_value_from_str("--latency")
+                    .or_else(|_| arguments.opt_value_from_str("-l"))?,
+                include: arguments
+                    .values_from_str("--include")?
+                    .into_iter()
+                    .chain(arguments.values_from_str("-i")?)
+                    .collect(),
+                exclude: arguments
+                    .values_from_str("--exclude")?
+                    .into_iter()
+                    .chain(arguments.values_from_str("-e")?)
+                    .collect(),
+                delivery: arguments
+                    .opt_value_from_str("--delivery")
+                    .or_else(|_| arguments.opt_value_from_str("-d"))?,
                 inputs: iter::from_fn(|| arguments.opt_free_from_str().transpose())
                     .collect::<Result<Vec<_>, _>>()
                     .map(|mut inputs| {
