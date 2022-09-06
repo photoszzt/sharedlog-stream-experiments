@@ -1,4 +1,5 @@
 mod compress;
+pub mod histogram;
 mod plot;
 
 pub use compress::compress_file;
