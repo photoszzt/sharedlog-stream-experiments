@@ -123,9 +123,26 @@ fn main() -> anyhow::Result<()> {
             },
         ),
 
-        Command::Plot { inputs, output } => {
+        Command::Plot {
+            inputs,
+            output,
+            delivery,
+            latency,
+            include,
+            exclude,
+        } => {
             let data = read_histograms(&inputs)?
                 .into_iter()
+                .filter(|((semantics, _), _)| {
+                    delivery
+                        .as_ref()
+                        .map_or(true, |delivery| delivery == semantics)
+                })
+                .filter(|((_, throughput), _)| exclude.is_empty() || !exclude.contains(throughput))
+                .filter(|((_, throughput), _)| include.is_empty() || include.contains(throughput))
+                .filter(|(_, (_, histogram))| {
+                    latency.map_or(true, |latency| histogram.max() <= latency)
+                })
                 .map(|((_, throughput), (_, histogram))| (throughput, histogram))
                 .collect::<Vec<_>>();
 
@@ -156,8 +173,24 @@ enum Command {
         prefix: String,
     },
 
+    /// Plot distributions from gzipped HDR histograms.
     Plot {
+        /// Include distributions with delivery semantics `delivery`.
+        delivery: Option<String>,
+
+        /// Include distributions with maximum latency below `max_latency`.
+        latency: Option<u64>,
+
+        /// Exclude throughputs in `exclude`.
+        exclude: Vec<u32>,
+
+        /// Include throughputs in `include`.
+        include: Vec<u32>,
+
+        /// Load histograms from paths in `inputs`.
         inputs: Vec<PathBuf>,
+
+        /// Output SVG file to `output`.
         output: PathBuf,
     },
 }
@@ -190,6 +223,10 @@ impl Command {
             },
             Some("plot") => Command::Plot {
                 output: arguments.value_from_str("--output")?,
+                latency: arguments.opt_value_from_str("--latency")?,
+                include: arguments.values_from_str("--include")?,
+                exclude: arguments.values_from_str("--exclude")?,
+                delivery: arguments.opt_value_from_str("--delivery")?,
                 inputs: iter::from_fn(|| arguments.opt_free_from_str().transpose())
                     .collect::<Result<Vec<_>, _>>()
                     .map(|mut inputs| {
