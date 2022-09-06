@@ -3,56 +3,56 @@ use std::io;
 use std::io::BufRead;
 use std::path::Path;
 
+use anyhow::anyhow;
 use anyhow::Context as _;
 use hdrhistogram::Histogram;
 
 pub fn compress_file<P: AsRef<Path>>(input: P, output: &mut Histogram<u32>) -> anyhow::Result<()> {
-    File::open(input)
-        .map(flate2::read::GzDecoder::new)
+    File::open(&input)
+        .map(|file| {
+            if input
+                .as_ref()
+                .extension()
+                .map_or(false, |extension| extension == "gz")
+            {
+                crate::Or::L(flate2::read::GzDecoder::new(file))
+            } else {
+                crate::Or::R(file)
+            }
+        })
         .map(io::BufReader::new)
         .map(|reader| compress_reader(reader, output))?
 }
 
 /// Parse Sys/Boki raw latency output and compress it into an HDR histogram.
 fn compress_reader<R: BufRead>(mut input: R, output: &mut Histogram<u32>) -> anyhow::Result<()> {
-    let mut buffer = Vec::new();
+    let mut buffer = String::new();
 
-    input
-        .read_until(b'[', &mut buffer)
-        .context("Expected opening '['")?;
-    buffer.clear();
+    loop {
+        buffer.clear();
 
-    let mut r#continue = true;
-
-    while r#continue {
-        match input.read_until(b',', &mut buffer) {
+        match input.read_line(&mut buffer) {
+            Ok(0) => break,
             Ok(_) => (),
-            Err(error) if error.kind() == io::ErrorKind::UnexpectedEof => (),
+            Err(error) if error.kind() == io::ErrorKind::UnexpectedEof => break,
             Err(error) => return Err(anyhow::Error::from(error)),
-        };
-
-        // Remove trailing delimiter (,)
-        buffer.pop();
-
-        // Remove non-numeric characters
-        loop {
-            match buffer.last() {
-                None | Some(b'0'..=b'9') => break,
-                Some(_) => {
-                    r#continue = false;
-                    buffer.pop();
-                }
-            }
         }
 
-        let time = std::str::from_utf8(&buffer)
-            .context("Expected valid UTF-8")?
-            .trim()
-            .parse::<u32>()
-            .context("Expected unsigned integer")?;
+        for line in buffer.trim().split('\n') {
+            let lo = line
+                .find('[')
+                .ok_or_else(|| anyhow!("Expected opening '['"))?;
 
-        buffer.clear();
-        output.record(time as u64)?;
+            let hi = line
+                .find(']')
+                .ok_or_else(|| anyhow!("Expected closing ']'"))?;
+
+            line[lo + 1..hi]
+                .split(',')
+                .map(str::trim)
+                .map(|time| time.parse::<u32>().context("Expected unsigned integer"))
+                .try_for_each(|time| output.record(time? as u64).map_err(anyhow::Error::from))?;
+        }
     }
 
     Ok(())

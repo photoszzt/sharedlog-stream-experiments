@@ -1,6 +1,5 @@
 use std::fs;
 use std::fs::File;
-use std::io;
 use std::iter;
 use std::path::PathBuf;
 use std::time;
@@ -8,6 +7,7 @@ use std::time;
 use anyhow::anyhow;
 use anyhow::Context as _;
 use latency::histogram;
+use walkdir::WalkDir;
 
 enum Command {
     /// Compress raw gzipped logs into gzipped HDR histograms.
@@ -82,7 +82,7 @@ fn main() -> anyhow::Result<()> {
 
                 let delivery = if name.ends_with("alo") {
                     "alo"
-                } else if name.ends_with("epoch") {
+                } else if name.ends_with("epoch") || name.ends_with("eo") {
                     "eo"
                 } else {
                     panic!("Expected `alo` or `epoch`, but got: {}", name);
@@ -116,28 +116,14 @@ fn main() -> anyhow::Result<()> {
                     }
                 };
 
-                let stats = entry.path().join("stats");
-
-                match stats.read_dir() {
-                    Ok(stats) => {
-                        stats
-                            .filter_map(Result::ok)
-                            .filter(|entry| {
-                                let name = entry.file_name();
-                                let name = name.to_string_lossy();
-                                name.starts_with(&prefix)
-                            })
-                            .try_for_each(|entry| {
-                                latency::compress_file(entry.path(), &mut histogram)
-                            })?;
-                    }
-                    Err(error) if error.kind() == io::ErrorKind::NotFound => (),
-                    Err(error) => {
-                        return Err(error).with_context(|| {
-                            anyhow!("Failed to read directory: {}", stats.display())
-                        })
-                    }
-                };
+                WalkDir::new(entry.path())
+                    // Descend into `stats` (sys/boki) or `logs` (kafka) directory
+                    .min_depth(2)
+                    .into_iter()
+                    .filter_map(Result::ok)
+                    .filter(|entry| entry.file_type().is_file())
+                    .filter(|entry| entry.file_name().to_string_lossy().starts_with(&prefix))
+                    .try_for_each(|entry| latency::compress_file(entry.path(), &mut histogram))?;
 
                 match histogram.is_empty() {
                     true => println!("{},{},x,x,x,x,x,x,x,x,x,x,x", delivery, throughput),
