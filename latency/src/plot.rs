@@ -1,3 +1,4 @@
+use std::cmp;
 use std::ops::Range;
 use std::path::Path;
 
@@ -45,13 +46,14 @@ where
     let root = plotters::backend::SVGBackend::new(&path, (1920, 1080)).into_drawing_area();
     root.fill(&WHITE)?;
 
-    let max_latency = data
+    let (min_latency, max_latency) = data
         .iter()
         .map(|(_, histogram)| histogram)
         .filter(|histogram| !histogram.is_empty())
-        .map(|histogram| histogram.max())
-        .max()
-        .expect("Expected maximum histogram value");
+        .map(|histogram| (histogram.min(), histogram.max()))
+        .fold((u64::MAX, 0), |(min, max), (min_, max_)| {
+            (cmp::min(min, min_), cmp::max(max, max_))
+        });
 
     let mut chart = ChartBuilder::on(&root)
         .caption(
@@ -61,7 +63,7 @@ where
         .set_label_area_size(LabelAreaPosition::Left, 6.percent_width())
         .set_label_area_size(LabelAreaPosition::Bottom, 6.percent_height())
         .margin(1.percent())
-        .build_cartesian_2d(0u32..100 + 1, scale(0..max_latency + 1))?;
+        .build_cartesian_2d(0u32..100 + 1, scale(min_latency..max_latency + 1))?;
 
     chart
         .configure_mesh()
