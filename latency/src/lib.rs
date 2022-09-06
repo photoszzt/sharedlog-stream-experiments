@@ -1,6 +1,8 @@
 mod compress;
+mod plot;
 
 pub use compress::compress_file;
+pub use plot::plot;
 
 use std::fs::File;
 use std::io;

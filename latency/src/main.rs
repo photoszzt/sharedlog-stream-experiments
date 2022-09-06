@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::fmt::Display;
 use std::fs;
 use std::fs::File;
 use std::io;
@@ -116,45 +117,19 @@ fn main() -> anyhow::Result<()> {
             }
         }
 
-        Command::Query { inputs, pretty } => {
-            let mut histograms = BTreeMap::default();
+        Command::Query { inputs, pretty } => read_histograms(&inputs)?.into_iter().for_each(
+            |((delivery, throughput), (trials, histogram))| {
+                report_histogram(&histogram, &delivery, &throughput, trials, pretty);
+            },
+        ),
 
-            for input in inputs {
-                let (delivery, throughput) =
-                    match input
-                        .to_string_lossy()
-                        .split_once('-')
-                        .and_then(|(delivery, next)| {
-                            let (throughput, _) = next.split_once('-')?;
-                            Some((delivery.to_owned(), throughput.to_owned()))
-                        }) {
-                        Some((delivery, throughput)) => (delivery, throughput),
-                        None => {
-                            eprintln!("Ignoring unrecognized file name: {}", input.display());
-                            continue;
-                        }
-                    };
-
-                let partial = read_histogram(latency::reader(Some(&input))?)?;
-
-                if partial.is_empty() {
-                    eprintln!("Ignoring empty histogram: {}", input.display());
-                    continue;
-                }
-
-                let (trials, total) = histograms
-                    .entry((delivery, throughput))
-                    .or_insert_with(|| (0, new_histogram()));
-
-                *trials += 1;
-                *total += partial;
-            }
-
-            histograms
+        Command::Plot { inputs, output } => {
+            let data = read_histograms(&inputs)?
                 .into_iter()
-                .for_each(|((delivery, throughput), (trials, histogram))| {
-                    report_histogram(&histogram, &delivery, &throughput, trials, pretty);
-                })
+                .map(|((_, throughput), (_, histogram))| (throughput, histogram))
+                .collect::<Vec<_>>();
+
+            latency::plot(output, &data)?;
         }
     }
 
@@ -179,6 +154,11 @@ enum Command {
         input: PathBuf,
         output: Option<PathBuf>,
         prefix: String,
+    },
+
+    Plot {
+        inputs: Vec<PathBuf>,
+        output: PathBuf,
     },
 }
 
@@ -208,7 +188,18 @@ impl Command {
                         inputs
                     })?,
             },
-            None | Some(_) => return Err(anyhow!("Expected one of [compress, scan, query]")),
+            Some("plot") => Command::Plot {
+                output: arguments.value_from_str("--output")?,
+                inputs: iter::from_fn(|| arguments.opt_free_from_str().transpose())
+                    .collect::<Result<Vec<_>, _>>()
+                    .map(|mut inputs| {
+                        if inputs.is_empty() {
+                            inputs.push(PathBuf::from("-"));
+                        }
+                        inputs
+                    })?,
+            },
+            None | Some(_) => return Err(anyhow!("Expected one of [compress, scan, query, plot]")),
         };
 
         Ok(command)
@@ -218,6 +209,46 @@ impl Command {
 fn new_histogram() -> Histogram<u32> {
     // Note: maximum latency should definitely be below 15 minutes
     Histogram::new_with_max(1_000 * 60 * 15, 3).expect("Expected valid histogram configuration")
+}
+
+#[allow(clippy::type_complexity)]
+fn read_histograms(
+    inputs: &[PathBuf],
+) -> anyhow::Result<BTreeMap<(String, u32), (u32, Histogram<u32>)>> {
+    let mut histograms = BTreeMap::default();
+
+    for input in inputs {
+        let (delivery, throughput) =
+            match input
+                .to_string_lossy()
+                .split_once('-')
+                .and_then(|(delivery, next)| {
+                    let (throughput, _) = next.split_once('-')?;
+                    Some((delivery.to_owned(), throughput.parse::<u32>().ok()?))
+                }) {
+                Some((delivery, throughput)) => (delivery, throughput),
+                None => {
+                    eprintln!("Ignoring unrecognized file name: {}", input.display());
+                    continue;
+                }
+            };
+
+        let partial = read_histogram(latency::reader(Some(input))?)?;
+
+        if partial.is_empty() {
+            eprintln!("Ignoring empty histogram: {}", input.display());
+            continue;
+        }
+
+        let (trials, total) = histograms
+            .entry((delivery, throughput))
+            .or_insert_with(|| (0, new_histogram()));
+
+        *trials += 1;
+        *total += partial;
+    }
+
+    Ok(histograms)
 }
 
 fn read_histogram<R: Read>(reader: R) -> anyhow::Result<Histogram<u32>> {
@@ -239,8 +270,8 @@ fn write_histogram<W: Write>(writer: W, histogram: &Histogram<u32>) -> anyhow::R
 fn report_histogram(
     histogram: &Histogram<u32>,
     delivery: &str,
-    throughput: &str,
-    trials: usize,
+    throughput: impl Display,
+    trials: u32,
     pretty: bool,
 ) {
     if pretty {
