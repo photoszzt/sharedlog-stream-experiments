@@ -6,6 +6,7 @@ use plotters::chart::LabelAreaPosition;
 use plotters::chart::SeriesLabelPosition;
 use plotters::drawing::IntoDrawingArea as _;
 use plotters::element::Rectangle;
+use plotters::prelude::IntoLogRange as _;
 use plotters::series::LineSeries;
 use plotters::style::AsRelative as _;
 use plotters::style::Color as _;
@@ -37,7 +38,7 @@ where
         .set_label_area_size(LabelAreaPosition::Left, 6.percent_width())
         .set_label_area_size(LabelAreaPosition::Bottom, 6.percent_height())
         .margin(1.percent())
-        .build_cartesian_2d(0u32..100 + 1, 0..max_latency + 1)?;
+        .build_cartesian_2d(0u32..100 + 1, (0..max_latency + 1).log_scale())?;
 
     chart
         .configure_mesh()
@@ -67,7 +68,7 @@ where
         .configure_series_labels()
         .position(SeriesLabelPosition::UpperLeft)
         .legend_area_size(25)
-        .label_font(("sans-serif", 3.percent()))
+        .label_font(("sans-serif", 2.percent()))
         .border_style(&BLACK)
         .draw()?;
 
