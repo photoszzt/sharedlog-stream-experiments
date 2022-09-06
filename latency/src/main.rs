@@ -255,20 +255,21 @@ fn read_histograms(
     let mut histograms = BTreeMap::default();
 
     for input in inputs {
-        let (delivery, throughput) =
-            match input
-                .to_string_lossy()
-                .split_once('-')
-                .and_then(|(delivery, next)| {
-                    let (throughput, _) = next.split_once('-')?;
-                    Some((delivery.to_owned(), throughput.parse::<u32>().ok()?))
-                }) {
-                Some((delivery, throughput)) => (delivery, throughput),
-                None => {
-                    eprintln!("Ignoring unrecognized file name: {}", input.display());
-                    continue;
-                }
-            };
+        let (delivery, throughput) = match input
+            .file_name()
+            .with_context(|| anyhow!("Missing file name for input: {}", input.display()))?
+            .to_string_lossy()
+            .split_once('-')
+            .and_then(|(delivery, next)| {
+                let (throughput, _) = next.split_once('-')?;
+                Some((delivery.to_owned(), throughput.parse::<u32>().ok()?))
+            }) {
+            Some((delivery, throughput)) => (delivery, throughput),
+            None => {
+                eprintln!("Ignoring unrecognized file name: {}", input.display());
+                continue;
+            }
+        };
 
         let partial = read_histogram(latency::reader(Some(input))?)?;
 
