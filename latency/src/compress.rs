@@ -38,21 +38,22 @@ fn compress_reader<R: BufRead>(mut input: R, output: &mut Histogram<u32>) -> any
             Err(error) => return Err(anyhow::Error::from(error)),
         }
 
-        for line in buffer.trim().split('\n') {
-            let lo = line
-                .find('[')
-                .ok_or_else(|| anyhow!("Expected opening '['"))?;
+        let lo = buffer
+            .find('[')
+            .ok_or_else(|| anyhow!("Expected opening '['"))?;
 
-            let hi = line
-                .find(']')
-                .ok_or_else(|| anyhow!("Expected closing ']'"))?;
+        let hi = buffer
+            .find(']')
+            .ok_or_else(|| anyhow!("Expected closing ']'"))?;
 
-            line[lo + 1..hi]
-                .split(',')
-                .map(str::trim)
-                .map(|time| time.parse::<u32>().context("Expected unsigned integer"))
-                .try_for_each(|time| output.record(time? as u64).map_err(anyhow::Error::from))?;
-        }
+        buffer[lo + 1..hi]
+            .split(',')
+            .map(str::trim)
+            .map(|time| {
+                time.parse::<u32>()
+                    .with_context(|| anyhow!("Expected unsigned integer, but got: {}", time))
+            })
+            .try_for_each(|time| output.record(time? as u64).map_err(anyhow::Error::from))?;
     }
 
     Ok(())

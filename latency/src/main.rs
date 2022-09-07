@@ -27,6 +27,7 @@ enum Command {
         input: PathBuf,
         output: Option<PathBuf>,
         prefix: String,
+        suffix: Option<String>,
     },
 
     /// Plot distributions from gzipped HDR histograms.
@@ -63,7 +64,8 @@ fn main() -> anyhow::Result<()> {
             let mut histogram = histogram::new();
 
             for input in inputs {
-                latency::compress_file(input, &mut histogram)?;
+                latency::compress_file(&input, &mut histogram)
+                    .with_context(|| anyhow!("Compressing file: {}", input.display()))?;
             }
 
             histogram::write(latency::writer(output.as_deref())?, &histogram)?;
@@ -73,6 +75,7 @@ fn main() -> anyhow::Result<()> {
             input,
             output,
             prefix,
+            suffix,
         } => {
             for entry in input.read_dir()?.filter_map(Result::ok) {
                 let name = entry.file_name();
@@ -125,8 +128,18 @@ fn main() -> anyhow::Result<()> {
                     .into_iter()
                     .filter_map(Result::ok)
                     .filter(|entry| entry.file_type().is_file())
-                    .filter(|entry| entry.file_name().to_string_lossy().starts_with(&prefix))
-                    .try_for_each(|entry| latency::compress_file(entry.path(), &mut histogram))?;
+                    .filter(|entry| {
+                        let name = entry.file_name().to_string_lossy();
+                        name.starts_with(&prefix)
+                            && suffix
+                                .as_ref()
+                                .map_or(true, |suffix| name.ends_with(suffix))
+                    })
+                    .try_for_each(|entry| {
+                        latency::compress_file(entry.path(), &mut histogram).with_context(|| {
+                            anyhow!("Compressing file: {}", entry.path().display())
+                        })
+                    })?;
 
                 match histogram.is_empty() {
                     true => println!("{},{},x,x,x,x,x,x,x,x,x,x,x", delivery, throughput),
@@ -209,6 +222,10 @@ impl Command {
                 prefix: arguments
                     .value_from_str("-p")
                     .or_else(|_| arguments.value_from_str("--prefix"))?,
+                suffix: match arguments.opt_value_from_str("-s")? {
+                    Some(suffix) => Some(suffix),
+                    None => arguments.opt_value_from_str("--suffix")?,
+                },
                 input: arguments.free_from_str()?,
             },
             Some("query") => Command::Query {
