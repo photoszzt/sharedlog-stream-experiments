@@ -47,9 +47,17 @@ enum Command {
 
     /// Plot distributions from gzipped HDR histograms.
     Plot {
+        /// Plot title prefix.
+        #[clap(short, long)]
+        title: String,
+
         /// Include distributions with delivery semantics `delivery`.
         #[clap(short, long)]
         delivery: String,
+
+        /// Plot using a linear Y-axis instead of logarithmic.
+        #[clap(short, long)]
+        linear: bool,
 
         /// Include distributions with maximum latency below `max_latency`.
         #[clap(short, long)]
@@ -63,20 +71,55 @@ enum Command {
         #[clap(short, long, multiple = false, use_delimiter = true)]
         include: Vec<u32>,
 
-        /// Plot using a linear Y-axis instead of logarithmic.
-        #[clap(short, long)]
-        linear: bool,
-
-        /// Experiment name for plot title.
-        #[clap(short, long)]
-        experiment: String,
-
         /// Output SVG file to `output`.
         #[clap(short, long)]
         output: PathBuf,
 
         /// Load histograms from paths in `inputs`.
         inputs: Vec<PathBuf>,
+    },
+
+    /// Compare distributions from two directories of gzipped HDR histograms.
+    Compare {
+        /// Plot title prefix.
+        #[clap(short, long)]
+        title: String,
+
+        /// Include distributions with delivery semantics `delivery`.
+        #[clap(short, long)]
+        delivery: String,
+
+        /// Plot using a linear Y-axis instead of logarithmic.
+        #[clap(short, long)]
+        linear: bool,
+
+        /// Exclude Kafka throughputs in `exclude`.
+        #[clap(long, multiple = false, use_delimiter = true)]
+        kafka_exclude: Vec<u32>,
+
+        /// Include Kafka throughputs in `include`.
+        #[clap(long, multiple = false, use_delimiter = true)]
+        kafka_include: Vec<u32>,
+
+        /// Kafka histograms.
+        #[clap(short, long)]
+        kafka: Vec<PathBuf>,
+
+        /// Exclude Sys throughputs in `exclude`.
+        #[clap(long, multiple = false, use_delimiter = true)]
+        sys_exclude: Vec<u32>,
+
+        /// Include Sys throughputs in `include`.
+        #[clap(long, multiple = false, use_delimiter = true)]
+        sys_include: Vec<u32>,
+
+        /// Sys histograms.
+        #[clap(short, long)]
+        sys: Vec<PathBuf>,
+
+        /// Output SVG file to `output`.
+        #[clap(short, long)]
+        output: PathBuf,
     },
 }
 
@@ -186,14 +229,14 @@ fn main() -> anyhow::Result<()> {
         ),
 
         Command::Plot {
-            inputs,
-            output,
+            title,
             delivery,
             max_latency,
             linear,
-            experiment,
             include,
             exclude,
+            inputs,
+            output,
         } => {
             let data = histogram::read_all(&inputs)?
                 .into_iter()
@@ -203,7 +246,7 @@ fn main() -> anyhow::Result<()> {
                 .filter(|(_, (_, histogram))| {
                     max_latency.map_or(true, |max_latency| histogram.max() <= max_latency)
                 })
-                .map(|((_, throughput), (_, histogram))| (throughput, histogram))
+                .map(|((_, throughput), (_, histogram))| (throughput.to_string(), histogram))
                 .collect::<Vec<_>>();
 
             if data.is_empty() {
@@ -211,10 +254,57 @@ fn main() -> anyhow::Result<()> {
             }
 
             latency::plot(
-                &experiment,
+                &title,
                 &delivery.to_ascii_uppercase(),
                 output,
                 &data,
+                linear,
+            )?;
+        }
+
+        Command::Compare {
+            title,
+            delivery,
+            linear,
+            kafka_exclude,
+            kafka_include,
+            kafka,
+            sys_exclude,
+            sys_include,
+            sys,
+            output,
+        } => {
+            let kafka_data = histogram::read_all(&kafka)?
+                .into_iter()
+                .filter(|((delivery_, _), _)| delivery == *delivery_)
+                .filter(|((_, throughput), _)| {
+                    kafka_exclude.is_empty() || !kafka_exclude.contains(throughput)
+                })
+                .filter(|((_, throughput), _)| {
+                    kafka_include.is_empty() || kafka_include.contains(throughput)
+                })
+                .map(|((_, throughput), (_, histogram))| {
+                    (format!("Kafka {}", throughput), histogram)
+                });
+
+            let sys_data = histogram::read_all(&sys)?
+                .into_iter()
+                .filter(|((delivery_, _), _)| delivery == *delivery_)
+                .filter(|((_, throughput), _)| {
+                    sys_exclude.is_empty() || !sys_exclude.contains(throughput)
+                })
+                .filter(|((_, throughput), _)| {
+                    sys_include.is_empty() || sys_include.contains(throughput)
+                })
+                .map(|((_, throughput), (_, histogram))| {
+                    (format!("Sys {}", throughput), histogram)
+                });
+
+            latency::plot(
+                &title,
+                &delivery.to_ascii_uppercase(),
+                output,
+                &kafka_data.chain(sys_data).collect::<Vec<_>>(),
                 linear,
             )?;
         }

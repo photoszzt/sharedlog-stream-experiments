@@ -25,7 +25,7 @@ pub fn plot<P: AsRef<Path>>(
     experiment: &str,
     delivery: &str,
     path: P,
-    data: &[(u32, Histogram<u32>)],
+    data: &[(String, Histogram<u32>)],
     linear: bool,
 ) -> anyhow::Result<()> {
     match linear {
@@ -38,7 +38,7 @@ fn plot_internal<S, P>(
     experiment: &str,
     delivery: &str,
     path: P,
-    data: &[(u32, Histogram<u32>)],
+    data: &[(String, Histogram<u32>)],
     scale: fn(Range<u64>) -> S,
 ) -> anyhow::Result<()>
 where
@@ -79,7 +79,7 @@ where
         .y_desc("Latency (ms)")
         .draw()?;
 
-    for (index, (throughput, histogram)) in data.iter().enumerate() {
+    for (index, (label, histogram)) in data.iter().enumerate() {
         let color = Palette99::pick(index);
 
         chart
@@ -92,7 +92,7 @@ where
                 }),
                 color.stroke_width(3),
             ))?
-            .label(format!("{}", throughput))
+            .label(label)
             .legend(move |(x, y)| Rectangle::new([(x, y - 5), (x + 20, y + 5)], color.filled()));
     }
 
