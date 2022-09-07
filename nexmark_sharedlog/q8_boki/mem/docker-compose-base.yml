@@ -4,6 +4,7 @@ networks:
     ipam:
       config:
         - subnet: 172.99.0.0/16
+
 services:
   zookeeper:
     image: docker.io/bitnami/zookeeper:3.8
@@ -205,6 +206,12 @@ services:
       - FAAS_NODE_ID={{.Task.Slot}}
     restart: always
 
+  snapcache:
+    image: redis:7
+    restart: always
+    ports:
+      - '6379'
+
   scale:
     image: ubuntu:focal
     entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "60"]
@@ -273,6 +280,10 @@ services:
        - MEASURE_SRC=1
        - MEASURE_SINK=1
        - BUFPUSH=1
+       - PARALLEL_RESTORE=1
+       - CREATE_SNAPSHOT=1
+       - REDIS_ADDR=snapcache:6379
     depends_on:
        - faas-engine
+       - snapcache
     restart: always
