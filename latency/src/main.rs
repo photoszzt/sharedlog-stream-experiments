@@ -1,65 +1,87 @@
 use std::fs;
 use std::fs::File;
-use std::iter;
 use std::path::PathBuf;
 use std::time;
 
 use anyhow::anyhow;
 use anyhow::Context as _;
+use clap::Parser;
 use latency::histogram;
 use walkdir::WalkDir;
 
+#[derive(Parser)]
+#[clap(about)]
 enum Command {
     /// Compress raw gzipped logs into gzipped HDR histograms.
     Compress {
-        inputs: Vec<PathBuf>,
+        #[clap(short, long)]
         output: Option<PathBuf>,
+
+        inputs: Vec<PathBuf>,
     },
 
     /// Print aggregate statistics from a gzipped HDR histogram.
-    Query { inputs: Vec<PathBuf>, pretty: bool },
+    Query {
+        #[clap(short, long)]
+        pretty: bool,
+
+        inputs: Vec<PathBuf>,
+    },
 
     /// Compress and report all aggregate statistics from experiment directory `input`.
     ///
     /// Only collects statistics from log files beginning with `prefix`.
     /// Optionally cache histograms under directory `output`.
     Scan {
-        input: PathBuf,
-        output: Option<PathBuf>,
+        #[clap(short, long)]
         prefix: String,
+
+        #[clap(short, long)]
         suffix: Option<String>,
+
+        #[clap(short, long)]
+        output: Option<PathBuf>,
+
+        input: PathBuf,
     },
 
     /// Plot distributions from gzipped HDR histograms.
     Plot {
         /// Include distributions with delivery semantics `delivery`.
+        #[clap(short, long)]
         delivery: String,
 
         /// Include distributions with maximum latency below `max_latency`.
+        #[clap(short, long)]
         max_latency: Option<u64>,
 
         /// Exclude throughputs in `exclude`.
+        #[clap(short, long, multiple = false, use_delimiter = true)]
         exclude: Vec<u32>,
 
         /// Include throughputs in `include`.
+        #[clap(short, long, multiple = false, use_delimiter = true)]
         include: Vec<u32>,
 
         /// Plot using a linear Y-axis instead of logarithmic.
+        #[clap(short, long)]
         linear: bool,
 
         /// Experiment name for plot title.
+        #[clap(short, long)]
         experiment: String,
+
+        /// Output SVG file to `output`.
+        #[clap(short, long)]
+        output: PathBuf,
 
         /// Load histograms from paths in `inputs`.
         inputs: Vec<PathBuf>,
-
-        /// Output SVG file to `output`.
-        output: PathBuf,
     },
 }
 
 fn main() -> anyhow::Result<()> {
-    match Command::parse()? {
+    match Command::parse() {
         Command::Compress { inputs, output } => {
             let mut histogram = histogram::new();
 
@@ -199,83 +221,4 @@ fn main() -> anyhow::Result<()> {
     }
 
     Ok(())
-}
-
-impl Command {
-    pub fn parse() -> anyhow::Result<Self> {
-        let mut arguments = pico_args::Arguments::from_env();
-
-        let command = match arguments.subcommand()?.as_deref() {
-            Some("compress") => Command::Compress {
-                output: match arguments.opt_value_from_str("-o")? {
-                    Some(output) => Some(output),
-                    None => arguments.opt_value_from_str("--output")?,
-                },
-                inputs: iter::from_fn(|| arguments.opt_free_from_str().transpose())
-                    .collect::<Result<Vec<_>, _>>()?,
-            },
-            Some("scan") => Command::Scan {
-                output: match arguments.opt_value_from_str("-o")? {
-                    Some(output) => Some(output),
-                    None => arguments.opt_value_from_str("--output")?,
-                },
-                prefix: arguments
-                    .value_from_str("-p")
-                    .or_else(|_| arguments.value_from_str("--prefix"))?,
-                suffix: match arguments.opt_value_from_str("-s")? {
-                    Some(suffix) => Some(suffix),
-                    None => arguments.opt_value_from_str("--suffix")?,
-                },
-                input: arguments.free_from_str()?,
-            },
-            Some("query") => Command::Query {
-                pretty: arguments.contains(["-p", "--pretty"]),
-                inputs: iter::from_fn(|| arguments.opt_free_from_str().transpose())
-                    .collect::<Result<Vec<_>, _>>()
-                    .map(|mut inputs| {
-                        if inputs.is_empty() {
-                            inputs.push(PathBuf::from("-"));
-                        }
-                        inputs
-                    })?,
-            },
-            Some("plot") => Command::Plot {
-                output: arguments
-                    .value_from_str("-o")
-                    .or_else(|_| arguments.value_from_str("--output"))?,
-                max_latency: match arguments.opt_value_from_str("-m")? {
-                    Some(max_latency) => Some(max_latency),
-                    None => arguments.opt_value_from_str("--max-latency")?,
-                },
-                include: arguments
-                    .values_from_str("--include")?
-                    .into_iter()
-                    .chain(arguments.values_from_str("-i")?)
-                    .collect(),
-                exclude: arguments
-                    .values_from_str("--exclude")?
-                    .into_iter()
-                    .chain(arguments.values_from_str("-e")?)
-                    .collect(),
-                delivery: arguments
-                    .value_from_str("-d")
-                    .or_else(|_| arguments.value_from_str("--delivery"))?,
-                linear: arguments.contains(["-l", "--linear"]),
-                experiment: arguments
-                    .value_from_str("-n")
-                    .or_else(|_| arguments.value_from_str("--experiment"))?,
-                inputs: iter::from_fn(|| arguments.opt_free_from_str().transpose())
-                    .collect::<Result<Vec<_>, _>>()
-                    .map(|mut inputs| {
-                        if inputs.is_empty() {
-                            inputs.push(PathBuf::from("-"));
-                        }
-                        inputs
-                    })?,
-            },
-            None | Some(_) => return Err(anyhow!("Expected one of [compress, scan, query, plot]")),
-        };
-
-        Ok(command)
-    }
 }
