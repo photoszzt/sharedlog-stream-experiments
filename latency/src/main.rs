@@ -46,6 +46,9 @@ enum Command {
         /// Plot using a linear Y-axis instead of logarithmic.
         linear: bool,
 
+        /// Experiment name for plot title.
+        experiment: String,
+
         /// Load histograms from paths in `inputs`.
         inputs: Vec<PathBuf>,
 
@@ -153,6 +156,7 @@ fn main() -> anyhow::Result<()> {
             delivery,
             max_latency,
             linear,
+            experiment,
             include,
             exclude,
         } => {
@@ -171,7 +175,13 @@ fn main() -> anyhow::Result<()> {
                 return Err(anyhow!("No valid histograms found"));
             }
 
-            latency::plot(output, &data, linear)?;
+            latency::plot(
+                &experiment,
+                &delivery.to_ascii_uppercase(),
+                output,
+                &data,
+                linear,
+            )?;
         }
     }
 
@@ -234,6 +244,9 @@ impl Command {
                     .value_from_str("-d")
                     .or_else(|_| arguments.value_from_str("--delivery"))?,
                 linear: arguments.contains(["-l", "--linear"]),
+                experiment: arguments
+                    .value_from_str("-n")
+                    .or_else(|_| arguments.value_from_str("--experiment"))?,
                 inputs: iter::from_fn(|| arguments.opt_free_from_str().transpose())
                     .collect::<Result<Vec<_>, _>>()
                     .map(|mut inputs| {

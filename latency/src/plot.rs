@@ -22,17 +22,21 @@ use plotters::style::BLACK;
 use plotters::style::WHITE;
 
 pub fn plot<P: AsRef<Path>>(
+    experiment: &str,
+    delivery: &str,
     path: P,
     data: &[(u32, Histogram<u32>)],
     linear: bool,
 ) -> anyhow::Result<()> {
     match linear {
-        true => plot_internal(path, data, std::convert::identity),
-        false => plot_internal(path, data, IntoLogRange::log_scale),
+        true => plot_internal(experiment, delivery, path, data, std::convert::identity),
+        false => plot_internal(experiment, delivery, path, data, IntoLogRange::log_scale),
     }
 }
 
 fn plot_internal<S, P>(
+    experiment: &str,
+    delivery: &str,
     path: P,
     data: &[(u32, Histogram<u32>)],
     scale: fn(Range<u64>) -> S,
@@ -57,7 +61,10 @@ where
 
     let mut chart = ChartBuilder::on(&root)
         .caption(
-            "Latency Distribution At Different Throughputs",
+            format!(
+                "{} {} Latency Distribution At Different Throughput Per Second Per Worker",
+                experiment, delivery,
+            ),
             ("sans-serif", 3.percent_height()),
         )
         .set_label_area_size(LabelAreaPosition::Left, 6.percent_width())
