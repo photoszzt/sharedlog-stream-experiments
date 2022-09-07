@@ -4,12 +4,12 @@ use std::io::Read;
 use std::io::Write;
 use std::path::PathBuf;
 
-use anyhow::anyhow;
 use anyhow::Context as _;
 use hdrhistogram::serialization::Deserializer;
 use hdrhistogram::serialization::Serializer as _;
 use hdrhistogram::serialization::V2Serializer;
 use hdrhistogram::Histogram;
+use walkdir::WalkDir;
 
 pub fn new() -> Histogram<u32> {
     // Note: maximum latency should definitely be below 15 minutes
@@ -22,10 +22,14 @@ pub fn read_all(
 ) -> anyhow::Result<BTreeMap<(String, u32), (u32, Histogram<u32>)>> {
     let mut histograms = BTreeMap::default();
 
-    for input in inputs {
-        let (delivery, throughput) = match input
+    for entry in inputs
+        .iter()
+        .flat_map(|input| WalkDir::new(input).max_depth(1))
+        .filter_map(Result::ok)
+        .filter(|entry| entry.file_type().is_file())
+    {
+        let (delivery, throughput) = match entry
             .file_name()
-            .with_context(|| anyhow!("Missing file name for input: {}", input.display()))?
             .to_string_lossy()
             .split_once('-')
             .and_then(|(delivery, next)| {
@@ -34,15 +38,18 @@ pub fn read_all(
             }) {
             Some((delivery, throughput)) => (delivery, throughput),
             None => {
-                eprintln!("Ignoring unrecognized file name: {}", input.display());
+                eprintln!(
+                    "Ignoring unrecognized file name: {}",
+                    entry.path().display()
+                );
                 continue;
             }
         };
 
-        let partial = read(crate::reader(Some(input))?)?;
+        let partial = read(crate::reader(Some(entry.path()))?)?;
 
         if partial.is_empty() {
-            eprintln!("Ignoring empty histogram: {}", input.display());
+            eprintln!("Ignoring empty histogram: {}", entry.path().display());
             continue;
         }
 
