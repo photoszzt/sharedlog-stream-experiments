@@ -117,6 +117,14 @@ enum Command {
         #[clap(short, long)]
         sys: Vec<PathBuf>,
 
+        /// Exclude throughputs in `exclude`.
+        #[clap(short, long, multiple = false, use_delimiter = true)]
+        exclude: Vec<u32>,
+
+        /// Include throughputs in `include`.
+        #[clap(short, long, multiple = false, use_delimiter = true)]
+        include: Vec<u32>,
+
         /// Output SVG file to `output`.
         #[clap(short, long)]
         output: PathBuf,
@@ -272,16 +280,20 @@ fn main() -> anyhow::Result<()> {
             sys_exclude,
             sys_include,
             sys,
+            include,
+            exclude,
             output,
         } => {
             let kafka_data = histogram::read_all(&kafka)?
                 .into_iter()
                 .filter(|((delivery_, _), _)| delivery == *delivery_)
                 .filter(|((_, throughput), _)| {
-                    kafka_exclude.is_empty() || !kafka_exclude.contains(throughput)
+                    (exclude.is_empty() || !exclude.contains(throughput))
+                        && (kafka_exclude.is_empty() || !kafka_exclude.contains(throughput))
                 })
                 .filter(|((_, throughput), _)| {
-                    kafka_include.is_empty() || kafka_include.contains(throughput)
+                    (include.is_empty() || include.contains(throughput))
+                        && (kafka_include.is_empty() || kafka_include.contains(throughput))
                 })
                 .map(|((_, throughput), (_, histogram))| {
                     (format!("Kafka {}", throughput), histogram)
@@ -291,10 +303,12 @@ fn main() -> anyhow::Result<()> {
                 .into_iter()
                 .filter(|((delivery_, _), _)| delivery == *delivery_)
                 .filter(|((_, throughput), _)| {
-                    sys_exclude.is_empty() || !sys_exclude.contains(throughput)
+                    (exclude.is_empty() || !exclude.contains(throughput))
+                        && (sys_exclude.is_empty() || !sys_exclude.contains(throughput))
                 })
                 .filter(|((_, throughput), _)| {
-                    sys_include.is_empty() || sys_include.contains(throughput)
+                    (include.is_empty() || include.contains(throughput))
+                        && (sys_include.is_empty() || sys_include.contains(throughput))
                 })
                 .map(|((_, throughput), (_, histogram))| {
                     (format!("Sys {}", throughput), histogram)
