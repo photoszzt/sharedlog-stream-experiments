@@ -3,6 +3,9 @@ use std::ops::Range;
 use std::path::Path;
 
 use hdrhistogram::Histogram;
+use plotters::backend::BitMapBackend;
+use plotters::backend::DrawingBackend;
+use plotters::backend::SVGBackend;
 use plotters::chart::ChartBuilder;
 use plotters::chart::LabelAreaPosition;
 use plotters::chart::SeriesLabelPosition;
@@ -11,7 +14,7 @@ use plotters::coord::ranged1d::AsRangedCoord;
 use plotters::coord::ranged1d::DefaultFormatting;
 use plotters::coord::ranged1d::Ranged;
 use plotters::coord::ranged1d::ValueFormatter;
-use plotters::drawing::IntoDrawingArea as _;
+use plotters::drawing::IntoDrawingArea;
 use plotters::element::Rectangle;
 use plotters::series::LineSeries;
 use plotters::style::AsRelative as _;
@@ -28,26 +31,55 @@ pub fn plot<P: AsRef<Path>>(
     data: &[(String, Histogram<u32>)],
     linear: bool,
 ) -> anyhow::Result<()> {
-    match linear {
-        true => plot_internal(experiment, delivery, path, data, std::convert::identity),
-        false => plot_internal(experiment, delivery, path, data, IntoLogRange::log_scale),
+    const SIZE: (u32, u32) = (1920, 1080);
+
+    match (path.as_ref().ends_with("png"), linear) {
+        (true, true) => plot_internal(
+            experiment,
+            delivery,
+            data,
+            BitMapBackend::new(&path, SIZE),
+            std::convert::identity,
+        ),
+        (true, false) => plot_internal(
+            experiment,
+            delivery,
+            data,
+            BitMapBackend::new(&path, SIZE),
+            IntoLogRange::log_scale,
+        ),
+        (false, true) => plot_internal(
+            experiment,
+            delivery,
+            data,
+            SVGBackend::new(&path, SIZE),
+            std::convert::identity,
+        ),
+        (false, false) => plot_internal(
+            experiment,
+            delivery,
+            data,
+            SVGBackend::new(&path, SIZE),
+            IntoLogRange::log_scale,
+        ),
     }
 }
 
-fn plot_internal<S, P>(
+fn plot_internal<B, S>(
     experiment: &str,
     delivery: &str,
-    path: P,
     data: &[(String, Histogram<u32>)],
+    backend: B,
     scale: fn(Range<u64>) -> S,
 ) -> anyhow::Result<()>
 where
+    B: DrawingBackend + IntoDrawingArea,
+    B::ErrorType: 'static,
     S: AsRangedCoord<Value = u64>,
     S::CoordDescType: ValueFormatter<u64> + Ranged<FormatOption = DefaultFormatting>,
     S::Value: std::fmt::Debug,
-    P: AsRef<Path>,
 {
-    let root = plotters::backend::SVGBackend::new(&path, (1920, 1080)).into_drawing_area();
+    let root = backend.into_drawing_area();
     root.fill(&WHITE)?;
 
     let (min_latency, max_latency) = data
