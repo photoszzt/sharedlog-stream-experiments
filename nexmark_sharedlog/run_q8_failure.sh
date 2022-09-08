@@ -6,7 +6,7 @@ WORKSPACE_DIR=$(realpath $SCRIPT_DIR/../../)
 # $WORKSPACE_DIR/research-helper-scripts/microservice_helper start-machines --use-spot-instances
 # cd ../..
 
-TPS_PER_WORKER=(4000)
+TPS_PER_WORKER=(12000)
 NUM_WORKER=(4)
 DURATION=180
 WARM_DURATION=0
@@ -16,7 +16,7 @@ FLUSH_MS=100
 SRC_FLUSH_MS=100
 SNAPSHOT_S=10
 
-for ((i = 1; i < 3; ++i)); do
+for ((i = 0; i < 3; ++i)); do
 	for ((k = 0; k < ${#APP[@]}; ++k)); do
 	    cd ${DIR[k]}
 	    for ((idx = 0; idx < ${#TPS_PER_WORKER[@]}; ++idx)); do
