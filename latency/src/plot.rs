@@ -33,7 +33,14 @@ pub fn plot<P: AsRef<Path>>(
 ) -> anyhow::Result<()> {
     const SIZE: (u32, u32) = (1920, 1080);
 
-    match (path.as_ref().ends_with("png"), linear) {
+    match (
+        path.as_ref()
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .ends_with("png"),
+        linear,
+    ) {
         (true, true) => plot_internal(
             experiment,
             delivery,

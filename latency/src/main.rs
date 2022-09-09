@@ -174,6 +174,7 @@ fn main() -> anyhow::Result<()> {
                 let cache = match output.as_deref() {
                     None => None,
                     Some(path) => {
+                        let name = format!("{}-{}-{}.hist.gz", delivery, throughput, time);
                         let path =
                             path.join(format!("{}-{}-{}.hist.gz", delivery, throughput, time));
 
@@ -187,7 +188,7 @@ fn main() -> anyhow::Result<()> {
                         // Short-circuit with cached histogram
                         if file.metadata()?.len() > 0 {
                             let histogram = histogram::read(file)?;
-                            histogram::report(&histogram, delivery, throughput, 1, false);
+                            histogram::report(&histogram, delivery, throughput, &[name], false);
                             continue;
                         }
 
@@ -216,7 +217,13 @@ fn main() -> anyhow::Result<()> {
 
                 match histogram.is_empty() {
                     true => println!("{},{},x,x,x,x,x,x,x,x,x,x,x", delivery, throughput),
-                    false => histogram::report(&histogram, delivery, throughput, 1, false),
+                    false => histogram::report(
+                        &histogram,
+                        delivery,
+                        throughput,
+                        &[entry.file_name().to_string_lossy()],
+                        false,
+                    ),
                 }
 
                 match cache {
@@ -232,7 +239,7 @@ fn main() -> anyhow::Result<()> {
 
         Command::Query { inputs, pretty } => histogram::read_all(&inputs)?.into_iter().for_each(
             |((delivery, throughput), (trials, histogram))| {
-                histogram::report(&histogram, &delivery, &throughput, trials, pretty);
+                histogram::report(&histogram, &delivery, &throughput, &trials, pretty);
             },
         ),
 

@@ -19,7 +19,7 @@ pub fn new() -> Histogram<u32> {
 #[allow(clippy::type_complexity)]
 pub fn read_all(
     inputs: &[PathBuf],
-) -> anyhow::Result<BTreeMap<(String, u32), (u32, Histogram<u32>)>> {
+) -> anyhow::Result<BTreeMap<(String, u32), (Vec<String>, Histogram<u32>)>> {
     let mut histograms = BTreeMap::default();
 
     for entry in inputs
@@ -55,9 +55,9 @@ pub fn read_all(
 
         let (trials, total) = histograms
             .entry((delivery, throughput))
-            .or_insert_with(|| (0, new()));
+            .or_insert_with(|| (Vec::new(), new()));
 
-        *trials += 1;
+        trials.push(entry.file_name().to_string_lossy().into_owned());
         *total += partial;
     }
 
@@ -80,17 +80,19 @@ pub fn write<W: Write>(writer: W, histogram: &Histogram<u32>) -> anyhow::Result<
     Ok(())
 }
 
-pub fn report(
+pub fn report<S>(
     histogram: &Histogram<u32>,
     delivery: &str,
     throughput: impl Display,
-    trials: u32,
+    trials: &[S],
     pretty: bool,
-) {
+) where
+    S: AsRef<str>,
+{
     if pretty {
         println!("delivery: {}", delivery);
         println!("throughput/sec/worker: {}", throughput);
-        println!("\ttrials: {}", trials);
+        println!("\ttrials: {}", trials.len());
         println!("\tpoints: {}", histogram.len());
         println!("\tavg (ms): {:.03}", histogram.mean());
         println!("\tstd (ms): {:.03}", histogram.stdev());
@@ -103,11 +105,15 @@ pub fn report(
         println!("\tmax (ms): {}", histogram.max());
         println!();
     } else {
+        print!("{},{},", delivery, throughput,);
+
+        match trials {
+            [trial] => print!("{},", trial.as_ref()),
+            _ => print!("{},", trials.len()),
+        }
+
         println!(
-            "{},{},{},{},{:.03},{:.03},{},{},{},{},{},{},{}",
-            delivery,
-            throughput,
-            trials,
+            "{},{:.03},{:.03},{},{},{},{},{},{},{}",
             histogram.len(),
             histogram.mean(),
             histogram.stdev(),
