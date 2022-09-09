@@ -16,7 +16,8 @@
         "faas-storage-2": { "type": "c5d.2xlarge", "role": "worker", "mount_instance_storage": "nvme1n1", "labels": ["storage_node=true"] },
         "faas-storage-3": { "type": "c5d.2xlarge", "role": "worker", "mount_instance_storage": "nvme1n1", "labels": ["storage_node=true"] },
         "faas-storage-4": { "type": "c5d.2xlarge", "role": "worker", "mount_instance_storage": "nvme1n1", "labels": ["storage_node=true"] },
-        "faas-client": { "type": "c5d.xlarge", "role": "client" }
+        "faas-client": { "type": "c5d.xlarge", "role": "client" },
+        "faas-snapcache": { "type": "c5d.2xlarge", "role": "worker", "mount_instance_storage": "nvme1n1", "labels": ["redis_node=true"] }
     },
     "services": {
         "zookeeper": { "placement": "faas-gateway" },
@@ -29,6 +30,7 @@
         "nexmark-source": { "placement_label": "engine_node", "replicas": 8 },
         "q3GroupBy": { "placement_label": "engine_node", "replicas": 8 },
         "q3JoinTable": { "placement_label": "engine_node", "replicas": 8 },
-        "scale": { "placement_label": "engine_node", "replicas": 8 }
+        "scale": { "placement_label": "engine_node", "replicas": 8 },
+	    "snapcache": { "placement": "faas-snapcache" }
     }
 }

@@ -16,8 +16,7 @@ WARM_DURATION=""
 FLUSH_MS=""
 SRC_FLUSH_MS=""
 NUM_WORKER=""
-FAIL=""
-SNAPSHOT_S=0
+FAIL_SCRIPT=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -61,13 +60,9 @@ while [ $# -gt 0 ]; do
             if [[ "$1" != *=* ]]; then shift; fi
             SRC_FLUSH_MS="${1#*=}"
             ;;
-        --fail*)
+        --fail_script*)
             if [[ "$1" != *=* ]]; then shift; fi
-            FAIL="${1#*=}"
-            ;;
-	--snapshot_s*)
-            if [[ "$1" != *=* ]]; then shift; fi
-            SNAPSHOT_S="${1#*=}"
+            FAIL_SCRIPT="${1#*=}"
             ;;
         --help|-h)
             printf -- "--app <appname> one of q1,q2,q3,q5,q7,q8\n"
@@ -119,11 +114,16 @@ if [[ "$NUM_WORKER" = "" ]]; then
     echo "need to specify num worker"
     exit 1
 fi
+if [[ "FAIL_SCRIPT" = "" ]]; then
+	echo "need to specify the fail script"
+	exit 1
+fi
+FAIL_SCRIPT=$(realpath $FAIL_SCRIPT)
 
 
 echo "app: ${APP_NAME}, exp_dir: ${EXP_DIR}, guarantee: ${GUA}, duration: ${DURATION}, \
     events_num: ${EVENTS_NUM}, tps: ${TPS}, warmup time: ${WARM_DURATION}, flushms: ${FLUSH_MS}, \
-    src_flushms: ${SRC_FLUSH_MS}, num_worker: ${NUM_WORKER}, fail_spec: ${FAIL_SPEC}, snapshot_s: ${SNAPSHOT_S}"
+    src_flushms: ${SRC_FLUSH_MS}, num_worker: ${NUM_WORKER}, fail_spec: ${FAIL_SPEC}"
 
 SOURCE=${BASH_SOURCE[0]}
 while [ -L "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
@@ -148,10 +148,6 @@ mkdir -p $EXP_DIR
 
 ssh -q $MANAGER_HOST -- cat /proc/cmdline >>$EXP_DIR/kernel_cmdline
 ssh -q $MANAGER_HOST -- uname -a >>$EXP_DIR/kernel_version
-FAIL_SPEC_ARG=""
-if [[ "$FAIL" = "true" ]]; then
-    FAIL_SPEC_ARG="-fail_spec=$SRC_DIR/workload_config/${NUM_WORKER}_ins/failure_config/${APP_NAME}.json"
-fi
 
 ALL_ENGINE_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=engine_node)
 for HOST in $ALL_ENGINE_HOSTS; do
@@ -164,7 +160,24 @@ ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name ${APP_NAME} \
     -src_flushms ${SRC_FLUSH_MS} -events_num ${EVENTS_NUM} \
     -wconfig $SRC_DIR/workload_config/${NUM_WORKER}_ins/${APP_NAME}.json \
     -stat_dir /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats -waitForLast=true \
-    -tps $TPS -warmup_time $WARM_DURATION $FAIL_SPEC_ARG -snapshot_everyS=$SNAPSHOT_S >$EXP_DIR/results.log 2>&1
+    -tps $TPS -warmup_time $WARM_DURATION >$EXP_DIR/results.log 2>&1 &
+p=$!
+
+# FAIL_EVERY=20
+# PASSED=0
+# 
+# END=$(expr ${DURATION} - 40)
+# 
+# while [ $PASSED -lt $END ]; do
+# 	sleep $FAIL_EVERY
+# 	$FAIL_SCRIPT
+# 	PASSED=$(expr $PASSED + $FAIL_EVERY)
+# done
+
+sleep 40
+$FAIL_SCRIPT
+
+wait $p
 
 for HOST in $ALL_ENGINE_HOSTS; do
 	ssh -q $HOST -oStrictHostKeyChecking=no -- pkill sar
@@ -204,5 +217,5 @@ ssh -q $CLIENT_HOST -- "$WORKSPACE_DIR/sharedlog-stream-experiments/nexmark_shar
 
 scp -r $CLIENT_HOST:/home/ubuntu/${APP_NAME}/${EXP_DIR}/stats ${EXP_DIR}
 
-$HELPER_SCRIPT collect-func-output --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
-# $HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
+# $HELPER_SCRIPT collect-func-output --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
+$HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs

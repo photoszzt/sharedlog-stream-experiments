@@ -205,6 +205,12 @@ services:
       - FAAS_NODE_ID={{.Task.Slot}}
     restart: always
 
+  snapcache:
+    image: redis:7
+    restart: always
+    ports:
+      - '6379'
+
   scale:
     image: ubuntu:focal
     entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "70"]
@@ -274,8 +280,12 @@ services:
        - MEASURE_SINK=1
        - BUFPUSH=1
        - USE_CACHE=1
+       - PARALLEL_RESTORE=1
+       - CREATE_SNAPSHOT=1
+       - REDIS_ADDR=snapcache:6379
     depends_on:
        - faas-engine
+       - snapcache
     restart: always
 
   q4MaxBid:
@@ -294,8 +304,12 @@ services:
        - MEASURE_SINK=1
        - BUFPUSH=1
        - USE_CACHE=1
+       - PARALLEL_RESTORE=1
+       - CREATE_SNAPSHOT=1
+       - REDIS_ADDR=snapcache:6379
     depends_on:
        - faas-engine
+       - snapcache
     restart: always
 
   q4Avg:
@@ -314,6 +328,10 @@ services:
        - MEASURE_SINK=1
        - BUFPUSH=1
        - USE_CACHE=1
+       - PARALLEL_RESTORE=1
+       - CREATE_SNAPSHOT=1
+       - REDIS_ADDR=snapcache:6379
     depends_on:
        - faas-engine
+       - snapcache
     restart: always
