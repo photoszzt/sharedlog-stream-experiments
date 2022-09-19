@@ -15,6 +15,7 @@ EVENTS_NUM=""
 TPS=""
 FLUSH_MS=""
 SRC_FLUSH_MS=""
+SNAPSHOT_S=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -50,6 +51,10 @@ while [ $# -gt 0 ]; do
             if [[ "$1" != *=* ]]; then shift; fi
             SRC_FLUSH_MS="${1#*=}"
             ;;
+	--snapshot_s*)
+            if [[ "$1" != *=* ]]; then shift; fi
+            SNAPSHOT_S="${1#*=}"
+            ;;
         --help|-h)
             printf -- "--app <appname> one of q1,q2,q3,q5,q7,q8\n"
             printf -- "--exp_dir <exp_dir> required\n"
@@ -68,10 +73,6 @@ done
 
 if [[ "$EVENTS_NUM" = "" ]]; then
     echo "need to specify number of events"
-    exit 1
-fi
-if [[ "$WARM_DURATION" = "" ]]; then
-    echo "need to specify warmup duration"
     exit 1
 fi
 if [[ "$TPS" = "" ]]; then
@@ -95,10 +96,9 @@ if [[ "$EXP_DIR" = "" ]]; then
     exit 1
 fi
 
-
 echo "app: ${APP_NAME}, exp_dir: ${EXP_DIR}, dur before scale: ${BEF_DUR}, dur after scale: ${AF_DUR} \
     events_num: ${EVENTS_NUM}, tps: ${TPS}, flushms: ${FLUSH_MS}, \
-    src_flushms: ${SRC_FLUSH_MS}"
+    src_flushms: ${SRC_FLUSH_MS}, snapshot_s: ${SNAPSHOT_S}"
 
 SOURCE=${BASH_SOURCE[0]}
 while [ -L "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
@@ -133,10 +133,10 @@ ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_scale -app_name ${APP_NAME} \
     -faas_gateway $ENTRY_HOST:8080 -durBF ${BEF_DUR} -durAF ${AF_DUR} -serde msgp \
     -guarantee epoch -comm_everyMS ${FLUSH_MS} -flushms ${FLUSH_MS} \
     -src_flushms ${SRC_FLUSH_MS} -events_num ${EVENTS_NUM} \
-    -wconfig $SRC_DIR/workload_config/4_ins/${APP_NAME}.json \
-    -scconfig $SRC_DIR/scale_to_src_unchanged/4_to_8_ins/${APP_NAME}.json \
+    -wconfig $SRC_DIR/workload_config/2_ins/${APP_NAME}.json \
+    -scconfig $SRC_DIR/scale_to_src_unchanged/2_to_4_ins/${APP_NAME}.json \
     -stat_dir /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats -waitForLast=true \
-    -tps $TPS >$EXP_DIR/results.log 2>&1
+    -tps $TPS -snapshot_everyS=$SNAPSHOT_S >$EXP_DIR/results.log 2>&1
 
 for HOST in $ALL_ENGINE_HOSTS; do
 	ssh -q $HOST -oStrictHostKeyChecking=no -- pkill sar
@@ -176,5 +176,5 @@ ssh -q $CLIENT_HOST -- "$WORKSPACE_DIR/sharedlog-stream-experiments/nexmark_shar
 
 scp -r $CLIENT_HOST:/home/ubuntu/${APP_NAME}/${EXP_DIR}/stats ${EXP_DIR}
 
-$HELPER_SCRIPT collect-func-output --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
-# $HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
+# $HELPER_SCRIPT collect-func-output --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
+$HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
