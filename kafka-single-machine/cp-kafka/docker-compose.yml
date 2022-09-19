@@ -1,5 +1,5 @@
 ---
-version: '2'
+version: '3'
 
 services:
   zookeeper:
@@ -10,12 +10,17 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    healthcheck:
+      test: echo srvr | nc zookeeper 2181 || exit 1
+      retries: 20
+      interval: 10s
 
   broker1:
     image: confluentinc/cp-kafka:7.1.0
     hostname: broker1
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_started
     ports:
       - "29092:29092"
     environment:
@@ -24,14 +29,22 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker1:9092,PLAINTEXT_HOST://localhost:29092
       KAFKA_MIN_INSYNC_REPLICAS: 3
+    healthcheck:
+      test:
+        ["CMD", "nc", "-vz", "localhost", "29092"]
+      interval: 30s
+      timeout: 10s
+      retries: 4
     volumes:
       - /mnt/data/src/stream_workspace/kdata1:/var/lib/kafka/data
+    restart: always
 
   broker2:
     image: confluentinc/cp-kafka:7.1.0
     hostname: broker2
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_started
     ports:
       - "29093:29093"
     environment:
@@ -40,14 +53,22 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker2:9092,PLAINTEXT_HOST://localhost:29093
       KAFKA_MIN_INSYNC_REPLICAS: 3
+    healthcheck:
+      test:
+        ["CMD", "nc", "-vz", "localhost", "29093"]
+      interval: 30s
+      timeout: 10s
+      retries: 4
     volumes:
       - /mnt/data/src/stream_workspace/kdata2:/var/lib/kafka/data
+    restart: always
 
   broker3:
     image: confluentinc/cp-kafka:7.1.0
     hostname: broker3
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_started
     ports:
       - "29094:29094"
     environment:
@@ -56,5 +77,12 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker3:9092,PLAINTEXT_HOST://localhost:29094
       KAFKA_MIN_INSYNC_REPLICAS: 3
+    healthcheck:
+      test:
+        ["CMD", "nc", "-vz", "localhost", "29094"]
+      interval: 30s
+      timeout: 10s
+      retries: 4
     volumes:
       - /mnt/data/src/stream_workspace/kdata3:/var/lib/kafka/data
+    restart: always
