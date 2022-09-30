@@ -12,9 +12,7 @@ def parse_file(fpath: str):
                 arr[0] = arr[0][1:]
                 arr[-1] = arr[-1][:-1]
                 times = [ int(i) for i in arr]
-                p50 = quantiles(times, n=100)[49]
-                p99 = quantiles(times, n=100)[98]
-                print(f"{fpath} p50: {p50} us, p99: {p99} us")
+                return times
 
 
 def main():
@@ -25,7 +23,10 @@ def main():
         for fname in files:
             if "consume" in fname and "stderr" in fname:
                 path = os.path.join(root, fname)
-                parse_file(path)
+                times = parse_file(path)
+                p50 = quantiles(times, n=100)[49]
+                p99 = quantiles(times, n=100)[98]
+                print(f"{fpath} p50: {p50} us, p99: {p99} us")
 
 
 if __name__ == '__main__':
