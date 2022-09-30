@@ -13,14 +13,14 @@ services:
     healthcheck:
       test: echo srvr | nc zookeeper 2181 || exit 1
       retries: 20
-      interval: 10s
+      interval: 5s
 
   broker1:
     image: confluentinc/cp-kafka:7.1.0
     hostname: broker1
     depends_on:
       zookeeper:
-        condition: service_started
+        condition: service_healthy
     ports:
       - "29092:29092"
     environment:
@@ -44,7 +44,7 @@ services:
     hostname: broker2
     depends_on:
       zookeeper:
-        condition: service_started
+        condition: service_healthy
     ports:
       - "29093:29093"
     environment:
@@ -68,7 +68,7 @@ services:
     hostname: broker3
     depends_on:
       zookeeper:
-        condition: service_started
+        condition: service_healthy
     ports:
       - "29094:29094"
     environment:

@@ -1,0 +1,146 @@
+---
+version: '3'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.1.0
+    hostname: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    healthcheck:
+      test: echo srvr | nc zookeeper 2181 || exit 1
+      retries: 20
+      interval: 10s
+
+  broker1:
+    image: confluentinc/cp-kafka:7.1.0
+    hostname: broker1
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "29092:29092"
+      - "39999:39999"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker1:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_MIN_INSYNC_REPLICAS: 3
+      KAFKA_KMX_PORT: 39999
+      KAFKA_KMX_HOSTNAME: ${EXTERNAL_IP}
+      KAFKA_JMX_OPTS: "-javaagent:/usr/share/jmx-exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx-exporter/kafka_broker.yml"
+      # KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=${EXTERNAL_IP} -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.rmi.port=39999 -Dcom.sun.management.jmxremote.port=39999 -Djava.net.preferIPv4Stack=true"
+    healthcheck:
+      test:
+        ["CMD", "nc", "-vz", "localhost", "29092"]
+      interval: 30s
+      timeout: 10s
+      retries: 4
+    volumes:
+      - /mnt/data/src/stream_workspace/kdata1:/var/lib/kafka/data
+      - ${SCRIPT_DIR}/shared-assets/jmx-exporter/:/usr/share/jmx-exporter
+    restart: always
+
+  broker2:
+    image: confluentinc/cp-kafka:7.1.0
+    hostname: broker2
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "29093:29093"
+      - "49999:49999"
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker2:9092,PLAINTEXT_HOST://localhost:29093
+      KAFKA_MIN_INSYNC_REPLICAS: 3
+      KAFKA_KMX_PORT: 49999
+      KAFKA_KMX_HOSTNAME: ${EXTERNAL_IP}
+      KAFKA_JMX_OPTS: "-javaagent:/usr/share/jmx-exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx-exporter/kafka_broker.yml"
+        # KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=${EXTERNAL_IP} -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.rmi.port=49999 -Dcom.sun.management.jmxremote.port=49999 -Djava.net.preferIPv4Stack=true"
+    healthcheck:
+      test:
+        ["CMD", "nc", "-vz", "localhost", "29093"]
+      interval: 30s
+      timeout: 10s
+      retries: 4
+    volumes:
+      - /mnt/data/src/stream_workspace/kdata2:/var/lib/kafka/data
+      - ${SCRIPT_DIR}/shared-assets/jmx-exporter/:/usr/share/jmx-exporter
+    restart: always
+
+  broker3:
+    image: confluentinc/cp-kafka:7.1.0
+    hostname: broker3
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "29094:29094"
+      - "59999:59999"
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker3:9092,PLAINTEXT_HOST://localhost:29094
+      KAFKA_MIN_INSYNC_REPLICAS: 3
+      KAFKA_KMX_PORT: 59999
+      KAFKA_KMX_HOSTNAME: ${EXTERNAL_IP}
+      KAFKA_JMX_OPTS: "-javaagent:/usr/share/jmx-exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx-exporter/kafka_broker.yml"
+      # KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=${EXTERNAL_IP} -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.rmi.port=59999 -Dcom.sun.management.jmxremote.port=59999 -Djava.net.preferIPv4Stack=true"
+    healthcheck:
+      test:
+        ["CMD", "nc", "-vz", "localhost", "29094"]
+      interval: 30s
+      timeout: 10s
+      retries: 4
+    volumes:
+      - /mnt/data/src/stream_workspace/kdata3:/var/lib/kafka/data
+      - ${SCRIPT_DIR}/shared-assets/jmx-exporter/:/usr/share/jmx-exporter
+    restart: always
+
+  node_exporter:
+    image: prom/node-exporter:v1.2.2
+    hostname: node_exporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.ignored-mount-points"
+      - "^(aufs|proc|nsfs|shm|cgroup|tmpfs|binfmt_misc|debugfs|devpts|fusectl|hugetlbfs|fuse.lxcfs|mqueue|pstore|securityfs|sysfs|autofs|devtmpfs|configfs)"
+
+  prometheus:
+    hostname: prometheus
+    image: prom/prometheus:v2.29.2
+    ports:
+      - "9090:9090"
+    depends_on:
+      broker1:
+        condition: service_healthy
+      broker2:
+        condition: service_healthy
+      broker3:
+        condition: service_healthy
+    volumes:
+      - ${SCRIPT_DIR}/assets/prometheus/prometheus-config/:/etc/prometheus
+
+  # grafana:
+  #   hostname: grafana
+  #   image: grafana/grafana:8.1.3
+  #   environment:
+  #     - "GF_SECURITY_ADMIN_USER=admin"
+  #     - "GF_SECURITY_ADMIN_PASSWORD=password"
+  #     - "GF_USERS_ALLOW_SIGN_UP=false"
+  #   ports:
+  #     - "33000:33000"
+  #   volumes:
+  #     - ${SCRIPT_DIR}/assets/grafana/provisioning/:/etc/grafana/provisioning
