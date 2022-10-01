@@ -60,11 +60,16 @@ ssh -q $MANAGER_HOST -- docker network rm faas-test_default
 ssh -q $MANAGER_HOST -- SRC_DIR=$SRC_DIR FAAS_DIR=$FAAS_DIR EXP_DIR=$EXP_DIR USE_CACHE=${USE_CACHE} FAAS_BUILD_TYPE=$FAAS_BUILD_TYPE \
     docker stack deploy \
     -c ~/docker-compose-base.yml -c ~/docker-compose.yml faas-test
-sleep 80
+ssh -q $MANAGER_HOST -- 'docker exec $(docker container ls -q --filter name=faas-test_zookeeper-setup) bash -c "test -f /tmp/zksetup_down"'
+ret=$?
+while [ $ret != "0" ]; do
+    sleep 5
+    ssh -q $MANAGER_HOST -- 'docker exec $(docker container ls -q --filter name=faas-test_zookeeper-setup) bash -c "test -f /tmp/zksetup_down"'
+    ret=$?
+done
+sleep 20
 
 # for HOST in $ALL_ENGINE_HOSTS; do
 #     ENGINE_CONTAINER_ID=$($HELPER_SCRIPT get-container-id --service faas-engine --machine-host $HOST)
 #     echo 4096 | ssh -q $HOST -- sudo tee /sys/fs/cgroup/cpu,cpuacct/docker/$ENGINE_CONTAINER_ID/cpu.shares
 # done
-
-sleep 10
