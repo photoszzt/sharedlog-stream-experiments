@@ -143,8 +143,8 @@ ssh -q $MANAGER_HOST -- "docker service create \
     --constraint node.labels.consume_node==true --network kstreams-test_default \
     --name kstreams-test_consume --restart-condition none --replicas=$NUM_CONSUMER \
     --replicas-max-per-node=1 --publish published=8090,target=8090 openjdk:11.0.12-jre-slim-buster \
-    bash -c 'java /src/benchmark/lat_tp/kafka_consume_java/app/build/libs/app-uber.jar \
-    -b $FIRST_BROKER_CONTAINER_IP:9092 -d ${CONSUME_DURATION} \
+    bash -c 'java -cp /src/benchmark/lat_tp/kafka_consume_java/app/build/libs/app-uber.jar \
+    kafka_consume_java.App -b $FIRST_BROKER_CONTAINER_IP:9092 -d ${CONSUME_DURATION} \
     -ev ${NUM_EVENTS}'" &
 
 ssh -q $MANAGER_HOST -- "docker service create \
@@ -152,8 +152,8 @@ ssh -q $MANAGER_HOST -- "docker service create \
     --constraint node.labels.produce_node==true --network kstreams-test_default \
     --name kstreams-test_produce --restart-condition none --replicas=$NUM_PRODUCER \
     --replicas-max-per-node=1 --publish published=8080,target=8080 openjdk:11.0.12-jre-slim-buster \
-    bash -c 'java /src/benchmark/lat_tp/kafka_produce_java/app/build/libs/app-uber.jar \
-    -b $FIRST_BROKER_CONTAINER_IP:9092 -d ${DURATION} -ev ${NUM_EVENTS} \
+    bash -c 'java -cp /src/benchmark/lat_tp/kafka_produce_java/app/build/libs/app-uber.jar \
+    kafka_produce_java.App -b $FIRST_BROKER_CONTAINER_IP:9092 -d ${DURATION} -ev ${NUM_EVENTS} \
     -payload /src/data/$PAYLOAD -t $TPS'"
 
 sleep 10
