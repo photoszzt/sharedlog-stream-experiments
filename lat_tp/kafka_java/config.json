@@ -1,0 +1,16 @@
+{
+    "machines": {
+        "kstreams-broker-1": {"type": "c5d.2xlarge", "role": "worker", "mount_instance_storage": "nvme1n1", "labels": [ "broker_node=true" ]},
+        "kstreams-broker-2": {"type": "c5d.2xlarge", "role": "worker", "mount_instance_storage": "nvme1n1", "labels": [ "broker_node=true" ]},
+        "kstreams-broker-3": {"type": "c5d.2xlarge", "role": "worker", "mount_instance_storage": "nvme1n1", "labels": [ "broker_node=true" ]},
+        "kstreams-broker-4": {"type": "c5d.2xlarge", "role": "worker", "mount_instance_storage": "nvme1n1", "labels": [ "broker_node=true" ]},
+        "kstreams-control-1": {"type": "c5d.2xlarge", "role": "manager", "labels": [ "manager_node=true" ]},
+        "kstreams-produce-1": {"type": "c5d.2xlarge", "role": "worker", "labels": [ "produce_node=true" ]},
+        "kstreams-consume-1": {"type": "c5d.2xlarge", "role": "worker", "labels": [ "consume_node=true" ]},
+        "kstreams-client": { "type": "c5d.xlarge", "role": "client" }
+    },
+    "services": {
+        "zookeeper": {"placement": "kstreams-control-1"},
+        "broker": {"placement_label": "broker_node", "replicas": 4 }
+    }
+}

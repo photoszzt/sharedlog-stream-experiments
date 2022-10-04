@@ -152,7 +152,7 @@ ssh -q $MANAGER_HOST -- "docker service create \
     --constraint node.labels.produce_node==true --network kstreams-test_default \
     --name kstreams-test_produce --restart-condition none --replicas=$NUM_PRODUCER \
     --replicas-max-per-node=1 --publish published=8080,target=8080 openjdk:11.0.12-jre-slim-buster \
-    bash -c 'java /src/benchmark/lat_tp/kafka_consume_java/app/build/libs/app-uber.jar \
+    bash -c 'java /src/benchmark/lat_tp/kafka_produce_java/app/build/libs/app-uber.jar \
     -b $FIRST_BROKER_CONTAINER_IP:9092 -d ${DURATION} -ev ${NUM_EVENTS} \
     -payload /src/data/$PAYLOAD -t $TPS'"
 
