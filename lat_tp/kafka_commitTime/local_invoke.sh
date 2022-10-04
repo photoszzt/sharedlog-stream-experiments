@@ -1,5 +1,5 @@
 #!/bin/bash
-curl localhost:8090/consume &
+curl localhost:8090/run &
 p1=$!
 curl localhost:8080/produce &
 p2=$!
