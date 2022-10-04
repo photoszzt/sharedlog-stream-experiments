@@ -31,10 +31,10 @@ sleep 40
 
 ALL_SEQUENCER_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=sequencer_node)
 for HOST in $ALL_SEQUENCER_HOSTS; do
-    ssh -q $HOST -- sudo rm -rf /mnt/inmem/log
-    ssh -q $HOST -- sudo mkdir -p /mnt/inmem/log
-    ssh -q $HOST -- sudo rm -rf /mnt/storage/journal
-    ssh -q $HOST -- sudo mkdir -p /mnt/storage/journal
+    ssh -q $HOST -- sudo rm -rf /mnt/inmem/log_seq
+    ssh -q $HOST -- sudo mkdir -p /mnt/inmem/log_seq
+    ssh -q $HOST -- sudo rm -rf /mnt/storage_seq/journal
+    ssh -q $HOST -- sudo mkdir -p /mnt/storage_seq/journal
 done
 
 ALL_ENGINE_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=engine_node)
