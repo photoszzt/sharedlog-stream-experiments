@@ -174,7 +174,8 @@ sleep 40
 
 PROMETHEUS_HOST=$($HELPER_SCRIPT get-machine-with-label --machine-label=prometheus_node)
 ssh -q $PROMETHEUS_HOST -oStrictHostKeyChecking=no -- \
-    "sudo rm -rf /mnt/storage/prometheus && sudo mkdir /mnt/storage/prometheus && sudo chown ubuntu:ubuntu /mnt/storage/prometheus"
+    "sudo rm -rf /mnt/storage/prometheus && sudo mkdir /mnt/storage/prometheus && sudo chown \
+    ubuntu:ubuntu /mnt/storage/prometheus && sudo chmod -R 777 /mnt/storage/prometheus"
 
 ALL_BROKER_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=broker_node)
 FIRST_BROKER=""
@@ -241,7 +242,7 @@ for ((k=0; k<$NUM_INSTANCE; k++)); do
         --name kstreams-test_nexmark-${k} --publish mode=host,published=$PORT,target=$PORT \
         openjdk:11.0.12-jre-slim-buster \
         bash -c 'java -cp /src/build/libs/nexmark-kafka-streams-0.2-SNAPSHOT-uber.jar \
-        -javaagent:/usr/share/jmx-exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx-exporter/kafka_streams.yml
+        -javaagent:/usr/share/jmx-exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx-exporter/kafka_streams.yml \
         com.github.nexmark.kafka.queries.RunQuery \
         --name $NAME --serde $SERDE --conf  /src/workload_config/${NAME}.properties \
         --duration $DURATION --port $PORT  \
@@ -313,7 +314,7 @@ done
 # done
 
 ssh -q $PROMETHEUS_HOST -oStrictHostKeyChecking=no -- curl -XPOST http://localhost:9090/api/v1/admin/tsdb/snapshot
-scp -r $PROMETHEUS_HOST:/prometheus/data/snapshots $EXP_DIR/prometheus
+scp -r $PROMETHEUS_HOST:/mnt/storage/prometheus/data/snapshots $EXP_DIR/prometheus
 
 mkdir $EXP_DIR/broker_netstats
 for HOST in ${ALL_BROKER_HOSTS[@]}; do
