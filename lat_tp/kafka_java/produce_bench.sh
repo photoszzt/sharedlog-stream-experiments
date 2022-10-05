@@ -8,6 +8,7 @@ DURATION=""
 NUM_EVENTS=""
 PAYLOAD=""
 TPS=""
+WARM_EVENTS=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -22,6 +23,10 @@ while [ $# -gt 0 ]; do
         --ncon*)
             if [[ "$1" != *=* ]]; then shift; fi
             NUM_CONSUMER="${1#*=}"
+            ;;
+        --warm_events*)
+            if [[ "$1" != *=* ]]; then shift; fi
+            WARM_EVENTS="${1#*=}"
             ;;
         --duration*)
             if [[ "$1" != *=* ]]; then shift; fi
@@ -80,6 +85,10 @@ if [[ "$PAYLOAD" = "" ]]; then
 fi
 if [[ "$TPS" = "" ]]; then
     echo "need to specify tps"
+    exit 1
+fi
+if [[ "$WARM_EVENTS" = "" ]]; then
+    echo "need to specify warm events"
     exit 1
 fi
 
@@ -145,7 +154,7 @@ ssh -q $MANAGER_HOST -- "docker service create \
     --replicas-max-per-node=1 --publish published=8090,target=8090 openjdk:11.0.12-jre-slim-buster \
     bash -c 'java -cp /src/benchmark/lat_tp/kafka_consume_java/app/build/libs/app-uber.jar \
     kafka_consume_java.App -b $FIRST_BROKER_CONTAINER_IP:9092 -d ${CONSUME_DURATION} \
-    -ev ${NUM_EVENTS}'" &
+    -ev ${NUM_EVENTS}' -we ${WARM_EVENTS}" &
 
 ssh -q $MANAGER_HOST -- "docker service create \
     --mount type=bind,source=/mnt/efs/workspace/sharedlog-stream,destination=/src \
