@@ -125,7 +125,7 @@ done
 ssh -q $MANAGER_HOST -- docker network rm kstreams-test_default || true
 ssh -q $MANAGER_HOST -- docker stack deploy \
     -c ~/docker-compose-base.yml -c ~/docker-compose.yml kstreams-test
-sleep 80
+sleep 60
 
 FIRST_BROKER_CONTAINER_IP=""
 for HOST in $ALL_BROKER_HOSTS; do
@@ -154,7 +154,7 @@ ssh -q $MANAGER_HOST -- "docker service create \
     --replicas-max-per-node=1 --publish published=8090,target=8090 openjdk:11.0.12-jre-slim-buster \
     bash -c 'java -cp /src/benchmark/lat_tp/kafka_consume_java/app/build/libs/app-uber.jar \
     kafka_consume_java.App -b $FIRST_BROKER_CONTAINER_IP:9092 -d ${CONSUME_DURATION} \
-    -ev ${NUM_EVENTS}' -we ${WARM_EVENTS}" &
+    -ev ${NUM_EVENTS} -we ${WARM_EVENTS}'" &
 
 ssh -q $MANAGER_HOST -- "docker service create \
     --mount type=bind,source=/mnt/efs/workspace/sharedlog-stream,destination=/src \
