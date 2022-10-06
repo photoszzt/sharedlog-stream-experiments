@@ -240,9 +240,10 @@ for ((k=0; k<$NUM_INSTANCE; k++)); do
         --network kstreams-test_default --restart-condition none --replicas=1 \
         --replicas-max-per-node=1 --hostname=nexmark-${k} \
         --name kstreams-test_nexmark-${k} --publish mode=host,published=$PORT,target=$PORT \
+        --publish mode=host,published=12345,target=12345 \
         openjdk:11.0.12-jre-slim-buster \
-        bash -c 'java -cp /src/build/libs/nexmark-kafka-streams-0.2-SNAPSHOT-uber.jar \
-        -javaagent:/usr/share/jmx-exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx-exporter/kafka_streams.yml \
+        bash -c 'java -javaagent:/usr/share/jmx-exporter/jmx_prometheus_javaagent-0.16.1.jar=12345:/usr/share/jmx-exporter/kafka_streams.yml \
+        -cp /src/build/libs/nexmark-kafka-streams-0.2-SNAPSHOT-uber.jar \
         com.github.nexmark.kafka.queries.RunQuery \
         --name $NAME --serde $SERDE --conf  /src/workload_config/${NAME}.properties \
         --duration $DURATION --port $PORT  \
@@ -254,7 +255,6 @@ sleep 20
 
 ALL_SOURCE_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=source_node)
 ALL_APP_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=app_node)
-PROMETHEUS_HOST=$($HELPER_SCRIPT get-machine-with-label --machine-label=prometheus_node)
 
 # for HOST in $ALL_BROKER_HOSTS; do
 # 	ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
@@ -314,7 +314,7 @@ done
 # done
 
 ssh -q $PROMETHEUS_HOST -oStrictHostKeyChecking=no -- curl -XPOST http://localhost:9090/api/v1/admin/tsdb/snapshot
-scp -r $PROMETHEUS_HOST:/mnt/storage/prometheus/data/snapshots $EXP_DIR/prometheus
+scp -r $PROMETHEUS_HOST:/mnt/storage/prometheus/snapshots $EXP_DIR/snapshots
 
 mkdir $EXP_DIR/broker_netstats
 for HOST in ${ALL_BROKER_HOSTS[@]}; do
