@@ -144,7 +144,8 @@ ssh -q $MANAGER_HOST -- "docker service create \
     --name kstreams-test_consume --restart-condition none --replicas=$NUM_CONSUMER \
     --replicas-max-per-node=1 --publish published=8090,target=8090 openjdk:11.0.12-jre-slim-buster \
     bash -c 'java -cp /src/benchmark/protocol_lat_java/app/build/libs/app-uber.jar \
-    protocol_lat_java.App -b $FIRST_BROKER_CONTAINER_IP:9092 -dur ${CONSUME_DURATION} -ev ${NUM_EVENTS}'" &
+    protocol_lat_java.App -b $FIRST_BROKER_CONTAINER_IP:9092 -dur ${CONSUME_DURATION} \
+    -p 8090 -ev ${NUM_EVENTS}'" &
 
 ssh -q $MANAGER_HOST -- "docker service create \
     --mount type=bind,source=/mnt/efs/workspace/sharedlog-stream,destination=/src \
@@ -169,7 +170,7 @@ for HOST in $PRODUCE_HOSTS; do
 done
 
 for HOST in $CONSUME_HOSTS; do
-    ssh -q $CLIENT_HOST -- "curl $HOST:8090/consume" &
+    ssh -q $CLIENT_HOST -- "curl $HOST:8090/run" &
     pids[$i]=$!
     i=$(expr $i + 1)
 done
