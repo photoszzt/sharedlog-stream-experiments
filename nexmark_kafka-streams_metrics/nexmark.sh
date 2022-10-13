@@ -234,6 +234,7 @@ for ((k=0; k<$NUM_INSTANCE; k++)); do
     PORT=$(expr 7000 + $k)
     ssh -q $MANAGER_HOST -oStrictHostKeyChecking=no -- "docker service create \
         --mount type=bind,source=$WORKSPACE_DIR/nexmark/nexmark-kafka-streams,destination=/src \
+        --mount type=bind,source=$WORKSPACE_DIR/sharedlog-stream-experiments/nexmark_kafka-streams/shared-assets/jmx-exporter,destination=/usr/share/jmx-exporter \
         --constraint node.labels.app_node==true \
         --env BOOTSTRAP_SERVER_CONFIG=$FIRST_BROKER_CONTAINER_IP:9092 \
         --network kstreams-test_default --restart-condition none --replicas=1 \
@@ -241,7 +242,8 @@ for ((k=0; k<$NUM_INSTANCE; k++)); do
         --name kstreams-test_nexmark-${k} --publish mode=host,published=$PORT,target=$PORT \
         --publish mode=host,published=12345,target=12345 \
         openjdk:11.0.12-jre-slim-buster \
-        bash -c 'java -cp /src/build/libs/nexmark-kafka-streams-0.2-SNAPSHOT-uber.jar \
+        bash -c 'java -javaagent:/usr/share/jmx-exporter/jmx_prometheus_javaagent-0.16.1.jar=12345:/usr/share/jmx-exporter/kafka_streams.yml \
+        -cp /src/build/libs/nexmark-kafka-streams-0.2-SNAPSHOT-uber.jar \
         com.github.nexmark.kafka.queries.RunQuery \
         --name $NAME --serde $SERDE --conf  /src/workload_config/${NAME}.properties \
         --duration $DURATION --port $PORT  \
@@ -254,17 +256,17 @@ sleep 20
 ALL_SOURCE_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=source_node)
 ALL_APP_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=app_node)
 
-for HOST in $ALL_BROKER_HOSTS; do
-	ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
-done
-
-for HOST in $ALL_SOURCE_HOSTS; do
-	ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
-done
-
-for HOST in $ALL_APP_HOSTS; do
-	ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
-done
+# for HOST in $ALL_BROKER_HOSTS; do
+# 	ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
+# done
+# 
+# for HOST in $ALL_SOURCE_HOSTS; do
+# 	ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
+# done
+# 
+# for HOST in $ALL_APP_HOSTS; do
+# 	ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
+# done
 
 pids=()
 i=0
@@ -290,26 +292,26 @@ for pid in ${pids[*]}; do
     wait $pid
 done
 
-for HOST in $ALL_BROKER_HOSTS; do
-	ssh -q $HOST -oStrictHostKeyChecking=no -- pkill sar
-	mkdir -p $EXP_DIR/broker_sar/$HOST
-	scp $HOST:/home/ubuntu/sar_st $EXP_DIR/broker_sar/$HOST
-	ssh -q $HOST -oStrictHostKeyChecking=no -- rm /home/ubuntu/sar_st
-done
-
-for HOST in $ALL_SOURCE_HOSTS; do
-	ssh -q $HOST -oStrictHostKeyChecking=no -- pkill sar
-	mkdir -p $EXP_DIR/source_sar/$HOST
-	scp $HOST:/home/ubuntu/sar_st $EXP_DIR/source_sar/$HOST
-	ssh -q $HOST -oStrictHostKeyChecking=no -- rm /home/ubuntu/sar_st
-done
-
-for HOST in $ALL_APP_HOSTS; do
-	ssh -q $HOST -oStrictHostKeyChecking=no -- pkill sar
-	mkdir -p $EXP_DIR/app_sar/$HOST
-	scp $HOST:/home/ubuntu/sar_st $EXP_DIR/app_sar/$HOST
-	ssh -q $HOST -oStrictHostKeyChecking=no -- rm /home/ubuntu/sar_st
-done
+# for HOST in $ALL_BROKER_HOSTS; do
+# 	ssh -q $HOST -oStrictHostKeyChecking=no -- pkill sar
+# 	mkdir -p $EXP_DIR/broker_sar/$HOST
+# 	scp $HOST:/home/ubuntu/sar_st $EXP_DIR/broker_sar/$HOST
+# 	ssh -q $HOST -oStrictHostKeyChecking=no -- rm /home/ubuntu/sar_st
+# done
+# 
+# for HOST in $ALL_SOURCE_HOSTS; do
+# 	ssh -q $HOST -oStrictHostKeyChecking=no -- pkill sar
+# 	mkdir -p $EXP_DIR/source_sar/$HOST
+# 	scp $HOST:/home/ubuntu/sar_st $EXP_DIR/source_sar/$HOST
+# 	ssh -q $HOST -oStrictHostKeyChecking=no -- rm /home/ubuntu/sar_st
+# done
+# 
+# for HOST in $ALL_APP_HOSTS; do
+# 	ssh -q $HOST -oStrictHostKeyChecking=no -- pkill sar
+# 	mkdir -p $EXP_DIR/app_sar/$HOST
+# 	scp $HOST:/home/ubuntu/sar_st $EXP_DIR/app_sar/$HOST
+# 	ssh -q $HOST -oStrictHostKeyChecking=no -- rm /home/ubuntu/sar_st
+# done
 
 ssh -q $PROMETHEUS_HOST -oStrictHostKeyChecking=no -- curl -XPOST http://localhost:9090/api/v1/admin/tsdb/snapshot
 scp -r $PROMETHEUS_HOST:/mnt/storage/prometheus/snapshots $EXP_DIR/snapshots
