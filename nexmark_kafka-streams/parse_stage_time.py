@@ -2,7 +2,7 @@ import argparse
 import os
 from pathlib import Path
 import json
-from statistics import mean, stdev, quantiles 
+import numpy as np
 
 stages = {"q3": {"subGAuc_proc", "subGPer_proc", "aucQueueDelay", "perQueueDelay"},
         "q4": {"subGAuc_proc", "subGBid_proc",    "aucQueueDelay",    "bidQueueDelay",
@@ -40,14 +40,14 @@ def main():
                         for name, data in stat.items():
                             if name in stages[args.app]:
                                 if name not in stats[tps_per_work]:
-                                    stats[tps_per_work][name] = []
-                                stats[tps_per_work][name].extend(data)
+                                    stats[tps_per_work][name] = numpy.array()
+                                np.append(stats[tps_per_work][name], data)
     for tps_per_work, stat in stats.items():
         mtime = int(os.stat(dirs_dict[tps_per_work]).st_mtime)
         all_data_path = os.path.join(
-            args.out_stats, f"{tps_per_work}_{mtime}.json")
-        with open(all_data_path, "w") as f:
-            json.dump(stat, f)
+            args.out_stats, f"{tps_per_work}_{mtime}.pickle")
+        with open(all_data_path, "wb") as f:
+            pickle.dump(stat, f)
         # summary = os.path.join(
         #     args.out_stats, f"{args.app}_{tps_per_work}_{mtime}_stat.json")
         # summary_stat = {}
