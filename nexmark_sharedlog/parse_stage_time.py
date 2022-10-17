@@ -20,6 +20,10 @@ stages = {
 translate = {
     "q3": {"aucProc": "subG1", "perProc": "subG1",
            "subG2_left": "subG2", "subG2_right": "subG2", },
+    "q4": {},
+    "q5": {},
+    "q6": {},
+    "q7": {},
     "q8": {"aucProc": "subG1", "perProc": "subG1",
            "subG2_left": "subG2", "subG2_right": "subG2", },
 }
@@ -46,6 +50,7 @@ def main():
         for fname in Path(dirpath).glob("**/*.stderr"):
             if fname in visited_files:
                 continue
+            print(fname)
             with open(fname, "r") as f:
                 for line in f:
                     if "{" in line and ": [" in line:
@@ -54,6 +59,8 @@ def main():
                         data = l[1].strip("[]{}").split(" ")
                         data = [int(x) for x in data]
                         if name in stages[args.app]:
+                            if args.app in translate and name in translate[args.app]:
+                                name = translate[args.app][name]
                             if name not in stats[tps_per_work]:
                                 stats[tps_per_work][name] = []
                             stats[tps_per_work][name].append(data)
