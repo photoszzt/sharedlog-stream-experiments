@@ -1,0 +1,79 @@
+import argparse
+import os
+from pathlib import Path
+import json
+import numpy as np
+import pickle
+
+stages = {
+    "q3": {"aucProc", "perProc", "procToq3_aucsBySellerID_out",
+           "procToq3_personsByID_out", "epoch mark time",
+           "subG2_left", "subG2_right"},
+    "q4": {},
+    "q5": {},
+    "q6": {},
+    "q7": {},
+    "q8": {"aucProc", "perProc", "epoch mark time",
+           "subG2_left", "subG2_right", },
+}
+
+translate = {
+    "q3": {"aucProc": "subG1", "perProc": "subG1",
+           "subG2_left": "subG2", "subG2_right": "subG2", },
+    "q8": {"aucProc": "subG1", "perProc": "subG1",
+           "subG2_left": "subG2", "subG2_right": "subG2", },
+}
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Parse stage time')
+    parser.add_argument('--dir', type=str, help='dir to parse', required=True)
+    parser.add_argument('--app', type=str, help='app to parse', required=True)
+    parser.add_argument('--out_stats', type=str,
+                        help='output stats dir', required=True)
+    args = parser.parse_args()
+    dirs_dict = {}
+    stats = {}
+
+    for root, dirs, _ in os.walk(args.dir):
+        for d in dirs:
+            if "epoch" in d:
+                tps_per_work = int(d.split("_")[0][:-3])
+                dirs_dict[tps_per_work] = os.path.join(root, d, "logs")
+    for tps_per_work, dirpath in dirs_dict.items():
+        stats[tps_per_work] = {}
+        visited_files = set()
+        for fname in Path(dirpath).glob("**/*.stderr"):
+            if fname in visited_files:
+                continue
+            with open(fname, "r") as f:
+                for line in f:
+                    if "{" in line and ": [" in line:
+                        l = line.strip().split(": ")
+                        name = l[0].strip("{")
+                        data = l[1].strip("[]{}").split(" ")
+                        data = [int(x) for x in data]
+                        if name in stages[args.app]:
+                            if name not in stats[tps_per_work]:
+                                stats[tps_per_work][name] = []
+                            stats[tps_per_work][name].append(data)
+    for tps_per_work, stat in stats.items():
+        mtime = int(os.stat(dirs_dict[tps_per_work]).st_mtime)
+        all_data_path = os.path.join(
+            args.out_stats, f"{tps_per_work}_{mtime}.pickle")
+        with open(all_data_path, "wb") as f:
+            pickle.dump(stat, f)
+        # summary = os.path.join(
+        #     args.out_stats, f"{args.app}_{tps_per_work}_{mtime}_stat.json")
+        # summary_stat = {}
+        # for name, data in stat.items():
+        #     quan = quantiles(data, n=100)
+        #     summary_stat[name] = {"mean": mean(data), "std": stdev(data), "min": min(data), "max": max(data),
+        #                           "p25": quan[24], "p50": quan[49],
+        #                           "p90": quan[89], "p99": quan[98]}
+        # with open(summary, "w") as f:
+        #     json.dump(summary_stat, f)
+
+
+if __name__ == '__main__':
+    main()
