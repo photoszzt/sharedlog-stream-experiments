@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import json
 import numpy as np
+import pickle
 
 stages = {"q3": {"subGAuc_proc", "subGPer_proc", "aucQueueDelay", "perQueueDelay"},
         "q4": {"subGAuc_proc", "subGBid_proc",    "aucQueueDelay",    "bidQueueDelay",
