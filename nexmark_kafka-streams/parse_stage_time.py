@@ -40,8 +40,8 @@ def main():
                         for name, data in stat.items():
                             if name in stages[args.app]:
                                 if name not in stats[tps_per_work]:
-                                    stats[tps_per_work][name] = numpy.array()
-                                np.append(stats[tps_per_work][name], data)
+                                    stats[tps_per_work][name] = []
+                                stats[tps_per_work][name].append(data)
     for tps_per_work, stat in stats.items():
         mtime = int(os.stat(dirs_dict[tps_per_work]).st_mtime)
         all_data_path = os.path.join(
