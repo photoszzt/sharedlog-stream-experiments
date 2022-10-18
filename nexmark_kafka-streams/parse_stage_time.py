@@ -5,16 +5,21 @@ import json
 import numpy as np
 import pickle
 
-stages = {"q3": {"subGAuc_proc", "subGPer_proc", "aucQueueDelay", "perQueueDelay"},
-        "q4": {"subGAuc_proc", "subGBid_proc",    "aucQueueDelay",    "bidQueueDelay",
-            "aucBidsQueueDelay",    "maxBidsQueueDelay",    "subG2_proc",    "subG3_proc",},
+stages = {"q3": {"subGAuc_proc", "subGPer_proc", "aucQueueDelay", "perQueueDelay",
+                 "q3_sink_ets-7_proc"},
+          "q4": {"subGAuc_proc", "subGBid_proc", "aucQueueDelay", "bidQueueDelay",
+               "aucBidsQueueDelay", "maxBidsQueueDelay", "subG2_proc", "subG3_proc",},
           "q5": {"subG1ProcLat", "subG2ProcLat", "bidsQueueDelay", "auctionBidsQueueDelay",},
           "q6": {"subGAuc_proc", "subGBid_proc", "aucQueueTime", "bidQueueTime", "topo2_proc",
               "topo3_proc", "aucBidsQueueTime",},
           "q7": {"bids_by_win_proc", "bids_by_price_proc", "bids_by_win_queue",
               "bids_by_price_queue", "max_bids_queue", "topo2_proc",},
-          "q8": {"subAuc_proc", "subPer_proc", "auc_queue", "per_queue",},
+          "q8": {"subAuc_proc", "subPer_proc", "auc_queue", "per_queue", "q8_sink_ets-7_proc"},
           }
+translate = {
+        "q3": {"subGAuc_proc": "subG1", "subGPer_proc": "subG1"},
+        "q8": {"subAuc_proc": "subG1", "subPer_proc": "subG1"},
+}
 
 
 def main():
@@ -40,6 +45,8 @@ def main():
                         stat = json.loads(line.strip())
                         for name, data in stat.items():
                             if name in stages[args.app]:
+                                if args.app in translate and name in translate[args.app]:
+                                    name = translate[args.app][name]
                                 if name not in stats[tps_per_work]:
                                     stats[tps_per_work][name] = []
                                 stats[tps_per_work][name].append(data)
