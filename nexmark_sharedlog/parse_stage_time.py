@@ -6,15 +6,14 @@ import numpy as np
 import pickle
 
 stages = {
-    "q3": {"aucProc", "perProc", "procToq3_aucsBySellerID_out",
-           "procToq3_personsByID_out", "epoch mark time",
-           "subG2_left", "subG2_right"},
+    "q3": {"aucProc", "perProc", "procToq3_aucsBySellerID_out_src",
+           "procToq3_personsByID_out_src", "subG2_left", "subG2_right"},
     "q4": {},
     "q5": {},
     "q6": {},
     "q7": {},
-    "q8": {"aucProc", "perProc", "epoch mark time",
-           "subG2_left", "subG2_right", },
+    "q8": {"aucProc", "perProc", "subG2_left", "subG2_right", 
+           "procToq8_aucsBySellerID_out_src", "procToq8_personsByID_out_src"},
 }
 
 translate = {
@@ -48,17 +47,18 @@ def main():
         stats[tps_per_work] = {}
         visited_files = set()
         for fname in Path(dirpath).glob("**/*.stderr"):
-            if fname in visited_files:
+            basename = os.path.basename(fname)
+            if basename in visited_files:
                 continue
-            print(fname)
+            visited_files.add(basename)
             with open(fname, "r") as f:
                 for line in f:
-                    if "{" in line and ": [" in line:
+                    if ": [" in line:
                         l = line.strip().split(": ")
-                        name = l[0].strip("{")
-                        data = l[1].strip("[]{}").split(" ")
-                        data = [int(x) for x in data]
+                        name = l[0].strip()
                         if name in stages[args.app]:
+                            data = l[1].strip("[]").split(" ")
+                            data = [int(x) for x in data]
                             if args.app in translate and name in translate[args.app]:
                                 name = translate[args.app][name]
                             if name not in stats[tps_per_work]:
