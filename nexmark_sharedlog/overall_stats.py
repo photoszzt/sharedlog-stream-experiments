@@ -17,9 +17,9 @@ stages = {
     "q3": {"subG1", "subG2", "procToq3_aucsBySellerID_out_src",
            "procToq3_personsByID_out_src"},
     "q4": {},
-    "q5": {},
+    "q5": {"subG1Proc", "subG2Proc", "subG3Proc", "procTobids_src", "procToaucBids_src"},
     "q6": {},
-    "q7": {},
+    "q7": {"bidByPriceProc", "bidByWinProc", "subG2Proc", "subG3"},
     "q8": {"subG1", "subG2", "procToq8_aucsBySellerID_out_src", "procToq8_personsByID_out_src"},
 }
 

@@ -15,7 +15,7 @@ def main():
     dirs_dict = {}
     for root, dirs, _ in os.walk(args.dir):
         for d in dirs:
-            if "epoch" in d:
+            if "epoch" in d or "eo" in d:
                 tps_per_work = int(d.split("_")[0][:-3])
                 dirs_dict[tps_per_work] = os.path.join(root, d, args.target_dir)
     for tps_per_work, dirpath in dirs_dict.items():

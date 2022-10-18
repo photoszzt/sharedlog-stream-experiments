@@ -9,9 +9,9 @@ stages = {
     "q3": {"aucProc", "perProc", "procToq3_aucsBySellerID_out_src",
            "procToq3_personsByID_out_src", "subG2_left", "subG2_right"},
     "q4": {},
-    "q5": {},
+    "q5": {"subG1Proc", "subG2Proc", "subG3Proc", "procTobids_src", "procToaucBids_src"},
     "q6": {},
-    "q7": {},
+    "q7": {"bidByPriceProc", "bidByWinProc", "subG2Proc", "subG2_left", "subG2_right"},
     "q8": {"aucProc", "perProc", "subG2_left", "subG2_right", 
            "procToq8_aucsBySellerID_out_src", "procToq8_personsByID_out_src"},
 }
@@ -22,7 +22,7 @@ translate = {
     "q4": {},
     "q5": {},
     "q6": {},
-    "q7": {},
+    "q7": {"subG2_left": "subG3", "subG2_right": "subG3"},
     "q8": {"aucProc": "subG1", "perProc": "subG1",
            "subG2_left": "subG2", "subG2_right": "subG2", },
 }
