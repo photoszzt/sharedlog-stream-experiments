@@ -41,7 +41,7 @@ def main():
         mtime = int(os.stat(dirpath).st_mtime)
         cpu_out = os.path.join(args.out_dir, f"{tps_per_work}_cpu_{mtime}.json")
         os.makedirs(os.path.join(args.out_dir, "cpu_fig"), exist_ok=True)
-        cpu_fig = os.path.join(args.out_dir, "cpu_fig", f"{tps_per_work}_cpu_{mtime}.pdf")
+        cpu_fig = os.path.join(args.out_dir, "cpu_fig", f"{tps_per_work}_cpu_{mtime}.png")
         with open(cpu_out, "w") as f:
             json.dump(cpu_stats, f)
         plt.figure()

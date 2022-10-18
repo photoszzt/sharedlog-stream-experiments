@@ -3,17 +3,20 @@ from pathlib import Path
 import pickle
 import numpy as np
 
-stages = {"q3": {"subG1", "aucQueueDelay", "perQueueDelay",
-                 "q3_sink_ets-7_proc"},
-          "q4": {"subGAuc_proc", "subGBid_proc", "aucQueueDelay", "bidQueueDelay",
-               "aucBidsQueueDelay", "maxBidsQueueDelay", "subG2_proc", "subG3_proc",},
-          "q5": {"subG1ProcLat", "subG2ProcLat", "bidsQueueDelay", "auctionBidsQueueDelay",},
-          "q6": {"subGAuc_proc", "subGBid_proc", "aucQueueTime", "bidQueueTime", "topo2_proc",
-              "topo3_proc", "aucBidsQueueTime",},
-          "q7": {"bids_by_win_proc", "bids_by_price_proc", "bids_by_win_queue",
-              "bids_by_price_queue", "max_bids_queue", "topo2_proc",},
-          "q8": {"subG1", "auc_queue", "per_queue", "q8_sink_ets-7_proc"},
-          }
+stages = {
+    "q3": {"subG1", "aucQueueDelay", "perQueueDelay",
+           "q3_sink_ets-7_proc"},
+    "q4": {"subG1", "aucQueueDelay", "bidQueueDelay",
+           "aucBidsQueueDelay", "maxBidsQueueDelay", "subG2_proc", "subG3_proc", 
+           "q4_sink_ets-7_proc",},
+    "q5": {"subG1ProcLat", "subG2ProcLat", "bidsQueueDelay", "auctionBidsQueueDelay", 
+           "q5_sink_ets-7_proc"},
+    "q6": {"subG1", "aucQueueTime", "bidQueueTime", "topo2_proc",
+           "topo3_proc", "aucBidsQueueTime", "q6_sink_ets-7_proc"},
+    "q7": {"bids_by_win_proc", "bids_by_price_proc", "topo2_proc", "q7_sink_ets-7_proc", 
+           "bids_by_win_queue", "bids_by_price_queue", "max_bids_queue", },
+    "q8": {"subG1", "auc_queue", "per_queue", "q8_sink_ets-7_proc"},
+}
 
 throughput = {
     "q3": [80000, 96000, 112000, 128000],

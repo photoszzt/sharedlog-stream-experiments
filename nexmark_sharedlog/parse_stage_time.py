@@ -11,7 +11,8 @@ stages = {
     "q4": {},
     "q5": {"subG1Proc", "subG2Proc", "subG3Proc", "procTobids_src", "procToaucBids_src"},
     "q6": {},
-    "q7": {"bidByPriceProc", "bidByWinProc", "subG2Proc", "subG2_left", "subG2_right"},
+    "q7": {"bidByPriceProc", "bidByWinProc", "subG2Proc", "subG2_left", "subG2_right",
+           "procTobid_by_price_src", "procTobid_by_win_src", "procTomax_bids_src"},
     "q8": {"aucProc", "perProc", "subG2_left", "subG2_right", 
            "procToq8_aucsBySellerID_out_src", "procToq8_personsByID_out_src"},
 }

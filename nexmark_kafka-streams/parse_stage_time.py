@@ -5,20 +5,25 @@ import json
 import numpy as np
 import pickle
 
-stages = {"q3": {"subGAuc_proc", "subGPer_proc", "aucQueueDelay", "perQueueDelay",
-                 "q3_sink_ets-7_proc"},
-          "q4": {"subGAuc_proc", "subGBid_proc", "aucQueueDelay", "bidQueueDelay",
-               "aucBidsQueueDelay", "maxBidsQueueDelay", "subG2_proc", "subG3_proc",},
-          "q5": {"subG1ProcLat", "subG2ProcLat", "bidsQueueDelay", "auctionBidsQueueDelay",},
-          "q6": {"subGAuc_proc", "subGBid_proc", "aucQueueTime", "bidQueueTime", "topo2_proc",
-              "topo3_proc", "aucBidsQueueTime",},
-          "q7": {"bids_by_win_proc", "bids_by_price_proc", "bids_by_win_queue",
-              "bids_by_price_queue", "max_bids_queue", "topo2_proc",},
-          "q8": {"subAuc_proc", "subPer_proc", "auc_queue", "per_queue", "q8_sink_ets-7_proc"},
-          }
+stages = {
+    "q3": {"subGAuc_proc", "subGPer_proc", "aucQueueDelay", "perQueueDelay",
+           "q3_sink_ets-7_proc"},
+    "q4": {"subGAuc_proc", "subGBid_proc", "aucQueueDelay", "bidQueueDelay",
+           "aucBidsQueueDelay", "maxBidsQueueDelay", "subG2_proc", "subG3_proc",
+           "q4_sink_ets-7_proc"},
+    "q5": {"subG1ProcLat", "subG2ProcLat", "bidsQueueDelay", "auctionBidsQueueDelay",
+           "q5_sink_ets-7_proc"},
+    "q6": {"subGAuc_proc", "subGBid_proc", "aucQueueTime", "bidQueueTime", "topo2_proc",
+           "topo3_proc", "aucBidsQueueTime", "q6_sink_ets-7_proc"},
+    "q7": {"bids_by_win_proc", "bids_by_price_proc", "bids_by_win_queue",
+           "bids_by_price_queue", "max_bids_queue", "topo2_proc", "q7_sink_ets-7_proc"},
+    "q8": {"subAuc_proc", "subPer_proc", "auc_queue", "per_queue", "q8_sink_ets-7_proc"},
+}
 translate = {
-        "q3": {"subGAuc_proc": "subG1", "subGPer_proc": "subG1"},
-        "q8": {"subAuc_proc": "subG1", "subPer_proc": "subG1"},
+    "q3": {"subGAuc_proc": "subG1", "subGPer_proc": "subG1"},
+    "q8": {"subAuc_proc": "subG1", "subPer_proc": "subG1"},
+    "q4": {"subGAuc_proc": "subG1", "subGBid_proc": "subG1"},
+    "q6": {"subGAuc_proc": "subG1", "subGBid_proc": "subG1"},
 }
 
 
@@ -26,7 +31,8 @@ def main():
     parser = argparse.ArgumentParser(description='Parse stage time')
     parser.add_argument('--dir', type=str, help='dir to parse', required=True)
     parser.add_argument('--app', type=str, help='app to parse', required=True)
-    parser.add_argument('--out_stats', type=str, help='output stats dir', required=True)
+    parser.add_argument('--out_stats', type=str,
+                        help='output stats dir', required=True)
     args = parser.parse_args()
     dirs_dict = {}
     stats = {}
