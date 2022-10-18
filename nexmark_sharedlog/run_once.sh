@@ -158,6 +158,16 @@ for HOST in $ALL_ENGINE_HOSTS; do
 	ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
 done
 
+ALL_SEQUENCER_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=sequencer_node)
+ALL_STORAGE_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=storage_node)
+for HOST in $ALL_SEQUENCER_HOSTS; do
+    echo $HOST >> $EXP_DIR/seqhosts
+done
+
+for HOST in $ALL_STORAGE_HOSTS; do
+	ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
+done
+
 ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name ${APP_NAME} \
     -faas_gateway $ENTRY_HOST:8080 -duration ${DURATION} -serde msgp \
     -guarantee $GUA -comm_everyMS ${FLUSH_MS} -flushms ${FLUSH_MS} \
@@ -173,8 +183,14 @@ for HOST in $ALL_ENGINE_HOSTS; do
 	ssh -q $HOST -oStrictHostKeyChecking=no -- rm /home/ubuntu/sar_st
 done
 
+for HOST in $ALL_STORAGE_HOSTS; do
+	ssh -q $HOST -oStrictHostKeyChecking=no -- pkill sar
+	mkdir -p $EXP_DIR/storage_sar/$HOST
+	scp $HOST:/home/ubuntu/sar_st $EXP_DIR/storage_sar/$HOST
+	ssh -q $HOST -oStrictHostKeyChecking=no -- rm /home/ubuntu/sar_st
+done
+
 mkdir $EXP_DIR/sequencer_netstats
-ALL_SEQUENCER_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=sequencer_node)
 for HOST in $ALL_SEQUENCER_HOSTS; do
 	NETDEVS=$(ssh -q $HOST -oStrictHostKeyChecking=no -- ls /sys/class/net | grep -e ^e)
 	for NETDEV in $NETDEVS; do
@@ -192,7 +208,6 @@ for HOST in $ALL_ENGINE_HOSTS; do
 done
 
 mkdir $EXP_DIR/storage_netstats
-ALL_STORAGE_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=storage_node)
 for HOST in $ALL_STORAGE_HOSTS; do
 	NETDEVS=$(ssh -q $HOST -oStrictHostKeyChecking=no -- ls /sys/class/net | grep -e ^e)
 	for NETDEV in $NETDEVS; do
