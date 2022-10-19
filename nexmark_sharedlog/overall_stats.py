@@ -6,9 +6,9 @@ from parse_stage_time import stages
 
 throughput = {
     "q3": [80000, 96000, 112000, 128000],
-    "q4": [],
+    "q4": [1000, 1250],
     "q5": [24000, 32000, 40000, 56000, 64000],
-    "q6": [],
+    "q6": [500, 750],
     "q7": [12000, 16000, 28000, 32000, 36000],
     "q8": [16000, 20000, 28000, 32000],
 }
@@ -16,9 +16,14 @@ throughput = {
 stages = {
     "q3": {"subG1", "subG2", "procToq3_aucsBySellerID_out_src",
            "procToq3_personsByID_out_src"},
-    "q4": {},
+    "q4": {"subG1", "subG2", "subG3Proc", "subG4Proc", 
+           "procToq46_aucsByID_src", "procToq46_bidsByAucID_src",
+           "procToq4_aucIDCat_src", "procToq4_maxBids_src"},
     "q5": {"subG1Proc", "subG2Proc", "subG3Proc", "procTobids_src", "procToaucBids_src"},
-    "q6": {},
+    "q6": {"subG1", "subG2","subG3Proc", "subG4Proc", 
+           "procToq46_aucsByID_src", 
+           "procToq46_bidsByAucID_src", "procToq6_aucIDSeller_src", 
+           "procToq6_maxBids_src"},
     "q7": {"bidByPriceProc", "bidByWinProc", "subG2Proc", "subG3", 
            "procTobid_by_price_src", "procTobid_by_win_src", "procTomax_bids_src"},
     "q8": {"subG1", "subG2", "procToq8_aucsBySellerID_out_src", "procToq8_personsByID_out_src"},

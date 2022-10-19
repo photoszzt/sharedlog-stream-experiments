@@ -19,6 +19,8 @@ def main():
                 tps_per_work = int(d.split("_")[0][:-3])
                 dirs_dict[tps_per_work] = os.path.join(root, d, args.target_dir)
     for tps_per_work, dirpath in dirs_dict.items():
+        top_dir = os.path.basename(os.path.dirname(os.path.dirname(dirpath)))
+        print(top_dir)
         cpu_stats = {}
         # net_stats = {}
         for fname in Path(dirpath).glob("**/sar_st"):
@@ -39,9 +41,9 @@ def main():
             # print(net_str)
 
         mtime = int(os.stat(dirpath).st_mtime)
-        cpu_out = os.path.join(args.out_dir, f"{tps_per_work}_cpu_{mtime}.json")
+        cpu_out = os.path.join(args.out_dir, f"{tps_per_work}_cpu_{top_dir}.json")
         os.makedirs(os.path.join(args.out_dir, "cpu_fig"), exist_ok=True)
-        cpu_fig = os.path.join(args.out_dir, "cpu_fig", f"{tps_per_work}_cpu_{mtime}.png")
+        cpu_fig = os.path.join(args.out_dir, "cpu_fig", f"{tps_per_work}_cpu_{top_dir}.png")
         with open(cpu_out, "w") as f:
             json.dump(cpu_stats, f)
         plt.figure()
