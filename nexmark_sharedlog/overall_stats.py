@@ -10,7 +10,8 @@ throughput = {
     "q5": [24000, 32000, 40000, 56000, 64000],
     "q6": [500, 750],
     "q7": [12000, 16000, 28000, 32000, 36000],
-    "q8": [16000, 20000, 28000, 32000],
+    #"q8": [16000, 20000, 28000, 32000],
+    "q8": [200, 1000],
 }
 
 stages = {
@@ -26,7 +27,9 @@ stages = {
            "procToq6_maxBids_src"},
     "q7": {"bidByPriceProc", "bidByWinProc", "subG2Proc", "subG3", 
            "procTobid_by_price_src", "procTobid_by_win_src", "procTomax_bids_src"},
-    "q8": {"subG1", "subG2", "procToq8_aucsBySellerID_out_src", "procToq8_personsByID_out_src"},
+    "q8": {"subG1", "subG2", "procToq8_aucsBySellerID_out_src", "procToq8_personsByID_out_src",
+           "streamTimeq8_aucsBySellerID_out", "streamTimeq8_personsByID_out",
+           "msgBatchTimeq8_aucsBySellerID_out_src", "msgBatchTimeq8_personsByID_out_src", "flushAllStream"},
 }
 
 

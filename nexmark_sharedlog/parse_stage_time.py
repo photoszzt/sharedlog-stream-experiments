@@ -19,7 +19,10 @@ stages = {
     "q7": {"bidByPriceProc", "bidByWinProc", "subG2Proc", "subG2_left", "subG2_right",
            "procTobid_by_price_src", "procTobid_by_win_src", "procTomax_bids_src"},
     "q8": {"aucProc", "perProc", "subG2_left", "subG2_right", 
-           "procToq8_aucsBySellerID_out_src", "procToq8_personsByID_out_src"},
+           "procToq8_aucsBySellerID_out_src", "procToq8_personsByID_out_src",
+           "streamTimeq8_aucsBySellerID_out", "streamTimeq8_personsByID_out",
+           "msgBatchTimeq8_aucsBySellerID_out_src", "msgBatchTimeq8_personsByID_out_src", 
+           "flushAllStream"},
 }
 
 translate = {
@@ -72,6 +75,7 @@ def main():
                             if name not in stats[tps_per_work]:
                                 stats[tps_per_work][name] = []
                             stats[tps_per_work][name].append(data)
+    os.makedirs(args.out_stats, exist_ok=True)
     for tps_per_work, stat in stats.items():
         mtime = int(os.stat(dirs_dict[tps_per_work]).st_mtime)
         all_data_path = os.path.join(
