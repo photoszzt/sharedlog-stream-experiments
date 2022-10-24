@@ -1,32 +1,44 @@
 import argparse
 import os
 import json
+from pathlib import Path
 from statistics import quantiles, mean
+import numpy as np
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--dir', required=True)
     args = parser.parse_args()
+    dirs_dict = {}
+    for root, dirs, _ in os.walk(args.dir):
+        for d in dirs:
+            if "epoch" in d:
+                tps_per_work = int(d.split("_")[0][:-3])
+                dirs_dict[tps_per_work] = os.path.join(root, d, "logs")
     stats = {}
-    for root, dirs, files in os.walk(args.dir):
-        for fname in files:
-            if "stderr" in fname:
-                fpath = os.path.join(root, fname)
-                if fname not in stats:
-                    with open(fpath, "r") as f:
-                        for line in f:
-                            if "epoch mark time" in line:
-                                l = line.strip().split(": ")[1]
-                                nums = l.strip("[]{}").split(" ")
-                                nums = [int(i) for i in nums]
-                                q = quantiles(nums, n=100)
-                                print(f"{fname}: p50: {q[49]}, p99: {q[98]}")
-                                stats[fname] = nums
-    all_epoch_mark = []
-    for f, nums in stats.items():
-        all_epoch_mark.extend(nums)
-    print(f"mean: {mean(all_epoch_mark)}, max: {max(all_epoch_mark)}")
-
+    for tps_per_work, dirpath in dirs_dict.items():
+        stats[tps_per_work] = {}
+        visited_files = set()
+        for fname in Path(dirpath).glob("**/*.stderr"):
+            basename = os.path.basename(fname)
+            if basename in visited_files:
+                continue
+            visited_files.add(basename)
+            stage = basename.split("_")[0]
+            with open(fname, "r") as f:
+                for line in f:
+                    if "epoch mark time" in line:
+                        l = line.strip().split(": ")[1]
+                        nums = l.strip("[]{}").split(" ")
+                        nums = [int(i) for i in nums]
+                        if stage not in stats[tps_per_work]:
+                            stats[tps_per_work][stage] = []
+                        stats[tps_per_work][stage].append(nums)
+    for tps_per_work, stat in stats.items():
+        for stage, data in stat.items():
+            data_arr = np.concatenate(data)
+            print(f"{tps_per_work},{stage},{np.mean(data_arr)},{np.std(data_arr)},{np.min(data_arr)},{np.quantile(data_arr, 0.25)},{np.quantile(data_arr, 0.5)},{np.quantile(data_arr, 0.9)},{np.quantile(data_arr, 0.99)},{np.max(data_arr)}")
+                         
 
 if __name__ == '__main__':
     main()
