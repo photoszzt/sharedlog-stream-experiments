@@ -56,6 +56,7 @@ def main():
                                 if name not in stats[tps_per_work]:
                                     stats[tps_per_work][name] = []
                                 stats[tps_per_work][name].append(data)
+    os.makedirs(args.out_stats, exist_ok=True)
     for tps_per_work, stat in stats.items():
         mtime = int(os.stat(dirs_dict[tps_per_work]).st_mtime)
         all_data_path = os.path.join(
