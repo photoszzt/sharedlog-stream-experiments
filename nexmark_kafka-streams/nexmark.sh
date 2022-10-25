@@ -14,6 +14,7 @@ FLUSH_MS=""
 SRC_FLUSH_MS=""
 GUARANTEE=""
 DISABLE_CACHE=""
+DISABLE_BATCHING=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -69,6 +70,10 @@ while [ $# -gt 0 ]; do
         if [[ "$1" != *=* ]]; then shift; fi
         DISABLE_CACHE="${1#*=}"
         ;;
+    --disable_batching*)
+        if [[ "$1" != *=* ]]; then shift; fi
+        DISABLE_BATCHING="${1#*=}"
+        ;;
     --help | -h)
         printf -- "--app <appname> one of q1,q2,q3,q4,q5,q6,q7,q8\n"
         printf -- "--exp_dir <exp_dir> required\n"
@@ -81,6 +86,7 @@ while [ $# -gt 0 ]; do
         printf -- "--flushms <flush interval in ms>\n"
         printf -- "--gua <guarantee; alo or eo>\n"
 	printf -- "--disable_cache <true or false>\n"
+	printf -- "--disable_batching <true or false>\n"
         exit 0
         ;;
     *)
@@ -143,6 +149,17 @@ if [[ "$DISABLE_CACHE" = "true" ]]; then
 	CACHE_ARG="--disable_cache"
 fi
 
+BATCH_ARG=""
+if [[ "$DISABLE_BATCHING" = "true" ]]; then
+	BATCH_ARG="--disable_batching"
+fi
+
+SRC_BATCH_ARG=""
+if [[ "$DISABLE_BATCHING" = "true" ]]; then
+	SRC_BATCH_ARG="-disableBatching=true"
+fi
+
+
 echo "app: $NAME, exp_dir: $EXP_DIR, num_instance: $NUM_INSTANCE, num events: $NUM_EVENTS, \
 	num_src: $NUM_SRC_INSTANCE, serde: $SERDE, duration: $DURATION, tps: $TPS, \
 	warm duration: $WARM_DURATION, flushMs: $FLUSH_MS, guarantee: $GUARANTEE, \
@@ -172,10 +189,10 @@ ssh -q $MANAGER_HOST -- docker stack rm kstreams-test || true
 
 sleep 40
 
-PROMETHEUS_HOST=$($HELPER_SCRIPT get-machine-with-label --machine-label=prometheus_node)
-ssh -q $PROMETHEUS_HOST -oStrictHostKeyChecking=no -- \
-    "sudo rm -rf /mnt/storage/prometheus && sudo mkdir /mnt/storage/prometheus && sudo chown \
-    ubuntu:ubuntu /mnt/storage/prometheus && sudo chmod -R 777 /mnt/storage/prometheus"
+# PROMETHEUS_HOST=$($HELPER_SCRIPT get-machine-with-label --machine-label=prometheus_node)
+# ssh -q $PROMETHEUS_HOST -oStrictHostKeyChecking=no -- \
+#     "sudo rm -rf /mnt/storage/prometheus && sudo mkdir /mnt/storage/prometheus && sudo chown \
+#     ubuntu:ubuntu /mnt/storage/prometheus && sudo chmod -R 777 /mnt/storage/prometheus"
 
 ALL_BROKER_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=broker_node)
 FIRST_BROKER=""
@@ -227,7 +244,8 @@ for ((j=0; j<$NUM_SRC_INSTANCE; j++)); do
         --replicas-max-per-node=1 --hostname=source-${j} --publish mode=host,published=$PORT,target=$PORT \
         --env IID=$j ubuntu:focal /src/bin/nexmark_genevents_kafka \
         -broker $FIRST_BROKER_CONTAINER_IP:9092 -duration ${DURATION} -npar 4 -serde $SERDE \
-        -srcIns $NUM_SRC_INSTANCE -events_num $NUM_EVENTS -tps $TPS -port $PORT -flushms $SRC_FLUSH_MS" &
+        -srcIns $NUM_SRC_INSTANCE -events_num $NUM_EVENTS -tps $TPS \
+        -port $PORT -flushms $SRC_FLUSH_MS ${SRC_BATCH_ARG}" &
 done
 
 for ((k=0; k<$NUM_INSTANCE; k++)); do
@@ -246,7 +264,7 @@ for ((k=0; k<$NUM_INSTANCE; k++)); do
         --name $NAME --serde $SERDE --conf  /src/workload_config/${NAME}.properties \
         --duration $DURATION --port $PORT  \
         --flushms ${FLUSH_MS} --warmup_time ${WARM_DURATION} --guarantee ${GUARANTEE} \
-        --stats_dir /tmp/stats ${CACHE_ARG}'" &
+        --stats_dir /tmp/stats ${CACHE_ARG} ${BATCH_ARG}'" &
 done
 
 sleep 20
