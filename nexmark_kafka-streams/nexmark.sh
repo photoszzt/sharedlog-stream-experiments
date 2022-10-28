@@ -203,6 +203,9 @@ for HOST in ${ALL_BROKER_HOSTS[@]}; do
     ssh -q $HOST -oStrictHostKeyChecking=no -- sudo rm -rf /mnt/storage/kdata
     ssh -q $HOST -oStrictHostKeyChecking=no -- sudo mkdir -p /mnt/storage/kdata
     ssh -q $HOST -oStrictHostKeyChecking=no -- sudo chown ubuntu:ubuntu /mnt/storage/kdata
+    ssh -q $HOST -oStrictHostKeyChecking=no -- sudo sysctl -w vm.max_map_count=262144
+    ssh -q $HOST -- echo "ubuntu hard nofile 500000" | sudo tee -a /etc/security/limits.conf
+    ssh -q $HOST -- echo "ubuntu soft nofile 500000" | sudo tee -a /etc/security/limits.conf
 done
 
 ssh -q $MANAGER_HOST -oStrictHostKeyChecking=no -- docker network rm kstreams-test_default || true
