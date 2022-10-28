@@ -50,20 +50,28 @@ def main():
                         if stage not in epochMarkTimes[tps_per_work]:
                             epochMarkTimes[tps_per_work][stage] = []
                         epochMarkTimes[tps_per_work][stage].append(l)
+    tp = sorted(stats.keys())
+    stat = stats[tps_per_work]
+    statk = sorted(stat.keys())
     print("progress marking")
-    for tps_per_work, stat in stats.items():
-        for stage, data in stat.items():
+    for stage in statk:
+        for tps_per_work in tp:
+            data = stats[tps_per_work][stage]
             data_arr = np.concatenate(data)
             print(f"{tps_per_work},{stage},{np.mean(data_arr)},{np.std(data_arr)},{np.min(data_arr)},{np.quantile(data_arr, 0.25)},{np.quantile(data_arr, 0.5)},{np.quantile(data_arr, 0.9)},{np.quantile(data_arr, 0.99)},{np.max(data_arr)}")
                          
     print("flush all")
-    for tps_per_work, stat in flush_all.items():
+    tp = sorted(flush_all.keys())
+    for tps_per_work in tp:
+        stat = flush_all[tps_per_work]
         for stage, data in stat.items():
             data_arr = np.concatenate(data)
             print(f"{tps_per_work},{stage},{np.mean(data_arr)},{np.std(data_arr)},{np.min(data_arr)},{np.quantile(data_arr, 0.25)},{np.quantile(data_arr, 0.5)},{np.quantile(data_arr, 0.9)},{np.quantile(data_arr, 0.99)},{np.max(data_arr)}")
 
     print("progress marking times")
-    for tps_per_work, stat in epochMarkTimes.items():
+    tp = sorted(epochMarkTimes.keys())
+    for tps_per_work in tp:
+        stat = epochMarkTimes[tps_per_work]
         for stage, data in stat.items():
             print(f"{tps_per_work},{stage},{mean(data)},{stdev(data)}")
 
