@@ -15,18 +15,6 @@ scrape_configs:
     static_configs:
       - targets: ["localhost:9090"]
 
-  - job_name: "node-exporter"
-    dns_sd_configs:
-      - names:
-        - 'tasks.kstreams-test_node_exporter'
-        type: 'A'
-        port: 9100
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: hostname
-        regex: '([^:]+)(:[0-9]+)?'
-        replacement: '${1}'
-
   - job_name: "nexmark-1"
     scrape_interval: 10s
     dns_sd_configs:
