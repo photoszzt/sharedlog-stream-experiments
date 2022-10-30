@@ -10,6 +10,7 @@ stats_name = {
     "txn-abort-time-ns-total",
     "committed-time-ns-total",
     "commit-sync-time-ns-total",
+    "flush-time-ns-total",
 }
 
 def main():

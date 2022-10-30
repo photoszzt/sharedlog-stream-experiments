@@ -163,7 +163,8 @@ fi
 echo "app: $NAME, exp_dir: $EXP_DIR, num_instance: $NUM_INSTANCE, num events: $NUM_EVENTS, \
 	num_src: $NUM_SRC_INSTANCE, serde: $SERDE, duration: $DURATION, tps: $TPS, \
 	warm duration: $WARM_DURATION, flushMs: $FLUSH_MS, guarantee: $GUARANTEE, \
-	disable_cache: ${DISABLE_CACHE}, cache_arg: ${CACHE_ARG}, src_flush_ms: ${SRC_FLUSH_MS}"
+	disable_cache: ${DISABLE_CACHE}, cache_arg: ${CACHE_ARG}, src_flush_ms: ${SRC_FLUSH_MS}, \
+        disable_batching: ${DISABLE_BATCHING}, batch_arg: ${BATCH_ARG}, src_batch_arg: ${SRC_BATCH_ARG}"
 
 BASE_DIR=$(realpath $(dirname $0))
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
@@ -203,6 +204,9 @@ for HOST in ${ALL_BROKER_HOSTS[@]}; do
     ssh -q $HOST -oStrictHostKeyChecking=no -- sudo rm -rf /mnt/storage/kdata
     ssh -q $HOST -oStrictHostKeyChecking=no -- sudo mkdir -p /mnt/storage/kdata
     ssh -q $HOST -oStrictHostKeyChecking=no -- sudo chown ubuntu:ubuntu /mnt/storage/kdata
+    ssh -q $HOST -oStrictHostKeyChecking=no -- sudo sysctl -w vm.max_map_count=262144
+    ssh -q $HOST -- echo "ubuntu hard nofile 500000" | sudo tee -a /etc/security/limits.conf
+    ssh -q $HOST -- echo "ubuntu soft nofile 500000" | sudo tee -a /etc/security/limits.conf
 done
 
 ssh -q $MANAGER_HOST -oStrictHostKeyChecking=no -- docker network rm kstreams-test_default || true
@@ -258,7 +262,7 @@ for ((k=0; k<$NUM_INSTANCE; k++)); do
         --replicas-max-per-node=1 --hostname=nexmark-${k} \
         --name kstreams-test_nexmark-${k} --publish mode=host,published=$PORT,target=$PORT \
         --publish mode=host,published=12345,target=12345 \
-        openjdk:11.0.12-jre-slim-buster \
+        azul/zulu-openjdk:11.0.17 \
         bash -c 'java -cp /src/build/libs/nexmark-kafka-streams-0.2-SNAPSHOT-uber.jar \
         com.github.nexmark.kafka.queries.RunQuery \
         --name $NAME --serde $SERDE --conf  /src/workload_config/${NAME}.properties \

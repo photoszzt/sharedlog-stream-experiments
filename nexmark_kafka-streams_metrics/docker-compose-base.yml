@@ -56,21 +56,6 @@ services:
       - /mnt/storage/kdata:/var/lib/kafka/data
       - /mnt/efs/workspace/sharedlog-stream-experiments/kafka_entry/run:/etc/confluent/docker/run
 
-  node_exporter:
-    image: prom/node-exporter:v1.2.2
-    hostname: node_exporter-{{.Task.Slot}}
-    volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
-    command:
-      - "--path.procfs=/host/proc"
-      - "--path.sysfs=/host/sys"
-      - "--collector.filesystem.ignored-mount-points"
-      - "^(aufs|proc|nsfs|shm|cgroup|tmpfs|binfmt_misc|debugfs|devpts|fusectl|hugetlbfs|fuse.lxcfs|mqueue|pstore|securityfs|sysfs|autofs|devtmpfs|configfs)"
-    ports:
-      - "9100:9100"
-
   prometheus:
     hostname: prometheus
     image: prom/prometheus:v2.29.2
