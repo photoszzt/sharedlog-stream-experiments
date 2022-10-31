@@ -10,8 +10,8 @@ throughput = {
     "q5": [24000, 32000, 40000, 56000, 64000],
     "q6": [500, 750],
     "q7": [12000, 16000, 28000, 32000, 36000],
-    #"q8": [16000, 20000, 28000, 32000],
-    "q8": [200, 1000, 4000],
+    #"q8": [200, 1000, 4000],
+    "q8": [12000, 16000, 20000, 28000, 32000],
 }
 
 stages = {
@@ -27,9 +27,22 @@ stages = {
            "procToq6_maxBids_src"},
     "q7": {"bidByPriceProc", "bidByWinProc", "subG2Proc", "subG3", 
            "procTobid_by_price_src", "procTobid_by_win_src", "procTomax_bids_src"},
-    "q8": {"subG1", "subG2", "procToq8_aucsBySellerID_out_src", "procToq8_personsByID_out_src",
-           "streamTimeq8_aucsBySellerID_out", "streamTimeq8_personsByID_out",
-           "msgBatchTimeq8_aucsBySellerID_out_src", "msgBatchTimeq8_personsByID_out_src", "flushAllStream"},
+    "q8": ["subG1", "subG2", "auc_queue", "per_queue",
+           "streamTimeAuc", "streamTimePer",
+           "msgBatchTimeAuc", "msgBatchTimePer",
+           "flushStage", "flushAtLeastOne"],
+}
+
+out_stage_names = {
+        "q8": {"subG1": "subG1(ns)", "subG2": "subG2(ns)", 
+            "auc_queue": "auc_queue(ms)", 
+            "per_queue": "per_queue(ms)",
+            "streamTimeAuc": "streamTimeAuc(ms)", 
+            "streamTimePer": "streamTimePer(ms)",
+            "msgBatchTimeAuc": "msgBatchTimeAuc(ms)", 
+            "msgBatchTimePer": "msgBatchTimePer(ms)",
+            "flushStage": "flushStage(us)", 
+            "flushAtLeastOne": "flushAtLeastOne(us)"},
 }
 
 
@@ -58,11 +71,39 @@ def main():
                 all_stats[st] = data_arr
         tp_stats[tp] = all_stats
 
+    summary_stats = {}
     for st in stages[args.app]:
+        p50s = []
+        p99s = []
         for tp in throughput[args.app]:
             if st in tp_stats[tp]:
                 data_arr = tp_stats[tp][st]
-                print(f"{tp},{st},{np.mean(data_arr)},{np.std(data_arr)},{np.min(data_arr)},{np.quantile(data_arr, 0.25)},{np.quantile(data_arr, 0.5)},{np.quantile(data_arr, 0.9)},{np.quantile(data_arr, 0.99)},{np.max(data_arr)}")
+                st_name = out_stage_names[args.app][st]
+                mean = np.mean(data_arr)
+                std = np.std(data_arr)
+                min_data = np.min(data_arr)
+                p25 = np.quantile(data_arr, 0.25)
+                p50 = np.quantile(data_arr, 0.5)
+                p90 = np.quantile(data_arr, 0.9)
+                p99 = np.quantile(data_arr, 0.99)
+                max_data = np.max(data_arr)
+                p50s.append(p50)
+                p99s.append(p99)
+                print(f"{tp},{st_name},{mean},{std},{min_data},{p25},{p50},{p90},{p99},{max_data}")
+        summary_stats[st] = {}
+        summary_stats[st]["p50"] = p50s
+        summary_stats[st]["p99"] = p99s
+
+    print()
+    for st in stages[args.app]:
+        p50s = summary_stats[st]["p50"]
+        p99s = summary_stats[st]["p99"]
+        st_name = out_stage_names[args.app][st]
+        print(f"{st_name},Impeller p50,Impeller p99")
+        for i in range(len(throughput[args.app])):
+            tp = throughput[args.app][i]
+            print(f"{tp},{p50s[i]},{p99s[i]}")
+        print()
 
 
 if __name__ == '__main__':

@@ -22,7 +22,7 @@ stages = {
            "procToq8_aucsBySellerID_out_src", "procToq8_personsByID_out_src",
            "streamTimeq8_aucsBySellerID_out", "streamTimeq8_personsByID_out",
            "msgBatchTimeq8_aucsBySellerID_out_src", "msgBatchTimeq8_personsByID_out_src", 
-           "flushAllStream"},
+           "flushStage", "flushAtLeastOne"},
 }
 
 translate = {
@@ -35,7 +35,13 @@ translate = {
            "subG2_left": "subG2", "subG2_right": "subG2",},
     "q7": {"subG2_left": "subG3", "subG2_right": "subG3"},
     "q8": {"aucProc": "subG1", "perProc": "subG1",
-           "subG2_left": "subG2", "subG2_right": "subG2", },
+           "subG2_left": "subG2", "subG2_right": "subG2",
+           "procToq8_aucsBySellerID_out_src": "auc_queue",
+           "procToq8_personsByID_out_src": "per_queue",
+           "streamTimeq8_aucsBySellerID_out": "streamTimeAuc",
+           "streamTimeq8_personsByID_out": "streamTimePer",
+           "msgBatchTimeq8_aucsBySellerID_out_src": "msgBatchTimeAuc",
+           "msgBatchTimeq8_personsByID_out_src": "msgBatchTimePer"},
 }
 
 

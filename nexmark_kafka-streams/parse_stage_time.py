@@ -17,11 +17,14 @@ stages = {
            "topo3_proc", "aucBidsQueueTime", "q6_sink_ets-7_proc"},
     "q7": {"bids_by_win_proc", "bids_by_price_proc", "bids_by_win_queue",
            "bids_by_price_queue", "max_bids_queue", "topo2_proc", "q7_sink_ets-7_proc"},
-    "q8": {"subAuc_proc", "subPer_proc", "auc_queue", "per_queue", "q8_sink_ets-7_proc"},
+    "q8": {"subAuc_proc", "subPer_proc", "auc_queue", "per_queue", "q8_sink_ets-7_proc",
+           "txn-begin", "txn-send-offsets", "txn-commit", "flush"},
 }
+
 translate = {
     "q3": {"subGAuc_proc": "subG1", "subGPer_proc": "subG1"},
-    "q8": {"subAuc_proc": "subG1", "subPer_proc": "subG1"},
+    "q8": {"subAuc_proc": "subG1", "subPer_proc": "subG1", 
+           "q8_sink_ets-7_proc": "subG2"},
     "q4": {"subGAuc_proc": "subG1", "subGBid_proc": "subG1"},
     "q6": {"subGAuc_proc": "subG1", "subGBid_proc": "subG1"},
 }
@@ -48,14 +51,21 @@ def main():
             with open(fname, "r") as f:
                 for line in f:
                     if "{" in line and ": [" in line:
-                        stat = json.loads(line.strip())
-                        for name, data in stat.items():
-                            if name in stages[args.app]:
-                                if args.app in translate and name in translate[args.app]:
-                                    name = translate[args.app][name]
-                                if name not in stats[tps_per_work]:
-                                    stats[tps_per_work][name] = []
-                                stats[tps_per_work][name].append(data)
+                        l = line.strip().split(": ")
+                        name = l[0].strip("{\"")
+                        data = l[1].strip("[]{}").split(", ")
+                        data = [float(x) for x in data]
+                        if name in stages[args.app] or "commitLat" in name or "avgCommitLat" in name:
+                            if args.app in translate and name in translate[args.app]:
+                                name = translate[args.app][name]
+                            if "commitLat" in name:
+                                name = "commitLat"
+                            if "avgCommitLat" in name:
+                                name = "avgCommitLat"
+                            if name not in stats[tps_per_work]:
+                                stats[tps_per_work][name] = []
+                            stats[tps_per_work][name].append(data)
+
     os.makedirs(args.out_stats, exist_ok=True)
     for tps_per_work, stat in stats.items():
         mtime = int(os.stat(dirs_dict[tps_per_work]).st_mtime)
