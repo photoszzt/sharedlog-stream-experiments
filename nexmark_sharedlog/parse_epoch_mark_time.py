@@ -40,51 +40,55 @@ def main():
         for d in dirs:
             if "epoch" in d:
                 tps_per_work = int(d.split("_")[0][:-3])
-                dirs_dict[tps_per_work] = os.path.join(root, d, "logs")
+                if tps_per_work not in dirs_dict:
+                    dirs_dict[tps_per_work] = []
+                dirs_dict[tps_per_work].append(os.path.join(root, d, "logs"))
+    print(dirs_dict)
     stats = {}
     flush_all = {}
     flush_at_least_one = {}
     epochMarkTimes = {}
-    for tps_per_work, dirpath in dirs_dict.items():
+    for tps_per_work, dirpaths in dirs_dict.items():
         stats[tps_per_work] = {}
         flush_all[tps_per_work] = {}
         epochMarkTimes[tps_per_work] = {}
         flush_at_least_one[tps_per_work] = {}
         visited_files = set()
-        for fname in Path(dirpath).glob("**/*.stderr"):
-            basename = os.path.basename(fname)
-            if basename in visited_files:
-                continue
-            visited_files.add(basename)
-            stage = basename.split("_")[0]
-            with open(fname, "r") as f:
-                for line in f:
-                    if "epoch mark time" in line:
-                        l = line.strip().split(": ")[1]
-                        nums = l.strip("[]{}").split(" ")
-                        nums = [int(i) for i in nums]
-                        if stage not in stats[tps_per_work]:
-                            stats[tps_per_work][stage] = []
-                        stats[tps_per_work][stage].append(nums)
-                    elif "flushStage" in line and "[" in line:
-                        l = line.strip().split(": ")[1]
-                        nums = l.strip("[]{}").split(" ")
-                        nums = [int(i) for i in nums]
-                        if stage not in flush_all[tps_per_work]:
-                            flush_all[tps_per_work][stage] = []
-                        flush_all[tps_per_work][stage].append(nums)
-                    elif "flushAtLeastOne" in line and "[" in line:
-                        l = line.strip().split(": ")[1]
-                        nums = l.strip("[]{}").split(" ")
-                        nums = [int(i) for i in nums]
-                        if stage not in flush_at_least_one[tps_per_work]:
-                            flush_at_least_one[tps_per_work][stage] = []
-                        flush_at_least_one[tps_per_work][stage].append(nums)
-                    elif "epoch_mark_times" in line:
-                        l = int(line.strip().split(": ")[1])
-                        if stage not in epochMarkTimes[tps_per_work]:
-                            epochMarkTimes[tps_per_work][stage] = []
-                        epochMarkTimes[tps_per_work][stage].append(l)
+        for dirpath in dirpaths:
+            for fname in Path(dirpath).glob("**/*.stderr"):
+                basename = os.path.basename(fname)
+                if basename in visited_files:
+                    continue
+                visited_files.add(basename)
+                stage = basename.split("_")[0]
+                with open(fname, "r") as f:
+                    for line in f:
+                        if "epoch mark time" in line:
+                            l = line.strip().split(": ")[1]
+                            nums = l.strip("[]{}").split(" ")
+                            nums = [int(i) for i in nums]
+                            if stage not in stats[tps_per_work]:
+                                stats[tps_per_work][stage] = []
+                            stats[tps_per_work][stage].append(nums)
+                        elif "flushStage" in line and "[" in line:
+                            l = line.strip().split(": ")[1]
+                            nums = l.strip("[]{}").split(" ")
+                            nums = [int(i) for i in nums]
+                            if stage not in flush_all[tps_per_work]:
+                                flush_all[tps_per_work][stage] = []
+                            flush_all[tps_per_work][stage].append(nums)
+                        elif "flushAtLeastOne" in line and "[" in line:
+                            l = line.strip().split(": ")[1]
+                            nums = l.strip("[]{}").split(" ")
+                            nums = [int(i) for i in nums]
+                            if stage not in flush_at_least_one[tps_per_work]:
+                                flush_at_least_one[tps_per_work][stage] = []
+                            flush_at_least_one[tps_per_work][stage].append(nums)
+                        elif "epoch_mark_times" in line:
+                            l = int(line.strip().split(": ")[1])
+                            if stage not in epochMarkTimes[tps_per_work]:
+                                epochMarkTimes[tps_per_work][stage] = []
+                            epochMarkTimes[tps_per_work][stage].append(l)
 
     tp = sorted(stats.keys())
     stat = stats[tps_per_work]
