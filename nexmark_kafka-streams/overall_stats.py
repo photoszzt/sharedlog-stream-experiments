@@ -17,7 +17,7 @@ stages = {
            "bids_by_win_queue", "bids_by_price_queue", "max_bids_queue", },
     "q8": ["subG1", "subG2", "auc_queue", "per_queue",
            "txn-begin", "txn-send-offsets", "txn-commit", "flush", 
-           "commitLat", "avgCommitLat"],
+           "commitLat", "avgCommitLat", "execIntrMs"],
 }
 
 out_stage_names = {
@@ -41,7 +41,8 @@ out_stage_names = {
            "subG2": "subG2(ns)",
            "txn-begin": "txn-begin(ns)", "txn-send-offsets": "txn-send-offsets(ns)", 
            "txn-commit": "txn-commit(ns)", "flush": "flush(ns)", 
-           "commitLat": "commitLat(ns)", "avgCommitLat": "avgCommitLat(ms)"},
+           "commitLat": "commitLat(ns)", "avgCommitLat": "avgCommitLat(ms)",
+           "execIntrMs": "execIntr(ms)"},
 }
 
 throughput = {
@@ -69,9 +70,10 @@ def main():
                 print(stats.keys())
                 s = stages[args.app]
                 for st in s:
-                    if st not in all_stats:
-                        all_stats[st] = []
-                    all_stats[st].extend(stats[st])
+                    if st in stats:
+                        if st not in all_stats:
+                            all_stats[st] = []
+                        all_stats[st].extend(stats[st])
         for st in stages[args.app]:
             data_arr = np.concatenate(all_stats[st])
             all_stats[st] = data_arr

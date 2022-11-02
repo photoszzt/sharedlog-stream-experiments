@@ -38,51 +38,44 @@ def main():
                         help='output stats dir', required=True)
     args = parser.parse_args()
     dirs_dict = {}
-    stats = {}
 
     for root, dirs, _ in os.walk(args.dir):
         for d in dirs:
             if "eo" in d:
                 tps_per_work = int(d.split("_")[0][:-3])
-                dirs_dict[tps_per_work] = os.path.join(root, d, "logs")
-    for tps_per_work, dirpath in dirs_dict.items():
-        stats[tps_per_work] = {}
-        for fname in Path(dirpath).glob("*nexmark*.stdout"):
-            with open(fname, "r") as f:
-                for line in f:
-                    if "{" in line and ": [" in line:
-                        l = line.strip().split(": ")
-                        name = l[0].strip("{\"")
-                        data = l[1].strip("[]{}").split(", ")
-                        data = [float(x) for x in data]
-                        if name in stages[args.app] or "commitLat" in name or "avgCommitLat" in name:
-                            if args.app in translate and name in translate[args.app]:
-                                name = translate[args.app][name]
-                            if "commitLat" in name:
-                                name = "commitLat"
-                            if "avgCommitLat" in name:
-                                name = "avgCommitLat"
-                            if name not in stats[tps_per_work]:
-                                stats[tps_per_work][name] = []
-                            stats[tps_per_work][name].append(data)
-
+                if tps_per_work not in dirs_dict:
+                    dirs_dict[tps_per_work] = []
+                dirs_dict[tps_per_work].append(os.path.join(root, d, "logs"))
+    print(dirs_dict)
     os.makedirs(args.out_stats, exist_ok=True)
-    for tps_per_work, stat in stats.items():
-        mtime = int(os.stat(dirs_dict[tps_per_work]).st_mtime)
-        all_data_path = os.path.join(
-            args.out_stats, f"{tps_per_work}_{mtime}.pickle")
-        with open(all_data_path, "wb") as f:
-            pickle.dump(stat, f)
-        # summary = os.path.join(
-        #     args.out_stats, f"{args.app}_{tps_per_work}_{mtime}_stat.json")
-        # summary_stat = {}
-        # for name, data in stat.items():
-        #     quan = quantiles(data, n=100)
-        #     summary_stat[name] = {"mean": mean(data), "std": stdev(data), "min": min(data), "max": max(data),
-        #                           "p25": quan[24], "p50": quan[49],
-        #                           "p90": quan[89], "p99": quan[98]}
-        # with open(summary, "w") as f:
-        #     json.dump(summary_stat, f)
+    for tps_per_work, dirpaths in dirs_dict.items():
+        for dirpath in dirpaths:
+            stats = {}
+            for fname in Path(dirpath).glob("*nexmark*.stdout"):
+                print(fname)
+                with open(fname, "r") as f:
+                    for line in f:
+                        if "{" in line and ": [" in line:
+                            l = line.strip().split(": ")
+                            name = l[0].strip("{\"")
+                            data = l[1].strip("[]{}").split(", ")
+                            data = [float(x) for x in data]
+                            if name in stages[args.app] or "commitLat" in name or "avgCommitLat" in name or "execIntrMs" in name:
+                                if args.app in translate and name in translate[args.app]:
+                                    name = translate[args.app][name]
+                                if "commitLat" in name:
+                                    name = "commitLat"
+                                if "avgCommitLat" in name:
+                                    name = "avgCommitLat"
+                                if "execIntrMs" in name:
+                                    name = "execIntrMs"
+                                if name not in stats:
+                                    stats[name] = []
+                                stats[name].append(data)
+            mtime = int(os.stat(dirpath).st_mtime)
+            data_path = os.path.join(args.out_stats, f"{tps_per_work}_{mtime}.pickle")
+            with open(data_path, "wb") as f:
+                pickle.dump(stats, f)
 
 
 if __name__ == '__main__':
