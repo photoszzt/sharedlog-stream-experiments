@@ -30,7 +30,8 @@ stages = {
     "q8": ["subG1", "subG2", "auc_queue", "per_queue",
            "streamTimeAuc", "streamTimePer",
            "msgBatchTimeAuc", "msgBatchTimePer",
-           "flushStage", "flushAtLeastOne", "markPartUs"],
+           "flushStage", "flushAtLeastOne", "markPartUs", 
+           "execIntrMs", "thisAndLastCmtMs"],
 }
 
 out_stage_names = {
@@ -43,7 +44,8 @@ out_stage_names = {
             "msgBatchTimePer": "msgBatchTimePer(ms)",
             "flushStage": "flushStage(us)", 
             "flushAtLeastOne": "flushAtLeastOne(us)",
-            "markPartUs": "markPart(us)"},
+            "markPartUs": "markPart(us)",
+            "execIntrMs": "execIntr(ms)", "thisAndLastCmtMs": "thisAndLastCmt(ms)"},
 }
 
 

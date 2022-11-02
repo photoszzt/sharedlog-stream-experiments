@@ -22,7 +22,7 @@ stages = {
            "procToq8_aucsBySellerID_out_src", "procToq8_personsByID_out_src",
            "streamTimeq8_aucsBySellerID_out", "streamTimeq8_personsByID_out",
            "msgBatchTimeq8_aucsBySellerID_out_src", "msgBatchTimeq8_personsByID_out_src", 
-           "flushStage", "flushAtLeastOne", "markPartUs"},
+           "flushStage", "flushAtLeastOne", "markPartUs", "execIntrMs", "thisAndLastCmtMs"},
 }
 
 translate = {
