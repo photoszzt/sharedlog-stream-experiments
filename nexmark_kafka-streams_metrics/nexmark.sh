@@ -278,16 +278,22 @@ sleep 20
 ALL_SOURCE_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=source_node)
 ALL_APP_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=app_node)
 
+mkdir -p $EXP_DIR/broker_sar
 for HOST in $ALL_BROKER_HOSTS; do
-	ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
+    ssh -q $HOST -oStrictHostKeyChecking=no -- ls /dev/nvme* >>$EXP_DIR/broker_sar/${HOST}_dev
+    ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
 done
 
+mkdir -p $EXP_DIR/source_sar
 for HOST in $ALL_SOURCE_HOSTS; do
-	ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
+    ssh -q $HOST -oStrictHostKeyChecking=no -- ls /dev/nvme* >>$EXP_DIR/source_sar/${HOST}_dev
+    ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
 done
 
+mkdir -p $EXP_DIR/app_sar
 for HOST in $ALL_APP_HOSTS; do
-	ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
+    ssh -q $HOST -oStrictHostKeyChecking=no -- ls /dev/nvme* >>$EXP_DIR/app_sar/${HOST}_dev
+    ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
 done
 
 pids=()
