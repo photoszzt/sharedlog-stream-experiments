@@ -156,7 +156,7 @@ fi
 ALL_ENGINE_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=engine_node)
 mkdir -p $EXP_DIR/engine_sar/
 for HOST in $ALL_ENGINE_HOSTS; do
-    ssh -q $HOST -oStrictHostKeyChecking=no -- ls -l /dev/nvme* >>$EXP_DIR/engine_sar/${HOST}_dev
+    ssh -q $HOST -oStrictHostKeyChecking=no -- 'ls -l /dev/nvme*' >>$EXP_DIR/engine_sar/${HOST}_dev
     ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
 done
 
@@ -168,7 +168,7 @@ done
 
 mkdir -p $EXP_DIR/storage_sar/
 for HOST in $ALL_STORAGE_HOSTS; do
-    ssh -q $HOST -oStrictHostKeyChecking=no -- ls -l /dev/nvme* >>$EXP_DIR/storage_sar/${HOST}_dev
+    ssh -q $HOST -oStrictHostKeyChecking=no -- 'ls -l /dev/nvme*' >>$EXP_DIR/storage_sar/${HOST}_dev
     ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
 done
 
