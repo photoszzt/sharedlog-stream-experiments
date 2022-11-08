@@ -19,7 +19,7 @@ SNAPSHOT_S=10
 INIT_NUM_WORKER=4
 SCALE_SCENE=4_to_2_ins
 
-for ((iter=0; iter < 1; ++iter)); do
+for ((iter=0; iter < 2; ++iter)); do
     for ((k = 0; k < ${#APP[@]}; ++k)); do
         cd ${DIR[k]}
         for ((idx = 0; idx < ${#TPS_PER_WORKER[@]}; ++idx)); do

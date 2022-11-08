@@ -145,9 +145,22 @@ mkdir -p $EXP_DIR
 ssh -q $MANAGER_HOST -- cat /proc/cmdline >>$EXP_DIR/kernel_cmdline
 ssh -q $MANAGER_HOST -- uname -a >>$EXP_DIR/kernel_version
 
+ALL_SEQUENCER_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=sequencer_node)
+ALL_STORAGE_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=storage_node)
+for HOST in $ALL_SEQUENCER_HOSTS; do
+    echo $HOST >> $EXP_DIR/seqhosts
+done
+
 ALL_ENGINE_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=engine_node)
 for HOST in $ALL_ENGINE_HOSTS; do
-	ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
+    ssh -q $HOST -oStrictHostKeyChecking=no -- 'ls -l /dev/nvme*' >>$EXP_DIR/engine_sar/${HOST}_dev
+    ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
+done
+
+mkdir -p $EXP_DIR/storage_sar/
+for HOST in $ALL_STORAGE_HOSTS; do
+    ssh -q $HOST -oStrictHostKeyChecking=no -- 'ls -l /dev/nvme*' >>$EXP_DIR/storage_sar/${HOST}_dev
+    ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
 done
 
 ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_scale -app_name ${APP_NAME} \
@@ -160,10 +173,17 @@ ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_scale -app_name ${APP_NAME} \
     -tps $TPS -snapshot_everyS=$SNAPSHOT_S >$EXP_DIR/results.log 2>&1
 
 for HOST in $ALL_ENGINE_HOSTS; do
-	ssh -q $HOST -oStrictHostKeyChecking=no -- pkill sar
-	mkdir -p $EXP_DIR/engine_sar/$HOST
-	scp $HOST:/home/ubuntu/sar_st $EXP_DIR/engine_sar/$HOST
-	ssh -q $HOST -oStrictHostKeyChecking=no -- rm /home/ubuntu/sar_st
+    ssh -q $HOST -oStrictHostKeyChecking=no -- pkill sar
+    mkdir -p $EXP_DIR/engine_sar/$HOST
+    scp $HOST:/home/ubuntu/sar_st $EXP_DIR/engine_sar/$HOST
+    ssh -q $HOST -oStrictHostKeyChecking=no -- rm /home/ubuntu/sar_st
+done
+
+for HOST in $ALL_STORAGE_HOSTS; do
+    ssh -q $HOST -oStrictHostKeyChecking=no -- pkill sar
+    mkdir -p $EXP_DIR/storage_sar/$HOST
+    scp $HOST:/home/ubuntu/sar_st $EXP_DIR/storage_sar/$HOST
+    ssh -q $HOST -oStrictHostKeyChecking=no -- rm /home/ubuntu/sar_st
 done
 
 mkdir $EXP_DIR/sequencer_netstats
