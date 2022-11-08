@@ -75,8 +75,9 @@ def main():
                             all_stats[st] = []
                         all_stats[st].extend(stats[st])
         for st in stages[args.app]:
-            data_arr = np.concatenate(all_stats[st])
-            all_stats[st] = data_arr
+            if st in all_stats:
+                data_arr = np.concatenate(all_stats[st])
+                all_stats[st] = data_arr
         tp_stats[tp] = all_stats
 
     summary_stats = {}
@@ -103,14 +104,15 @@ def main():
 
     print()
     for st in stages[args.app]:
-        p50s = summary_stats[st]["p50"]
-        p99s = summary_stats[st]["p99"]
-        st_name = out_stage_names[args.app][st]
-        print(f"{st_name},Kafka p50,Kafka p99")
-        for i in range(len(throughput[args.app])):
-            tp = throughput[args.app][i]
-            print(f"{tp},{p50s[i]},{p99s[i]}")
-        print()
+        if st in summary_stats:
+            p50s = summary_stats[st]["p50"]
+            p99s = summary_stats[st]["p99"]
+            st_name = out_stage_names[args.app][st]
+            print(f"{st_name},Kafka p50,Kafka p99")
+            for i in range(len(throughput[args.app])):
+                tp = throughput[args.app][i]
+                print(f"{tp},{p50s[i]},{p99s[i]}")
+            print()
 
 
 if __name__ == '__main__':
