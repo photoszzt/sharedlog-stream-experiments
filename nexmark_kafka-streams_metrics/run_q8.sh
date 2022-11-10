@@ -5,14 +5,14 @@ WORKSPACE_DIR=$(realpath $SCRIPT_DIR/../../)
 $WORKSPACE_DIR/research-helper-scripts/microservice_helper start-machines --use-spot-instances
 
 TPS_PER_WORKER=(12000 16000 20000 28000 32000)
-# TPS_PER_WORKER=(4000)
+# TPS_PER_WORKER=(16000)
 DURATION=180
 WARM_DURATION=0
 APP=(q8)
 FLUSH_MS=(10 50 100)
 NUM_INS=4
 
-for ((iter=0; iter<3; iter++)); do
+for ((iter=0; iter<1; iter++)); do
     for ((j=0; j<${#APP[@]}; ++j)); do
         for ((k=0; k<${#FLUSH_MS[@]}; ++k)); do
             for ((idx=0; idx<${#TPS_PER_WORKER[@]}; ++idx)); do
@@ -28,7 +28,7 @@ for ((iter=0; iter<3; iter++)); do
                 #     --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms ${SRC_FLUSH_MS} --gua alo
     
                 ./nexmark.sh --app ${APP[j]} \
-                    --exp_dir ./${APP[j]}/4src_test/$subdir/$iter/${TPS_PER_WORKER[idx]}tps_eo/ \
+                    --exp_dir ./${APP[j]}/4src_1t_nosb_prometheus/$subdir/$iter/${TPS_PER_WORKER[idx]}tps_eo/ \
                     --nins 4 --nsrc 4 --serde msgp --duration $DURATION --nevents ${EVENTS} \
                     --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms ${FLUSH_MS[k]} --src_flushms ${SRC_FLUSH_MS} --gua eo
             done

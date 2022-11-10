@@ -1,10 +1,10 @@
 global:
   # How frequently to scrape targets by default.
   # Default 15s
-  scrape_interval: 15s
+  scrape_interval: 10s
   # How frequently to evaluate rules.
   # Default 15s
-  evaluation_interval: 15s
+  evaluation_interval: 10s
   # How long until a scrape request times out.
   # Default to 10s.
   # Required because cp-demo is using cpu throttling, so let's leave enough time to fetch the metrics in particular for the first time as it needs to compile all rexps
@@ -59,6 +59,58 @@ scrape_configs:
     dns_sd_configs:
       - names:
         - 'tasks.kstreams-test_nexmark-0'
+        type: 'A'
+        port: 12345
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: hostname
+        regex: '([^:]+)(:[0-9]+)?'
+        replacement: '${1}'
+
+  - job_name: "kafka-0"
+    scrape_interval: 10s
+    dns_sd_configs:
+      - names:
+        - 'tasks.kstreams-test_broker-0'
+        type: 'A'
+        port: 12345
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: hostname
+        regex: '([^:]+)(:[0-9]+)?'
+        replacement: '${1}'
+
+  - job_name: "kafka-1"
+    scrape_interval: 10s
+    dns_sd_configs:
+      - names:
+        - 'tasks.kstreams-test_broker-1'
+        type: 'A'
+        port: 12345
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: hostname
+        regex: '([^:]+)(:[0-9]+)?'
+        replacement: '${1}'
+
+  - job_name: "kafka-2"
+    scrape_interval: 10s
+    dns_sd_configs:
+      - names:
+        - 'tasks.kstreams-test_broker-2'
+        type: 'A'
+        port: 12345
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: hostname
+        regex: '([^:]+)(:[0-9]+)?'
+        replacement: '${1}'
+
+  - job_name: "kafka-3"
+    scrape_interval: 10s
+    dns_sd_configs:
+      - names:
+        - 'tasks.kstreams-test_broker-3'
         type: 'A'
         port: 12345
     relabel_configs:

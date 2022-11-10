@@ -2,64 +2,87 @@ import argparse
 import os
 import gzip
 import json
-from statistics import quantiles
+import numpy as np
+import pickle
+
+stages = {
+    "q1": "query1",
+    "q2": "query2",
+    "q3": "q3JoinTable",
+    "q4": "q4Avg",
+    "q5": "q5maxbid",
+    "q6": "q6Avg",
+    "q7": "q7JoinMaxBid",
+    "q8": "q8JoinStream",
+}
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dir', required=True)
-    parser.add_argument('--prefix', required=True)
+    parser.add_argument('--dir', type=str, help='dir to parse', required=True)
+    parser.add_argument('--out_stats', type=str, required=True)
+    parser.add_argument('--app', type=str, required=True)
     args = parser.parse_args()
-    prog_dirs = {}
+    dirs_dict = {}
     latency = {}
-    absdir = os.path.abspath(args.dir)
-    basedir = os.path.basename(absdir)
-    if "tps" not in basedir:
-        for root, dirs, files in os.walk(args.dir):
-            for dname in dirs:
-                if "tps" in dname:
-                    dpath = os.path.join(root, dname)
-                    tps = dname.split("_")[0][:-3]
-                    prog_dirs[dpath] = int(tps)
-    else:
-        tps = basedir.split("_")[0][:-3]
-        prog_dirs[absdir] = int(tps)
-    for (dpath, tps) in prog_dirs.items():
-        e2e_latency = []
-        stats_dir = os.path.join(dpath, "stats")
-        print(stats_dir)
-        for root, dirs, files in os.walk(stats_dir):
-            for fname in files:
-                if "gz" in fname and args.prefix in fname:
-                    fpath = os.path.join(root, fname)
-                    with gzip.open(fpath, 'rb') as f:
-                        st = json.load(f)
-                        print(st.keys())
-                        print(st['Latencies'].keys())
-                        found = False
-                        for key, value in st['Latencies'].items():
-                            if 'eventTimeLatency' in key:
-                                if st['Latencies'][key] is not None:
-                                    e2e_latency.extend(st['Latencies'][key])
-                                    found = True
-                        if not found:
-                            print(f"{fpath} event time latency is empty")
-                    # with open(fpath, 'r') as f:
-                    #     st = json.load(f)
-                    #     e2e_latency.extend(st['Latencies']['eventTimeLatency'])
-        if e2e_latency:
-            quan = quantiles(e2e_latency, n=100)
-            p50 = quan[49]
-            p99 = quan[98]
-            if tps not in latency:
-                latency[tps] = {}
-            latency[tps][dpath] = (p50, p99)
-            # print(f"dpath {dpath} tps {tps} {args.prefix} p50: {p50} ms, p99: {p99} ms")
-    for tps, stats in latency.items():
-        print(f"tps {tps}")
-        for dpath, stat in stats.items():
-            print(f"{dpath} p50: {stat[0]} ms, p99: {stat[1]} ms")
-
+    all_stats = {}
+    for root, dirs, _ in os.walk(args.dir):
+        for d in dirs:
+            if "epoch" in d:
+                tps_per_work = int(d.split("_")[0][:-3])
+                if tps_per_work not in dirs_dict:
+                    dirs_dict[tps_per_work] = []
+                dirs_dict[tps_per_work].append(os.path.join(root, d))
+    print(dirs_dict)
+    os.makedirs(args.out_stats, exist_ok=True)
+    prefix = stages[args.app]
+    for tps, dirpaths in dirs_dict.items():
+        all_data = []
+        for dpath in dirpaths:
+            e2e_latency = []
+            stats_dir = os.path.join(dpath, "stats")
+            for root, dirs, files in os.walk(stats_dir):
+                for fname in files:
+                    if "gz" in fname and prefix in fname:
+                        fpath = os.path.join(root, fname)
+                        with gzip.open(fpath, 'rb') as f:
+                            st = json.load(f)
+                            found = False
+                            for key, value in st['Latencies'].items():
+                                if 'eventTimeLatency' in key:
+                                    if st['Latencies'][key] is not None:
+                                        e2e_latency.append(st['Latencies'][key])
+                                        found = True
+                            if not found:
+                                print(f"{fpath} event time latency is empty")
+            if e2e_latency:
+                e2e_lat = np.concatenate(e2e_latency)
+                p50 = np.quantile(e2e_lat, 0.5)
+                p99 = np.quantile(e2e_lat, 0.99)
+                if tps not in latency:
+                    latency[tps] = {}
+                    latency[tps]["p50"] = []
+                    latency[tps]["p99"] = []
+                latency[tps]["p50"].append(p50)
+                latency[tps]["p99"].append(p99)
+                print(f"{dpath} p50: {p50} ms, p99: {p99} ms")
+                all_data.append(e2e_lat)
+        print()
+        all_data_cat = np.concatenate(all_data)
+        all_p50 = np.quantile(all_data_cat, 0.5)
+        all_p99 = np.quantile(all_data_cat, 0.99)
+        print(f"{tps} p50: {all_p50} ms, p99: {all_p99} ms")
+        if tps not in all_stats:
+            all_stats[tps] = {}
+        all_stats[tps]["p50"] = p50
+        all_stats[tps]["p99"] = p99
+    mtime = int(os.stat(args.dir).st_mtime)
+    all_stats_path = os.path.join(args.out_stats, f"{args.app}_{mtime}.pickle")
+    splitlat_stats_path = os.path.join(args.out_stats, f"{args.app}_split_{mtime}.pickle")
+    with open(all_stats_path, "wb") as f:
+        pickle.dump(all_stats, f)
+    with open(splitlat_stats_path, "wb") as f:
+        pickle.dump(latency, f)
 
 
 if __name__ == '__main__':
