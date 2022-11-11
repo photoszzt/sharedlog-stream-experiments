@@ -1,1 +1,0 @@
-../../run_once_mongodb.sh
