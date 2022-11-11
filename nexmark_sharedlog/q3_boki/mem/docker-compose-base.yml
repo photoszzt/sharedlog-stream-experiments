@@ -207,6 +207,7 @@ services:
 
   snapcache:
     image: redis:7
+    hostname: snapcache-{{.Task.Slot}}
     restart: always
     ports:
       - '6379'
@@ -280,7 +281,7 @@ services:
        - BUFPUSH=1
        - PARALLEL_RESTORE=1
        - CREATE_SNAPSHOT=1
-       - REDIS_ADDR=snapcache:6379
+       - REDIS_ADDR=snapcache-1:6379,snapcache-2:6379,snapcache-3:6379,snapcache-4:6379
     depends_on:
        - faas-engine
        - snapcache
