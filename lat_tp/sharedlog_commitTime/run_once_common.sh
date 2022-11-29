@@ -1,0 +1,1 @@
+../../nexmark_sharedlog/run_once_common.sh
