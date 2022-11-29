@@ -1,5 +1,7 @@
 import argparse
 from pathlib import Path
+import json
+import os
 import pickle
 import numpy as np
 
@@ -60,6 +62,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dir", type=str, help="dir to parse", required=True)
     parser.add_argument("--app", type=str, help="app to parse", required=True)
+    parser.add_argument("--out_stats", type=str, help="output stats dir", required=True)
     args = parser.parse_args()
     tp_stats = {}
     for tp in throughput[args.app]:
@@ -101,6 +104,11 @@ def main():
         summary_stats[st] = {}
         summary_stats[st]["p50"] = p50s
         summary_stats[st]["p99"] = p99s
+
+    os.makedirs(args.out_stats, exist_ok=True)
+    fpath = os.path.join(args.out_stats, f"{args.app}_stats.json")
+    with open(fpath, "w") as f:
+        json.dump(summary_stats, f)
 
     print()
     for st in stages[args.app]:

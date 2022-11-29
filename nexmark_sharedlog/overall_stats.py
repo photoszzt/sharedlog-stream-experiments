@@ -1,7 +1,9 @@
 import argparse
 from pathlib import Path
 import pickle
+import os
 import numpy as np
+import json
 from parse_stage_time import stages
 
 throughput = {
@@ -53,6 +55,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dir", type=str, help="dir to parse", required=True)
     parser.add_argument("--app", type=str, help="app to parse", required=True)
+    parser.add_argument("--out_stats", type=str, help="output stats dir", required=True)
     args = parser.parse_args()
     tp_stats = {}
     for tp in throughput[args.app]:
@@ -97,16 +100,22 @@ def main():
         summary_stats[st]["p50"] = p50s
         summary_stats[st]["p99"] = p99s
 
+    os.makedirs(args.out_stats, exist_ok=True)
+    fpath = os.path.join(args.out_stats, f"{args.app}_stats.json")
+    with open(fpath, "w") as f:
+        json.dump(summary_stats, f)
+
     print()
     for st in stages[args.app]:
         p50s = summary_stats[st]["p50"]
         p99s = summary_stats[st]["p99"]
-        st_name = out_stage_names[args.app][st]
-        print(f"{st_name},Impeller p50,Impeller p99")
-        for i in range(len(throughput[args.app])):
-            tp = throughput[args.app][i]
-            print(f"{tp},{p50s[i]},{p99s[i]}")
-        print()
+        if p50s and p99s:
+            st_name = out_stage_names[args.app][st]
+            print(f"{st_name},Impeller p50,Impeller p99")
+            for i in range(len(throughput[args.app])):
+                tp = throughput[args.app][i]
+                print(f"{tp},{p50s[i]},{p99s[i]}")
+            print()
 
 
 if __name__ == '__main__':

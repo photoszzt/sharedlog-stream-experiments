@@ -23,6 +23,7 @@ def printStats(tp, statk, stats, all_stats):
             max_data = np.max(data_arr)
             print(f"{tps_per_work},{stage},{mean},{std},{min_data},{p25},{p50},{p90},{p99},{max_data}")
 
+    summary_stats = []
     print()
     for tps in tp:
         data = all_stats[tps]
@@ -30,10 +31,14 @@ def printStats(tp, statk, stats, all_stats):
         p50 = np.quantile(data_arr, 0.5)
         p99 = np.quantile(data_arr, 0.99)
         print(f"{tps},{p50},{p99}")
+        summary_stats.append((tps, p50, p99))
+    sorted(summary_stats, key=lambda kv: kv[0])
+    return summary_stats
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--dir', required=True)
+    parser.add_argument('--out_dir', required=True)
     args = parser.parse_args()
     dirs_dict = {}
     for root, dirs, _ in os.walk(args.dir):
@@ -95,22 +100,26 @@ def main():
     statk = sorted(stat.keys())
     all_mark_stats = {}
     print("progress marking(us)")
-    printStats(tp, statk, stats, all_mark_stats)
+    summary = printStats(tp, statk, stats, all_mark_stats)
+    os.makedirs(args.out_dir, exist_ok=True)
+    p = os.path.join(args.out_dir, "mark_time.json")
+    with open(p, "w") as f:
+        json.dump(summary, f)
                          
-    print("flush all(us)")
-    all_flush_stats = {}
-    printStats(tp, statk, flush_all, all_flush_stats)
+    # print("flush all(us)")
+    # all_flush_stats = {}
+    # printStats(tp, statk, flush_all, all_flush_stats)
 
-    print("flush at least one(us)")
-    all_flush_at_least_one_stats = {}
-    printStats(tp, statk, flush_at_least_one, all_flush_at_least_one_stats)
+    # print("flush at least one(us)")
+    # all_flush_at_least_one_stats = {}
+    # printStats(tp, statk, flush_at_least_one, all_flush_at_least_one_stats)
 
-    print("progress marking times")
-    tp = sorted(epochMarkTimes.keys())
-    for tps_per_work in tp:
-        stat = epochMarkTimes[tps_per_work]
-        for stage, data in stat.items():
-            print(f"{tps_per_work},{stage},{mean(data)},{stdev(data)}")
+    # print("progress marking times")
+    # tp = sorted(epochMarkTimes.keys())
+    # for tps_per_work in tp:
+    #     stat = epochMarkTimes[tps_per_work]
+    #     for stage, data in stat.items():
+    #         print(f"{tps_per_work},{stage},{mean(data)},{stdev(data)}")
 
 
 if __name__ == '__main__':

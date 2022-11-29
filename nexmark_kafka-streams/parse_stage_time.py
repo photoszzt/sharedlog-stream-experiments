@@ -58,9 +58,9 @@ def main():
                         if "{" in line and ": [" in line:
                             l = line.strip().split(": ")
                             name = l[0].strip("{\"")
-                            data = l[1].strip("[]{}").split(", ")
-                            data = [float(x) for x in data]
                             if name in stages[args.app] or "commitLat" in name or "avgCommitLat" in name or "execIntrMs" in name:
+                                data = l[1].strip("[]{}\"").split(", ")
+                                data = [float(x) for x in data]
                                 if args.app in translate and name in translate[args.app]:
                                     name = translate[args.app][name]
                                 if "commitLat" in name:
