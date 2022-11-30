@@ -13,8 +13,8 @@ EVENTS_NUM=""
 NUM_PARTITION=""
 NUM_PRODUCER=""
 PAYLOAD=""
-WARM_DURATION=""
-WARM_EVENTS=""
+# WARM_DURATION=""
+# WARM_EVENTS=""
 TPS=""
 
 
@@ -44,14 +44,14 @@ while [ $# -gt 0 ]; do
         if [[ "$1" != *=* ]]; then shift; fi
         PAYLOAD="${1#*=}"
         ;;
-    --warm_duration*)
-        if [[ "$1" != *=* ]]; then shift; fi
-        WARM_DURATION="${1#*=}"
-        ;;
-    --warm_events*)
-        if [[ "$1" != *=* ]]; then shift; fi
-        WARM_EVENTS="${1#*=}"
-        ;;
+    # --warm_duration*)
+    #     if [[ "$1" != *=* ]]; then shift; fi
+    #     WARM_DURATION="${1#*=}"
+    #     ;;
+    # --warm_events*)
+    #     if [[ "$1" != *=* ]]; then shift; fi
+    #     WARM_EVENTS="${1#*=}"
+    #     ;;
     --tps*)
         if [[ "$1" != *=* ]]; then shift; fi
         TPS="${1#*=}"
@@ -93,14 +93,14 @@ if [[ "$PAYLOAD" = "" ]]; then
     echo "need to specify the payload"
     exit 1
 fi
-if [[ "$WARM_EVENTS" = "" ]]; then
-    echo "need to specify number of warmup events"
-    exit 1
-fi
-if [[ "$WARM_DURATION" = "" ]]; then
-    echo "need to specify warmup duration"
-    exit 1
-fi
+# if [[ "$WARM_EVENTS" = "" ]]; then
+#     echo "need to specify number of warmup events"
+#     exit 1
+# fi
+# if [[ "$WARM_DURATION" = "" ]]; then
+#     echo "need to specify warmup duration"
+#     exit 1
+# fi
 if [[ "$TPS" = "" ]]; then
     echo "need to specify tps"
     exit 1
@@ -124,10 +124,9 @@ mkdir -p $EXP_DIR
 ssh -q $MANAGER_HOST -- cat /proc/cmdline >>$EXP_DIR/kernel_cmdline
 ssh -q $MANAGER_HOST -- uname -a >>$EXP_DIR/kernel_version
 
-ssh -q $CLIENT_HOST -- $SRC_DIR/bin/sharedlog_bench_client \
+ssh -q $CLIENT_HOST -- $SRC_DIR/bin/sharedlog_protocol_lat \
     -faas_gateway $ENTRY_HOST:8080 -duration ${DURATION} -events_num ${EVENTS_NUM} -serde msgp \
     -npar ${NUM_PARTITION} -nprod ${NUM_PRODUCER} \
-    -payload /src/data/${PAYLOAD} -tps $TPS -warmup_events $WARM_EVENTS \
-    -warmup_time $WARM_DURATION \ >$EXP_DIR/results.log 2>&1
+    -payload /src/data/${PAYLOAD} -tps $TPS >$EXP_DIR/results.log 2>&1
 
 $HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
