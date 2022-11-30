@@ -43,8 +43,11 @@ def main():
     dirs_dict = {}
     for root, dirs, _ in os.walk(args.dir):
         for d in dirs:
-            if "epoch" in d:
-                tps_per_work = int(d.split("_")[0][:-3])
+            if "epoch" in d or "Kb" in d:
+                if "epoch" in d:
+                    tps_per_work = int(d.split("_")[0][:-3])
+                else:
+                    tps_per_work = d
                 if tps_per_work not in dirs_dict:
                     dirs_dict[tps_per_work] = []
                 dirs_dict[tps_per_work].append(os.path.join(root, d, "logs"))
@@ -96,7 +99,7 @@ def main():
                             epochMarkTimes[tps_per_work][stage].append(l)
 
     tp = sorted(stats.keys())
-    stat = stats[tps_per_work]
+    stat = stats[tp[0]]
     statk = sorted(stat.keys())
     all_mark_stats = {}
     print("progress marking(us)")

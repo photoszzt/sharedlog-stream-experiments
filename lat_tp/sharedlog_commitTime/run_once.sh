@@ -107,7 +107,7 @@ if [[ "$TPS" = "" ]]; then
 fi
 
 
-echo "exp_dir: $EXP_DIR, num_producer: $NUM_PRODUCER, duration: $DURATION, num partition: $NUM_PARTITION, payload: $PAYLOAD, warm_duration: $WARM_DURATION, warm_events: $WARM_EVENTS, tps: $TPS"
+echo "exp_dir: $EXP_DIR, num_producer: $NUM_PRODUCER, duration: $DURATION, num partition: $NUM_PARTITION, payload: $PAYLOAD, tps: $TPS"
 
 HELPER_SCRIPT=/mnt/efs/workspace/research-helper-scripts/microservice_helper
 BASE_DIR=$(realpath $(dirname $0))
