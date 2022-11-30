@@ -4,6 +4,7 @@ import gzip
 import json
 import numpy as np
 import pickle
+from statistics import mean, stdev
 
 stages = {
     "q1": "query1",
@@ -29,10 +30,13 @@ def main():
     for root, dirs, _ in os.walk(args.dir):
         for d in dirs:
             if "epoch" in d:
-                tps_per_work = int(d.split("_")[0][:-3])
-                if tps_per_work not in dirs_dict:
-                    dirs_dict[tps_per_work] = []
-                dirs_dict[tps_per_work].append(os.path.join(root, d))
+                try:
+                    tps_per_work = int(d.split("_")[0][:-3])
+                    if tps_per_work not in dirs_dict:
+                        dirs_dict[tps_per_work] = []
+                    dirs_dict[tps_per_work].append(os.path.join(root, d))
+                except Exception:
+                    pass
     print(dirs_dict)
     os.makedirs(args.out_stats, exist_ok=True)
     prefix = stages[args.app]
@@ -77,6 +81,14 @@ def main():
                 all_stats[tps] = {}
             all_stats[tps]["p50"] = p50
             all_stats[tps]["p99"] = p99
+            p50Mean = mean(latency[tps]["p50"])
+            p50std = stdev(latency[tps]["p50"])
+            p99Mean = mean(latency[tps]["p99"])
+            p99Std = stdev(latency[tps]["p99"])
+            p50cv = p50std/p50Mean
+            p99cv = p99Std/p99Mean
+            print(f"{tps} p50 mean: {p50Mean} ms, std: {p50std}, cv: {p50cv}, p99 mean: {p99Mean}"
+                  f"ms, std: {p99Std}, cv: {p99cv}")
         else:
             print(f"{tps} doesn't have data")
     mtime = int(os.stat(args.dir).st_mtime)

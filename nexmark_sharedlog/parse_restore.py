@@ -1,6 +1,7 @@
 import argparse
 import os
 from string import ascii_lowercase
+from pathlib import Path
 
 
 class Data:
@@ -17,20 +18,29 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--dir', required=True)
     parser.add_argument('--target', required=True)
-    parser.add_argument('--num', required=True, type=int)
-    parser.add_argument('--tps', required=True, type=int)
     args = parser.parse_args()
 
-    for i in range(args.num):
-        print(i)
-        dpath = os.path.join(args.dir, str(i), f"{args.tps}tps_epoch", 'logs')
-        stats = {}
-        for root, dirs, files in os.walk(dpath):
-            for fname in files:
-                if args.target in fname and "stderr" in fname:
+    dirs_dict = {}
+    for root, dirs, _ in os.walk(args.dir):
+        for d in dirs:
+            if "epoch" in d:
+                tps_per_work = int(d.split("_")[0][:-3])
+                if tps_per_work not in dirs_dict:
+                    dirs_dict[tps_per_work] = []
+                dirs_dict[tps_per_work].append(os.path.join(root, d, "logs"))
+    print(dirs_dict)
+    all_tps = dirs_dict.keys()
+    all_tps = sorted(all_tps)
+
+    for tps_per_work in all_tps:
+        dirpaths = dirs_dict[tps_per_work]
+        for dpath in dirpaths:
+            stats = {}
+            for fpath in Path(dpath).glob("**/*.stderr"):
+                fname = os.path.basename(fpath)
+                if args.target in str(fname):
                     if fname not in stats:
                         stats[fname] = Data()
-                        fpath = os.path.join(root, fname)
                         with open(fpath, "r") as f:
                             for line in f:
                                 if "restore, count" in line:
@@ -60,8 +70,9 @@ def main():
                                         elapsed = elapsed * 1000 
                                     print(l, elapsed)
                                     stats[fname].elapsed = elapsed
-        for f, d in stats.items():
-            print(f"{d.auc_numElement},{d.auc_numEntry},{d.auc_elapsed},{d.per_numElement},{d.per_numEntry},{d.per_elapsed},{d.elapsed}")
+            for f, d in stats.items():
+                print(f"{d.auc_numElement},{d.auc_numEntry},{d.auc_elapsed},"
+                      f"{d.per_numElement},{d.per_numEntry},{d.per_elapsed},{d.elapsed}")
 
 
 if __name__ == '__main__':

@@ -178,7 +178,8 @@ ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name ${APP_NAME} \
     -src_flushms ${SRC_FLUSH_MS} -events_num ${EVENTS_NUM} \
     -wconfig $SRC_DIR/workload_config/${NUM_WORKER}_ins/${APP_NAME}.json \
     -stat_dir /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats -waitForLast=true \
-    -tps $TPS -warmup_time $WARM_DURATION $FAIL_SPEC_ARG -snapshot_everyS=$SNAPSHOT_S >$EXP_DIR/results.log 2>&1
+    -tps $TPS -warmup_time $WARM_DURATION $FAIL_SPEC_ARG \
+    -snapshot_everyS=$SNAPSHOT_S >$EXP_DIR/results.log 2>&1
 
 for HOST in $ALL_ENGINE_HOSTS; do
     ssh -q $HOST -oStrictHostKeyChecking=no -- pkill sar
@@ -220,8 +221,10 @@ for HOST in $ALL_STORAGE_HOSTS; do
 done
 
 ssh -q $CLIENT_HOST -- "$WORKSPACE_DIR/sharedlog-stream-experiments/nexmark_sharedlog/zip_files.sh /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats"
+# ssh -q $CLIENT_HOST -- "$WORKSPACE_DIR/sharedlog-stream-experiments/nexmark_sharedlog/zip_files.sh /home/ubuntu/${APP_NAME}/${EXP_DIR}/dump"
 
 scp -r $CLIENT_HOST:/home/ubuntu/${APP_NAME}/${EXP_DIR}/stats ${EXP_DIR}
+# scp -r $CLIENT_HOST:/home/ubuntu/${APP_NAME}/${EXP_DIR}/dump ${EXP_DIR}
 
 $HELPER_SCRIPT collect-func-output --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
 # $HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
