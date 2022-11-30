@@ -1,7 +1,7 @@
 #!/bin/bash
 /mnt/efs/workspace/research-helper-scripts/microservice_helper start-machines --use-spot-instances
 
-TPS=(10 50 100)
+TPS=(10)
 DURATION=180
 WARM_DURATION=0
 WARM_EVENTS=(0 0 0)
