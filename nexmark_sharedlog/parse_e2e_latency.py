@@ -4,6 +4,7 @@ import gzip
 import json
 import numpy as np
 import pickle
+import matplotlib.pyplot as plt
 from statistics import mean, stdev
 
 stages = {
@@ -40,7 +41,9 @@ def main():
     print(dirs_dict)
     os.makedirs(args.out_stats, exist_ok=True)
     prefix = stages[args.app]
-    for tps, dirpaths in dirs_dict.items():
+    tpss = sorted(dirs_dict.keys())
+    for tps in tpss:
+        dirpaths = dirs_dict[tps]
         all_data = []
         for dpath in dirpaths:
             e2e_latency = []
@@ -69,6 +72,17 @@ def main():
                     latency[tps]["p99"] = []
                 latency[tps]["p50"].append(p50)
                 latency[tps]["p99"].append(p99)
+
+                tlevel_run_dir = os.path.dirname(dpath)
+                tdir_name = os.path.basename(tlevel_run_dir)
+                outfig_dir = os.path.join(args.out_stats, args.app, str(tps))
+                os.makedirs(outfig_dir, exist_ok=True)
+                outfig = os.path.join(outfig_dir, f"{tdir_name}.pdf")
+                fig = plt.figure()
+                plt.plot(e2e_lat)
+                plt.savefig(outfig, bbox_inches='tight')
+                plt.close(fig)
+
                 print(f"{dpath} p50: {p50} ms, p99: {p99} ms")
                 all_data.append(e2e_lat)
         print()
