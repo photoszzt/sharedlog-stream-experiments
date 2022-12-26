@@ -16,23 +16,24 @@ FLUSH_MS=100
 SRC_FLUSH_MS=100
 
 for ((i = 0; i < 1; ++i)); do
-	for ((k = 0; k < ${#APP[@]}; ++k)); do
-	    cd ${DIR[k]}
-	    for ((idx = 0; idx < ${#TPS_PER_WORKER[@]}; ++idx)); do
-	        for ((w = 0; w < ${#NUM_WORKER[@]}; ++w)); do
-	            TPS=$(expr ${TPS_PER_WORKER[idx]} \* ${NUM_WORKER[w]})
-	            EVENTS=$(expr $TPS \* $DURATION)
-	            echo ${APP[k]}, ${DIR[k]}, ${EVENTS} events, ${TPS} tps
-		    subdir=${DURATION}s_${WARM_DURATION}swarm_${FLUSH_MS}ms_src${SRC_FLUSH_MS}ms
-	            ./run_once_frequent_fail.sh --app ${APP[k]} --exp_dir ./${NUM_WORKER[w]}src_freq_fail/$subdir/$i/${TPS_PER_WORKER[idx]}tps_epoch/ \
-	                --gua epoch --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
-	                --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS --fail_script ./q8_freq_fail.sh
-	        done
-	    done
-	    cd -
-	done
+    for ((k = 0; k < ${#APP[@]}; ++k)); do
+        cd ${DIR[k]}
+        for ((idx = 0; idx < ${#TPS_PER_WORKER[@]}; ++idx)); do
+            for ((w = 0; w < ${#NUM_WORKER[@]}; ++w)); do
+                TPS=$(expr ${TPS_PER_WORKER[idx]} \* ${NUM_WORKER[w]})
+                EVENTS=$(expr $TPS \* $DURATION)
+                echo ${APP[k]}, ${DIR[k]}, ${EVENTS} events, ${TPS} tps
+                subdir=${DURATION}s_${WARM_DURATION}swarm_${FLUSH_MS}ms_src${SRC_FLUSH_MS}ms
+                ./run_once_frequent_fail.sh --app ${APP[k]} \
+                    --exp_dir ./${NUM_WORKER[w]}src_freq_fail2/$subdir/$i/${TPS_PER_WORKER[idx]}tps_epoch/ \
+                    --gua epoch --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
+                    --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS --fail_script ./q8_freq_fail.sh
+            done
+        done
+        cd -
+    done
 done
 
-# cd q8_boki/mem
-# $WORKSPACE_DIR/research-helper-scripts/microservice_helper stop-machines
-# cd ../..
+cd q8_boki/mem
+$WORKSPACE_DIR/research-helper-scripts/microservice_helper stop-machines
+cd ../..

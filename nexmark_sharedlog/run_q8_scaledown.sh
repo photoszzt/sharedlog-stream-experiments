@@ -27,7 +27,7 @@ for ((iter=0; iter < 2; ++iter)); do
             TPS=$(expr ${TPS_PER_WORKER[idx]} \* 4)
             EVENTS=$(expr $TPS \* $DURATION)
             echo ${APP[k]}, ${DIR[k]}, ${EVENTS} events, ${TPS} tps
-            topdir=4src_scaledown_${BEFORE_SCALE}_${AFTER_SCALE}_${TPS_PER_WORKER}
+            topdir=4src_scaledown2_${BEFORE_SCALE}_${AFTER_SCALE}_${TPS_PER_WORKER}
             subdir=${DURATION}s_${FLUSH_MS}ms_src${SRC_FLUSH_MS}ms	
 
             ./run_once_scale.sh --app ${APP[k]} \
