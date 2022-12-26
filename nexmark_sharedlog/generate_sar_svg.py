@@ -14,10 +14,13 @@ def main():
     for root, dirs, _ in os.walk(args.dir):
         for d in dirs:
             if "epoch" in d:
-                tps_per_work = int(d.split("_")[0][:-3])
-                if tps_per_work not in dirs_dict:
-                    dirs_dict[tps_per_work] = []
-                dirs_dict[tps_per_work].append(os.path.join(root, d))
+                try:
+                    tps_per_work = int(d.split("_")[0][:-3])
+                    if tps_per_work not in dirs_dict:
+                        dirs_dict[tps_per_work] = []
+                    dirs_dict[tps_per_work].append(os.path.join(root, d))
+                except Exception:
+                    pass
     for tps_per_work, dirpaths in dirs_dict.items():
         for dirpath in dirpaths:
             logs_path = os.path.join(dirpath, "logs")

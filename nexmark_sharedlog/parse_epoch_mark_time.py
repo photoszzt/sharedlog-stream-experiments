@@ -44,13 +44,16 @@ def main():
     for root, dirs, _ in os.walk(args.dir):
         for d in dirs:
             if "epoch" in d or "Kb" in d:
-                if "epoch" in d:
-                    tps_per_work = int(d.split("_")[0][:-3])
-                else:
-                    tps_per_work = d
-                if tps_per_work not in dirs_dict:
-                    dirs_dict[tps_per_work] = []
-                dirs_dict[tps_per_work].append(os.path.join(root, d, "logs"))
+                try:
+                    if "epoch" in d:
+                        tps_per_work = int(d.split("_")[0][:-3])
+                    else:
+                        tps_per_work = d
+                    if tps_per_work not in dirs_dict:
+                        dirs_dict[tps_per_work] = []
+                    dirs_dict[tps_per_work].append(os.path.join(root, d, "logs"))
+                except Exception:
+                    pass
     print(dirs_dict)
     stats = {}
     flush_all = {}

@@ -11,7 +11,7 @@ throughput = {
     "q4": [1000, 1250],
     "q5": [24000, 32000, 40000, 56000, 64000],
     "q6": [500, 750],
-    "q7": [12000, 16000, 28000, 32000, 36000],
+    "q7": [8000, 12000, 16000],
     #"q8": [200, 1000, 4000],
     "q8": [12000, 16000, 20000, 28000, 32000],
 }
@@ -28,7 +28,8 @@ stages = {
            "procToq46_bidsByAucID_src", "procToq6_aucIDSeller_src", 
            "procToq6_maxBids_src"},
     "q7": {"bidByPriceProc", "bidByWinProc", "subG2Proc", "subG3", 
-           "procTobid_by_price_src", "procTobid_by_win_src", "procTomax_bids_src"},
+           "price_queue", "bidByWin_queue", "maxBids_queue",
+           "flushStage", "flushAtLeastOne", "markPartUs"},
     "q8": ["subG1", "subG2", "auc_queue", "per_queue",
            "streamTimeAuc", "streamTimePer",
            "msgBatchTimeAuc", "msgBatchTimePer",
@@ -37,17 +38,24 @@ stages = {
 }
 
 out_stage_names = {
-        "q8": {"subG1": "subG1(ns)", "subG2": "subG2(ns)", 
-            "auc_queue": "auc_queue(ms)", 
-            "per_queue": "per_queue(ms)",
-            "streamTimeAuc": "streamTimeAuc(ms)", 
-            "streamTimePer": "streamTimePer(ms)",
-            "msgBatchTimeAuc": "msgBatchTimeAuc(ms)", 
-            "msgBatchTimePer": "msgBatchTimePer(ms)",
-            "flushStage": "flushStage(us)", 
-            "flushAtLeastOne": "flushAtLeastOne(us)",
-            "markPartUs": "markPart(us)",
-            "execIntrMs": "execIntr(ms)", "thisAndLastCmtMs": "thisAndLastCmt(ms)"},
+    "q7": {"flushStage": "flushStage(us)", 
+           "flushAtLeastOne": "flushAtLeastOne(us)",
+           "markPartUs": "markPart(us)",
+           "subG2Proc": "subG2(ns)",
+           "price_queue": "price_queue(ms)", 
+           "bidByWin_queue": "bidByWin_queue(ms)", 
+           "maxBids_queue": "maxBids_queue(ms)",},
+    "q8": {"subG1": "subG1(ns)", "subG2": "subG2(ns)", 
+           "auc_queue": "auc_queue(ms)", 
+           "per_queue": "per_queue(ms)",
+           "streamTimeAuc": "streamTimeAuc(ms)", 
+           "streamTimePer": "streamTimePer(ms)",
+           "msgBatchTimeAuc": "msgBatchTimeAuc(ms)", 
+           "msgBatchTimePer": "msgBatchTimePer(ms)",
+           "flushStage": "flushStage(us)", 
+           "flushAtLeastOne": "flushAtLeastOne(us)",
+           "markPartUs": "markPart(us)",
+           "execIntrMs": "execIntr(ms)", "thisAndLastCmtMs": "thisAndLastCmt(ms)"},
 }
 
 
@@ -68,9 +76,9 @@ def main():
                 for st in s:
                     if st in stats:
                         if st not in all_stats:
-                            all_stats[st] = stats[st]
-                        else:
-                            all_stats[st].extend(stats[st])
+                            all_stats[st] = []
+                        one_stat = np.concatenate(stats[st])
+                        all_stats[st].append(one_stat)
         for st in stages[args.app]:
             if st in all_stats:
                 data_arr = np.concatenate(all_stats[st])
@@ -84,7 +92,10 @@ def main():
         for tp in throughput[args.app]:
             if st in tp_stats[tp]:
                 data_arr = tp_stats[tp][st]
-                st_name = out_stage_names[args.app][st]
+                if st in out_stage_names[args.app]:
+                    st_name = out_stage_names[args.app][st]
+                else:
+                    st_name = f"{st}(ns)"
                 mean = np.mean(data_arr)
                 std = np.std(data_arr)
                 min_data = np.min(data_arr)
@@ -95,7 +106,7 @@ def main():
                 max_data = np.max(data_arr)
                 p50s.append(p50)
                 p99s.append(p99)
-                print(f"{tp},{st_name},{mean},{std},{min_data},{p25},{p50},{p90},{p99},{max_data}")
+                # print(f"{tp},{st_name},{mean},{std},{min_data},{p25},{p50},{p90},{p99},{max_data}")
         summary_stats[st] = {}
         summary_stats[st]["p50"] = p50s
         summary_stats[st]["p99"] = p99s
@@ -110,7 +121,10 @@ def main():
         p50s = summary_stats[st]["p50"]
         p99s = summary_stats[st]["p99"]
         if p50s and p99s:
-            st_name = out_stage_names[args.app][st]
+            if st in out_stage_names[args.app]:
+                st_name = out_stage_names[args.app][st]
+            else:
+                st_name = f"{st}(ns)"
             print(f"{st_name},Impeller p50,Impeller p99")
             for i in range(len(throughput[args.app])):
                 tp = throughput[args.app][i]

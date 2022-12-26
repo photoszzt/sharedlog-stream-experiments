@@ -17,7 +17,8 @@ stages = {
            "procToq46_bidsByAucID_src", "procToq6_aucIDSeller_src", 
            "procToq6_maxBids_src"},
     "q7": {"bidByPriceProc", "bidByWinProc", "subG2Proc", "subG2_left", "subG2_right",
-           "procTobid_by_price_src", "procTobid_by_win_src", "procTomax_bids_src"},
+           "procTobid_by_price_src", "procTobid_by_win_src", "procTomax_bids_src",
+           "markPartUs", "flushStage", "flushAtLeastOne"},
     "q8": {"aucProc", "perProc", "subG2_left", "subG2_right", 
            "procToq8_aucsBySellerID_out_src", "procToq8_personsByID_out_src",
            "streamTimeq8_aucsBySellerID_out", "streamTimeq8_personsByID_out",
@@ -33,7 +34,10 @@ translate = {
     "q5": {},
     "q6": {"aucProc": "subG1", "bidProc": "subG1",
            "subG2_left": "subG2", "subG2_right": "subG2",},
-    "q7": {"subG2_left": "subG3", "subG2_right": "subG3"},
+    "q7": {"subG2_left": "subG3", "subG2_right": "subG3",
+           "procTobid_by_price_src": "price_queue",
+           "procTobid_by_win_src": "bidByWin_queue",
+           "procTomax_bids_src": "maxBids_queue"},
     "q8": {"aucProc": "subG1", "perProc": "subG1",
            "subG2_left": "subG2", "subG2_right": "subG2",
            "procToq8_aucsBySellerID_out_src": "auc_queue",
@@ -57,10 +61,13 @@ def main():
     for root, dirs, _ in os.walk(args.dir):
         for d in dirs:
             if "epoch" in d:
-                tps_per_work = int(d.split("_")[0][:-3])
-                if tps_per_work not in dirs_dict:
-                    dirs_dict[tps_per_work] = []
-                dirs_dict[tps_per_work].append(os.path.join(root, d, "logs"))
+                try:
+                    tps_per_work = int(d.split("_")[0][:-3])
+                    if tps_per_work not in dirs_dict:
+                        dirs_dict[tps_per_work] = []
+                    dirs_dict[tps_per_work].append(os.path.join(root, d, "logs"))
+                except Exception:
+                    pass
     print(dirs_dict)
     os.makedirs(args.out_stats, exist_ok=True)
     for tps_per_work, dirpaths in dirs_dict.items():
