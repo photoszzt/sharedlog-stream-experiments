@@ -16,42 +16,46 @@ stages = {
     "q6": {"subG1", "aucQueueTime", "bidQueueTime", "topo2_proc",
            "topo3_proc", "aucBidsQueueTime", "q6_sink_ets-7_proc"},
     "q7": {"bids_by_win_proc", "bids_by_price_proc", "topo2_proc", "q7_sink_ets-7_proc", 
-           "bids_by_win_queue", "bids_by_price_queue", "max_bids_queue", },
+           "bids_by_win_queue", "bids_by_price_queue", "max_bids_queue", 
+           "txn-begin", "txn-send-offsets", "txn-commit", "flush",
+           "commitLat", "avgCommitLat", "execIntrMs"},
     "q8": ["subG1", "subG2", "auc_queue", "per_queue",
            "txn-begin", "txn-send-offsets", "txn-commit", "flush", 
            "commitLat", "avgCommitLat", "execIntrMs"],
 }
 
 out_stage_names = {
-    "q3": {"subG1":"subG1(ns)", "aucQueueDelay":"auc_queue(ms)", "perQueueDelay":"per_queue(ms)",
-        "q3_sink_ets-7_proc":"subG2(ns)"},
-    "q4": {"subG1":"subG1(ns)", "aucQueueDelay":"auc_queue(ms)", "bidQueueDelay":"per_queue(ms)",
-        "aucBidsQueueDelay":"aucBid_queue(ms)", "maxBidsQueueDelay":"maxBid_queue(ms)", 
-        "subG2_proc":"subG2(ns)", "subG3_proc":"subG3(ns)", 
-        "q4_sink_ets-7_proc":"subG4(ns)",},
+    "q3": {"aucQueueDelay":"auc_queue(ms)", "perQueueDelay":"per_queue(ms)",
+           "q3_sink_ets-7_proc":"subG2(ns)"},
+    "q4": {"aucQueueDelay":"auc_queue(ms)", "bidQueueDelay":"per_queue(ms)",
+           "aucBidsQueueDelay":"aucBid_queue(ms)", "maxBidsQueueDelay":"maxBid_queue(ms)", 
+           "subG2_proc":"subG2(ns)", "subG3_proc":"subG3(ns)", 
+           "q4_sink_ets-7_proc":"subG4(ns)",},
     "q5": {"subG1ProcLat": "subG1(ns)", "subG2ProcLat": "subG2(ns)", 
-        "bidsQueueDelay": "bid_queue(ms)", 
-        "auctionBidsQueueDelay": "auc_queue(ms)", 
-        "q5_sink_ets-7_proc": "subG3(ns)"},
-    "q6": {"subG1": "subG1(ns)", "aucQueueTime": "aucQueueTime(ms)", 
-        "bidQueueTime": "bidQueueTime(ms)", "topo2_proc": "subG2(ns)",
-        "topo3_proc": "subG3(ns)", "aucBidsQueueTime": "aucBidsQueueTime(ms)", 
-        "q6_sink_ets-7_proc": "subG4(ns)"},
-    "q7": {"bids_by_win_proc": "bids_by_win_proc(ns)", "bids_by_price_proc": "bids_by_price_proc(ns)", 
-        "topo2_proc": "subG2(ns)", "q7_sink_ets-7_proc": "subG3(ns)", 
-        "bids_by_win_queue": "bids_by_win_queue(ms)", 
-        "bids_by_price_queue": "bids_by_price_queue(ms)", 
-        "max_bids_queue": "max_bids_queue(ms)", },
-    "q8": {"subG1": "subG1(ns)", "auc_queue": "auc_queue(ms)", "per_queue": "per_queue(ms)", 
-        "subG2": "subG2(ns)",
-        "txn-begin": "txn-begin(ns)", "txn-send-offsets": "txn-send-offsets(ns)", 
-        "txn-commit": "txn-commit(ns)", "flush": "flush(ns)", 
-        "commitLat": "commitLat(ns)", "avgCommitLat": "avgCommitLat(ms)",
-        "execIntrMs": "execIntr(ms)"},
+           "bidsQueueDelay": "bid_queue(ms)", 
+           "auctionBidsQueueDelay": "auc_queue(ms)", 
+           "q5_sink_ets-7_proc": "subG3(ns)"},
+    "q6": {"aucQueueTime": "aucQueueTime(ms)", 
+           "bidQueueTime": "bidQueueTime(ms)", 
+           "topo2_proc": "subG2(ns)",
+           "topo3_proc": "subG3(ns)", "aucBidsQueueTime": "aucBidsQueueTime(ms)", 
+           "q6_sink_ets-7_proc": "subG4(ns)"},
+    "q7": {"topo2_proc": "subG2(ns)", "q7_sink_ets-7_proc": "subG3(ns)", 
+           "bids_by_win_queue": "bids_by_win_queue(ms)", 
+           "bids_by_price_queue": "bids_by_price_queue(ms)", 
+           "max_bids_queue": "max_bids_queue(ms)", 
+           "avgCommitLat": "avgCommitLat(ms)",
+           "execIntrMs": "execIntr(ms)"},
+    "q8": {"auc_queue": "auc_queue(ms)", "per_queue": "per_queue(ms)", 
+           "avgCommitLat": "avgCommitLat(ms)",
+           "execIntrMs": "execIntr(ms)"},
 }
 
 need_convert_ns_to_ms = {
-    "q8": {"txn-begin", "txn-send-offsets", 
+    "q8": {"txn-send-offsets", 
+           "txn-commit", "flush", 
+           "commitLat"},
+    "q7": {"txn-send-offsets",
            "txn-commit", "flush", 
            "commitLat"},
 }
@@ -61,11 +65,22 @@ throughput = {
     "q4": [1000, 1250],
     "q5": [24000, 32000, 40000],
     "q6": [500, 750],
-    "q7": [12000, 16000, 28000, 32000, 36000],
-    #"q8": [12000, 16000, 20000, 28000, 32000],
+    "q7": [8000, 12000, 16000, 20000],
+    "q8": [12000, 16000, 20000, 28000, 32000],
     #"q8": [200, 1000, 4000],
-    "q8": [20000],
+    #"q8": [20000],
 }
+
+def get_name(st, app_name):
+    need_convert = False
+    if st in out_stage_names[app_name]:
+        st_name = out_stage_names[app_name][st]
+    elif st in need_convert_ns_to_ms[app_name]:
+        st_name = f"{st}(ms)"
+        need_convert = True
+    else:
+        st_name = f"{st}(ns)"
+    return st_name, need_convert
 
 
 def main():
@@ -80,6 +95,7 @@ def main():
         all_stats = {}
         stat_summary = {}
         for fname in Path(args.dir).glob(f"{tp}_*.pickle"):
+            print(fname)
             with open(fname, "rb") as f:
                 stats = pickle.load(f)
                 s = stages[args.app]
@@ -102,7 +118,6 @@ def main():
                         stat_summary[st_name]["p50"].append(stp50)
                         stat_summary[st_name]["p99"].append(stp99)
                         all_stats[st_name].append(one_stat)
-        print()
         tp_stats_summary[tp] = stat_summary
         for st in stages[args.app]:
             if st in all_stats:
@@ -113,11 +128,16 @@ def main():
     for st in stages[args.app]:
         for tp in throughput[args.app]:
             stats_summary = tp_stats_summary[tp]
-            p50s = stats_summary[st]["p50"]
-            p99s = stats_summary[st]["p99"]
-            files = stats_summary[st]["files"]
-            for i in range(len(p50s)):
-                print(f"{tp},{files[i]},{st},{p50s[i]},{p99s[i]}")
+            if st in stats_summary:
+                p50s = stats_summary[st]["p50"]
+                p99s = stats_summary[st]["p99"]
+                files = stats_summary[st]["files"]
+                if st in need_convert_ns_to_ms[args.app]:
+                    st_name = f"{st}(ms)"
+                else:
+                    st_name = f"{st}(ns)"
+                for i in range(len(p50s)):
+                    print(f"{tp},{files[i]},{st_name},{p50s[i]},{p99s[i]}")
         print()
     print()
 
@@ -126,22 +146,28 @@ def main():
         p50s = []
         p99s = []
         for tp in throughput[args.app]:
-            data_arr = tp_stats[tp][st]
-            st_name = out_stage_names[args.app][st]
-            mean = np.mean(data_arr)
-            std = np.std(data_arr)
-            min_data = np.min(data_arr)
-            p25 = np.quantile(data_arr, 0.25)
-            p50 = np.quantile(data_arr, 0.5)
-            p90 = np.quantile(data_arr, 0.9)
-            p99 = np.quantile(data_arr, 0.99)
-            max_data = np.max(data_arr)
-            p50s.append(p50)
-            p99s.append(p99)
-            print(f"{tp},{st_name},{mean},{std},{min_data},{p25},{p50},{p90},{p99},{max_data}")
-        summary_stats[st] = {}
-        summary_stats[st]["p50"] = p50s
-        summary_stats[st]["p99"] = p99s
+            statsOfATp = tp_stats[tp]
+            if st in statsOfATp:
+                data_arr = tp_stats[tp][st]
+                if st in out_stage_names[args.app]:
+                    st_name = out_stage_names[args.app][st]
+                else:
+                    st_name = f"{st}(ns)"
+                mean = np.mean(data_arr)
+                std = np.std(data_arr)
+                min_data = np.min(data_arr)
+                p25 = np.quantile(data_arr, 0.25)
+                p50 = np.quantile(data_arr, 0.5)
+                p90 = np.quantile(data_arr, 0.9)
+                p99 = np.quantile(data_arr, 0.99)
+                max_data = np.max(data_arr)
+                p50s.append(p50)
+                p99s.append(p99)
+                print(f"{tp},{st_name},{mean},{std},{min_data},{p25},{p50},{p90},{p99},{max_data}")
+        if p50s:
+            summary_stats[st] = {}
+            summary_stats[st]["p50"] = p50s
+            summary_stats[st]["p99"] = p99s
 
     os.makedirs(args.out_stats, exist_ok=True)
     fpath = os.path.join(args.out_stats, f"{args.app}_stats.json")
@@ -153,11 +179,17 @@ def main():
         if st in summary_stats:
             p50s = summary_stats[st]["p50"]
             p99s = summary_stats[st]["p99"]
-            st_name = out_stage_names[args.app][st]
+            st_name, need_convert = get_name(st, args.app)
             print(f"{st_name},Kafka p50,Kafka p99")
             for i in range(len(throughput[args.app])):
                 tp = throughput[args.app][i]
-                print(f"{tp},{p50s[i]},{p99s[i]}")
+                if need_convert:
+                    p50 = p50s[i] / 1000000.0
+                    p99 = p99s[i] / 1000000.0
+                else:
+                    p50 = p50s[i]
+                    p99 = p99s[i]
+                print(f"{tp},{p50},{p99}")
             print()
 
 
