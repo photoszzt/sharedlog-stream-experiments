@@ -49,11 +49,11 @@ for ((iter=6; iter < 9; ++iter)); do
                 #     --flushms ${FLUSH_MS[j]} --src_flushms $SRC_FLUSH_MS \
                 #     --snapshot_s 0
 
-                # ./run_once.sh --app ${APP} \
-                #     --exp_dir ./${NUM_WORKER[w]}src_ets2/$subdir/${TPS_PER_WORKER[idx]}tps_2pc/ \
-                #     --gua 2pc --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
-                #     --tps ${TPS} --warm_duration ${WARM_DURATION} \
-                #     --flushms ${FLUSH_MS[j]} --src_flushms $SRC_FLUSH_MS
+                ./run_once.sh --app ${APP} \
+                    --exp_dir ./${NUM_WORKER[w]}src_rds2/$subdir/$iter/${TPS_PER_WORKER[idx]}tps_2pc/ \
+                    --gua 2pc --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
+                    --tps ${TPS} --warm_duration ${WARM_DURATION} \
+                    --flushms ${FLUSH_MS[j]} --src_flushms $SRC_FLUSH_MS --snapshot_s 0
             done
         done
     done

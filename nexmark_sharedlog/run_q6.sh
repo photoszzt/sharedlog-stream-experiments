@@ -37,14 +37,17 @@ for ((iter=6; iter < 9; ++iter)); do
                     --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS \
                     --snapshot_s ${SNAPSHOT_S}
 
-                # ./run_once.sh --app ${APP[k]} --exp_dir ./${NUM_WORKER[w]}src_none_gm1/${subdir}/$iter/${TPS_PER_WORKER[idx]}tps_epoch/ \
+                # ./run_once.sh --app ${APP[k]} \
+                #     --exp_dir ./${NUM_WORKER[w]}src_none_rds2/${subdir}/$iter/${TPS_PER_WORKER[idx]}tps_epoch/ \
                 #     --gua none --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
                 #     --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS \
                 #     --snapshot_s 0
 
-                # ./run_once.sh --app ${APP[k]} --exp_dir ./${NUM_WORKER[w]}src_ets2/${DURATION}s_${WARM_DURATION}swarm_${FLUSH_MS}ms/${TPS_PER_WORKER[idx]}tps_2pc/ \
-                #     --gua 2pc --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
-                #     --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS
+                ./run_once.sh --app ${APP[k]} \
+                    --exp_dir ./${NUM_WORKER[w]}src_rds2/${subdir}/$iter/${TPS_PER_WORKER[idx]}tps_2pc/ \
+                    --gua 2pc --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
+                    --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS
+                    --snapshot_s 0
             done
         done
         cd -
