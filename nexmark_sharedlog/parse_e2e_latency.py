@@ -24,13 +24,14 @@ def main():
     parser.add_argument('--dir', type=str, help='dir to parse', required=True)
     parser.add_argument('--out_stats', type=str, required=True)
     parser.add_argument('--app', type=str, required=True)
+    parser.add_argument('--target', type=str, required=True)
     args = parser.parse_args()
     dirs_dict = {}
     latency = {}
     all_stats = {}
     for root, dirs, _ in os.walk(args.dir):
         for d in dirs:
-            if "epoch" in d:
+            if args.target in d:
                 try:
                     tps_per_work = int(d.split("_")[0][:-3])
                     if tps_per_work not in dirs_dict:
@@ -96,9 +97,13 @@ def main():
             all_stats[tps]["p50"] = p50
             all_stats[tps]["p99"] = p99
             p50Mean = mean(latency[tps]["p50"])
-            p50std = stdev(latency[tps]["p50"])
+            p50std = 0
+            if len(latency[tps]["p50"]) >= 2:
+                p50std = stdev(latency[tps]["p50"])
             p99Mean = mean(latency[tps]["p99"])
-            p99Std = stdev(latency[tps]["p99"])
+            p99Std = 0
+            if len(latency[tps]["p50"]) >= 2:
+                p99Std = stdev(latency[tps]["p99"])
             p50cv = p50std/p50Mean
             p99cv = p99Std/p99Mean
             print(f"{tps} p50 mean: {p50Mean} ms, std: {p50std}, cv: {p50cv}, p99 mean: {p99Mean}"
