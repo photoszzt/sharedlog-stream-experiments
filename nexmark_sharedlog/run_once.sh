@@ -18,6 +18,7 @@ SRC_FLUSH_MS=""
 NUM_WORKER=""
 FAIL=""
 SNAPSHOT_S=0
+CONFIG_SUBPATH=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -68,6 +69,10 @@ while [ $# -gt 0 ]; do
 	--snapshot_s*)
             if [[ "$1" != *=* ]]; then shift; fi
             SNAPSHOT_S="${1#*=}"
+            ;;
+	--config_subpath*)
+            if [[ "$1" != *=* ]]; then shift; fi
+            CONFIG_SUBPATH="${1#*=}"
             ;;
         --help|-h)
             printf -- "--app <appname> one of q1,q2,q3,q5,q7,q8\n"
@@ -158,6 +163,8 @@ mkdir -p $EXP_DIR/engine_sar/
 for HOST in $ALL_ENGINE_HOSTS; do
     ssh -q $HOST -oStrictHostKeyChecking=no -- 'ls -l /dev/nvme*' >>$EXP_DIR/engine_sar/${HOST}_dev
     ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
+    ssh -q $HOST -oStrictHostKeyChecking=no -- sudo apt-get install -y jq && rm -f $HOME/docker_stats.txt
+    ssh -q $HOST -oStrictHostKeyChecking=no -- $SCRIPT_DIR/docker_stats.sh &
 done
 
 ALL_SEQUENCER_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=sequencer_node)
@@ -172,20 +179,31 @@ for HOST in $ALL_STORAGE_HOSTS; do
     ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
 done
 
+WCONFIG=$SRC_DIR/workload_config/$CONFIG_SUBPATH
+if [[ "$CONFIG_SUBPATH" = "" ]]; then
+    WCONFIG=$SRC_DIR/workload_config/4node/${NUM_WORKER}_ins/${APP_NAME}.json
+fi
+
 ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name ${APP_NAME} \
     -faas_gateway $ENTRY_HOST:8080 -duration ${DURATION} -serde msgp \
     -guarantee $GUA -comm_everyMS ${FLUSH_MS} -flushms ${FLUSH_MS} \
     -src_flushms ${SRC_FLUSH_MS} -events_num ${EVENTS_NUM} \
-    -wconfig $SRC_DIR/workload_config/${NUM_WORKER}_ins/${APP_NAME}.json \
+    -wconfig $WCONFIG \
     -stat_dir /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats -waitForLast=true \
     -tps $TPS -warmup_time $WARM_DURATION $FAIL_SPEC_ARG \
     -snapshot_everyS=$SNAPSHOT_S >$EXP_DIR/results.log 2>&1
 
 for HOST in $ALL_ENGINE_HOSTS; do
     ssh -q $HOST -oStrictHostKeyChecking=no -- pkill sar
+    ssh -q $HOST -oStrictHostKeyChecking=no -- sync && pkill docker_stats.sh
     mkdir -p $EXP_DIR/engine_sar/$HOST
     scp $HOST:/home/ubuntu/sar_st $EXP_DIR/engine_sar/$HOST
     ssh -q $HOST -oStrictHostKeyChecking=no -- rm /home/ubuntu/sar_st
+    mkdir -p $EXP_DIR/docker_stats
+    scp $HOST:/home/ubuntu/docker_stats.txt $EXP_DIR/docker_stats/stats.txt
+    cat $EXP_DIR/docker_stats/stats.txt | jq '[inputs]' >> $EXP_DIR/docker_stats/${HOST}_stats.txt
+    rm $EXP_DIR/docker_stats/stats.txt
+    ssh -q $HOST -oStrictHostKeyChecking=no -- rm /home/ubuntu/stats.txt
 done
 
 for HOST in $ALL_STORAGE_HOSTS; do
