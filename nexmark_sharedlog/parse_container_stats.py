@@ -5,7 +5,8 @@ from statistics import mean
 
 stages = {
         "q5": {"bid-keyed-by-auction", "max-bid", "auc-bid", "faas-engine"},
-        "q7": {"q7BidByPrice", "q7BidByWin", "q7JoinMaxBid", "q7MaxBid", "faas-engine"}
+        "q7": {"q7BidByPrice", "q7BidByWin", "q7JoinMaxBid", "q7MaxBid", "faas-engine"},
+        "q8": {"q8GroupBy", "q8JoinStream", "faas-engine"},
 }
 
 def get_name(name, stages):

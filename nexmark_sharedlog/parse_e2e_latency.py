@@ -3,7 +3,6 @@ import os
 import gzip
 import json
 import numpy as np
-import pickle
 import matplotlib.pyplot as plt
 from statistics import mean, stdev
 
@@ -74,15 +73,15 @@ def main():
                 latency[tps]["p50"].append(p50)
                 latency[tps]["p99"].append(p99)
 
-                tlevel_run_dir = os.path.dirname(dpath)
-                tdir_name = os.path.basename(tlevel_run_dir)
-                outfig_dir = os.path.join(args.out_stats, args.app, str(tps))
-                os.makedirs(outfig_dir, exist_ok=True)
-                outfig = os.path.join(outfig_dir, f"{tdir_name}.pdf")
-                fig = plt.figure()
-                plt.plot(e2e_lat)
-                plt.savefig(outfig, bbox_inches='tight')
-                plt.close(fig)
+                # tlevel_run_dir = os.path.dirname(dpath)
+                # tdir_name = os.path.basename(tlevel_run_dir)
+                # outfig_dir = os.path.join(args.out_stats, args.app, str(tps))
+                # os.makedirs(outfig_dir, exist_ok=True)
+                # outfig = os.path.join(outfig_dir, f"{tdir_name}.pdf")
+                # fig = plt.figure()
+                # plt.plot(e2e_lat)
+                # plt.savefig(outfig, bbox_inches='tight')
+                # plt.close(fig)
 
                 print(f"{dpath} p50: {p50} ms, p99: {p99} ms")
                 all_data.append(e2e_lat)
@@ -94,8 +93,8 @@ def main():
             print(f"{tps} p50: {all_p50} ms, p99: {all_p99} ms")
             if tps not in all_stats:
                 all_stats[tps] = {}
-            all_stats[tps]["p50"] = p50
-            all_stats[tps]["p99"] = p99
+            all_stats[tps]["p50"] = all_p50
+            all_stats[tps]["p99"] = all_p99
             p50Mean = mean(latency[tps]["p50"])
             p50std = 0
             if len(latency[tps]["p50"]) >= 2:
@@ -110,13 +109,9 @@ def main():
                   f"ms, std: {p99Std}, cv: {p99cv}")
         else:
             print(f"{tps} doesn't have data")
-    mtime = int(os.stat(args.dir).st_mtime)
-    all_stats_path = os.path.join(args.out_stats, f"{args.app}_{mtime}.pickle")
-    splitlat_stats_path = os.path.join(args.out_stats, f"{args.app}_split_{mtime}.pickle")
-    with open(all_stats_path, "wb") as f:
-        pickle.dump(all_stats, f)
-    with open(splitlat_stats_path, "wb") as f:
-        pickle.dump(latency, f)
+    all_stats_path = os.path.join(args.out_stats, f"{args.app}.json")
+    with open(all_stats_path, "w") as f:
+        json.dump(all_stats, f)
 
 
 if __name__ == '__main__':
