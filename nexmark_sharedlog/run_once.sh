@@ -163,7 +163,8 @@ mkdir -p $EXP_DIR/engine_sar/
 for HOST in $ALL_ENGINE_HOSTS; do
     ssh -q $HOST -oStrictHostKeyChecking=no -- 'ls -l /dev/nvme*' >>$EXP_DIR/engine_sar/${HOST}_dev
     ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
-    ssh -q $HOST -oStrictHostKeyChecking=no -- sudo apt-get install -y jq && rm -f $HOME/docker_stats.txt
+    ssh -q $HOST -oStrictHostKeyChecking=no -- sudo apt-get install -y jq
+    ssh -q $HOST -oStrictHostKeyChecking=no -- sleep 1 && rm -f /home/ubuntu/docker_stats.txt
     ssh -q $HOST -oStrictHostKeyChecking=no -- $SCRIPT_DIR/docker_stats.sh &
 done
 
