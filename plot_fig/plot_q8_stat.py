@@ -22,9 +22,8 @@ impellers = [
 
 
 def main():
-    fig = plt.figure(figsize=(9, 7))
     l1, l2, l3, l4 = None, None, None, None
-    axs = fig.subplots(2, 3, sharey='row')
+    fig, axs = plt.subplots(2, 3, sharey='row', figsize=(9, 5))
     ax1 = None
     for i in range(0, len(times)):
         t = times[i]
@@ -47,15 +46,16 @@ def main():
         ll4, = axs[1, i].plot(input_throughput, [row[2]/1000.0 for row in idata], 
                 label=f'Impeller p99', color=colors[1], marker='o', ls='--')
         if i == 1:
-            axs[0, i].set_title(f'p50\n{t}ms', fontsize=16)
-            axs[1, i].set_title(f'p99', fontsize=16)
+            axs[0, i].set_title(f'p50\n{t}ms', fontsize=14)
+            axs[1, i].set_title(f'p99', fontsize=14)
         else:
-            axs[0, i].set_title(f'{t}ms', fontsize=16)
+            axs[0, i].set_title(f'{t}ms', fontsize=14)
         if i == 0:
             l1, l2, l3, l4 = ll1, ll2, ll3, ll4
-    ax1.legend(loc=(0.9, 1.25), ncol=2, handles = [l1, l2, l3, l4])
+    ax1.legend(loc=(0.5, 1.28), ncol=2, handles = [l1, l2, l3, l4], fontsize=14)
     fig.supxlabel('input throughput(events/s)', fontsize=16)
     fig.supylabel('commit/progress marking time(ms)', fontsize=16)
+    plt.subplots_adjust(hspace=0.3)
     plt.savefig('q8_commit_time.pdf', bbox_inches='tight')
 
 
