@@ -19,6 +19,7 @@ NUM_WORKER=""
 FAIL=""
 SNAPSHOT_S=0
 CONFIG_SUBPATH=""
+BUF_MAX_SIZE=$(expr 128 \* 1024)
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -66,13 +67,17 @@ while [ $# -gt 0 ]; do
             if [[ "$1" != *=* ]]; then shift; fi
             FAIL="${1#*=}"
             ;;
-	--snapshot_s*)
+	    --snapshot_s*)
             if [[ "$1" != *=* ]]; then shift; fi
             SNAPSHOT_S="${1#*=}"
             ;;
-	--config_subpath*)
+	    --config_subpath*)
             if [[ "$1" != *=* ]]; then shift; fi
             CONFIG_SUBPATH="${1#*=}"
+            ;;
+        --buf_max_size*)
+            if [[ "$1" != *=* ]]; then shift; fi
+            BUF_MAX_SIZE="${1#*=}"
             ;;
         --help|-h)
             printf -- "--app <appname> one of q1,q2,q3,q5,q7,q8\n"
@@ -128,7 +133,8 @@ fi
 
 echo "app: ${APP_NAME}, exp_dir: ${EXP_DIR}, guarantee: ${GUA}, duration: ${DURATION}, \
     events_num: ${EVENTS_NUM}, tps: ${TPS}, warmup time: ${WARM_DURATION}, flushms: ${FLUSH_MS}, \
-    src_flushms: ${SRC_FLUSH_MS}, num_worker: ${NUM_WORKER}, fail_spec: ${FAIL_SPEC}, snapshot_s: ${SNAPSHOT_S}"
+    src_flushms: ${SRC_FLUSH_MS}, num_worker: ${NUM_WORKER}, fail_spec: ${FAIL_SPEC}, \
+    snapshot_s: ${SNAPSHOT_S}, buf_max_size: ${BUF_MAX_SIZE}"
 
 SOURCE=${BASH_SOURCE[0]}
 while [ -L "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
@@ -189,7 +195,7 @@ ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name ${APP_NAME} \
     -faas_gateway $ENTRY_HOST:8080 -duration ${DURATION} -serde msgp \
     -guarantee $GUA -comm_everyMS ${FLUSH_MS} -flushms ${FLUSH_MS} \
     -src_flushms ${SRC_FLUSH_MS} -events_num ${EVENTS_NUM} \
-    -wconfig $WCONFIG \
+    -wconfig $WCONFIG -buf_max_size ${BUF_MAX_SIZE} \
     -stat_dir /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats -waitForLast=true \
     -tps $TPS -warmup_time $WARM_DURATION $FAIL_SPEC_ARG \
     -snapshot_everyS=$SNAPSHOT_S >$EXP_DIR/results.log 2>&1
