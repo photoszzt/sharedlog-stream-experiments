@@ -161,7 +161,7 @@ ssh -q $MANAGER_HOST -- cat /proc/cmdline >>$EXP_DIR/kernel_cmdline
 ssh -q $MANAGER_HOST -- uname -a >>$EXP_DIR/kernel_version
 FAIL_SPEC_ARG=""
 if [[ "$FAIL" = "true" ]]; then
-    FAIL_SPEC_ARG="-fail_spec=$SRC_DIR/workload_config/${NUM_WORKER}_ins/failure_config/${APP_NAME}.json"
+    FAIL_SPEC_ARG="-fail_spec=$SRC_DIR/workload_config/4node/${NUM_WORKER}_ins/failure_config/${APP_NAME}.json"
 fi
 
 ALL_ENGINE_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=engine_node)

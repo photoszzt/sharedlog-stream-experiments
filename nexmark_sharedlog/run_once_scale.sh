@@ -167,7 +167,7 @@ ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_scale -app_name ${APP_NAME} \
     -faas_gateway $ENTRY_HOST:8080 -durBF ${BEF_DUR} -durAF ${AF_DUR} -serde msgp \
     -guarantee epoch -comm_everyMS ${FLUSH_MS} -flushms ${FLUSH_MS} \
     -src_flushms ${SRC_FLUSH_MS} -events_num ${EVENTS_NUM} \
-    -wconfig $SRC_DIR/workload_config/${INIT_NUM_WORKER}_ins/${APP_NAME}.json \
+    -wconfig $SRC_DIR/workload_config/4node/${INIT_NUM_WORKER}_ins/${APP_NAME}.json \
     -scconfig $SRC_DIR/scale_to_src_unchanged/${SCALE_SCENE}/${APP_NAME}.json \
     -stat_dir /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats -waitForLast=true \
     -tps $TPS -snapshot_everyS=$SNAPSHOT_S >$EXP_DIR/results.log 2>&1
