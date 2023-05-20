@@ -7,9 +7,9 @@ cd q8_boki/mem
 $WORKSPACE_DIR/research-helper-scripts/microservice_helper start-machines --use-spot-instances
 cd ../..
 
-# TPS_PER_WORKER=(4000 8000 12000 16000 20000 24000 28000 32000 36000)
+TPS_PER_WORKER=(4000 8000 12000 16000 20000 24000 28000 32000 36000)
 # TPS_PER_WORKER=(12000 16000 20000 28000 32000)
-TPS_PER_WORKER=(32000 36000)
+# TPS_PER_WORKER=(36000)
 NUM_WORKER=(4)
 DURATION=180
 WARM_DURATION=0
@@ -18,7 +18,7 @@ DIR=q8_boki/mem
 FLUSH_MS=(100)
 SNAPSHOT_S=10
 
-for ((iter=6; iter < 9; ++iter)); do
+for ((iter=0; iter < 3; ++iter)); do
     cd ${DIR}
     for ((j=0; j<${#FLUSH_MS[@]}; ++j)); do
         for ((idx = 0; idx < ${#TPS_PER_WORKER[@]}; ++idx)); do
@@ -50,10 +50,10 @@ for ((iter=6; iter < 9; ++iter)); do
                 #     --snapshot_s 0
 
                 ./run_once.sh --app ${APP} \
-                    --exp_dir ./${NUM_WORKER[w]}src_rds2/$subdir/$iter/${TPS_PER_WORKER[idx]}tps_2pc/ \
+                    --exp_dir ./${NUM_WORKER[w]}src_2pcSync/$subdir/$iter/${TPS_PER_WORKER[idx]}tps_2pc/ \
                     --gua 2pc --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
                     --tps ${TPS} --warm_duration ${WARM_DURATION} \
-                    --flushms ${FLUSH_MS[j]} --src_flushms $SRC_FLUSH_MS --snapshot_s 0
+                    --flushms ${FLUSH_MS[j]} --src_flushms $SRC_FLUSH_MS --snapshot_s $SNAPSHOT_S
             done
         done
     done

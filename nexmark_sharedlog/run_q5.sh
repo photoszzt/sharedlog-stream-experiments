@@ -8,7 +8,7 @@ $WORKSPACE_DIR/research-helper-scripts/microservice_helper start-machines --use-
 cd ../..
 
 TPS_PER_WORKER=(1000 8000 16000 24000 32000 40000 48000 56000 64000)
-# TPS_PER_WORKER=(40000)
+# TPS_PER_WORKER=(56000 64000)
 NUM_WORKER=(4)
 DURATION=180
 WARM_DURATION=0
@@ -43,11 +43,12 @@ for ((iter=0; iter < 3; ++iter)); do
                 #     --gua none --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
                 #     --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS \
                 #     --snapshot_s 0
+
                 ./run_once.sh --app ${APP[k]} \
-                    --exp_dir ./${NUM_WORKER[w]}src_rds2/${subdir}/${iter}/${TPS_PER_WORKER[idx]}tps_2pc/ \
+                    --exp_dir ./${NUM_WORKER[w]}src_2pcSync/${subdir}/${iter}/${TPS_PER_WORKER[idx]}tps_2pc/ \
                     --gua 2pc --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
                     --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS \
-                    --snapshot_s 0
+                    --snapshot_s $SNAPSHOT_S
             done
         done
         cd -

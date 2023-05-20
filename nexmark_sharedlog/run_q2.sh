@@ -6,7 +6,8 @@ cd q2_boki
 $WORKSPACE_DIR/research-helper-scripts/microservice_helper start-machines --use-spot-instances
 cd ..
 
-TPS_PER_WORKER=(4000 16000 32000 48000 64000 80000 88000)
+# TPS_PER_WORKER=(4000 16000 32000 48000 64000 80000 88000)
+TPS_PER_WORKER=(16000 32000 48000 64000 80000 88000)
 # TPS_PER_WORKER=(88000)
 NUM_WORKER=(4)
 DURATION=180
@@ -36,14 +37,16 @@ for ((iter=0; iter < 4; ++iter)); do
                     --gua epoch --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
                     --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS \
                     --src_flushms $SRC_FLUSH_MS --snapshot_s ${SNAPSHOT_S}
+
                 # ./run_once.sh --app ${APP[k]} \
                 #     --exp_dir ./${NUM_WORKER[w]}src_none_gm1/$subdir/$iter/${TPS_PER_WORKER[idx]}tps_epoch/ \
                 #     --gua none --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
                 #     --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS \
                 #     --src_flushms $SRC_FLUSH_MS \
                 #     --snapshot_s 0
+
                 ./run_once.sh --app ${APP[k]} \
-                    --exp_dir ./${NUM_WORKER[w]}src_ets2/$subdir/$iter/${TPS_PER_WORKER[idx]}tps_2pc/ \
+                    --exp_dir ./${NUM_WORKER[w]}src_2pc/$subdir/$iter/${TPS_PER_WORKER[idx]}tps_2pc/ \
                     --gua 2pc --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
                     --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS \
                     --src_flushms $SRC_FLUSH_MS --snapshot_s 0
