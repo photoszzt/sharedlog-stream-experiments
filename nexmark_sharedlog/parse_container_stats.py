@@ -4,7 +4,9 @@ import json
 from statistics import mean
 
 stages = {
+        "q4": {"q46GroupBy", "q4Avg", "q4JoinTable", "q4MaxBid", "faas-engine"},
         "q5": {"bid-keyed-by-auction", "max-bid", "auc-bid", "faas-engine"},
+        "q6": {"q46GroupBy", "q6Avg", "q6JoinTable", "q6JoinStream", "q6MaxBid", "faas-engine"},
         "q7": {"q7BidByPrice", "q7BidByWin", "q7JoinMaxBid", "q7MaxBid", "faas-engine"},
         "q8": {"q8GroupBy", "q8JoinStream", "faas-engine"},
 }
@@ -21,6 +23,7 @@ def main():
     parser.add_argument('--app', type=str, help='app', required=True)
     args = parser.parse_args()
     max_cpu = {}
+    max_mem = {}
     for root, dirs, files in os.walk(args.dir):
         for fname in files:
             stats = {}
@@ -66,16 +69,20 @@ def main():
                     name = get_name(n, st)
                     if name not in max_cpu and name is not None:
                         max_cpu[name] = 0
+                        max_mem[name] = 0
                     maxCpu = max(stats[n]['cpuPer'])
                     meanCpu = mean(stats[n]['cpuPer'])
                     if name is not None and maxCpu > max_cpu[name]:
                         max_cpu[name] = maxCpu
                     maxMem = max(stats[n]['memUsg'])/1024.0/1024.0
                     meanMem = mean(stats[n]['memUsg'])/1024.0/1024.0
+                    if name is not None and maxMem > max_mem[name]:
+                        max_mem[name] = maxMem
                     print(f"{n}, max cpu util: {maxCpu}, max mem usage(MB): {maxMem}, "
                           f"mean cpu util: {meanCpu}, mean mem usage(MB): {meanMem}")
                 print()
-        print(max_cpu)
+        for n in max_cpu:
+            print(f"{n},{max_cpu[n]/100.0},{max_mem[n]}")
 
 
 if __name__ == '__main__':
