@@ -42,7 +42,7 @@ services:
         #     - ZOO_SERVERS=zookeeper:2888:3888,zookeeper2:2888:3888,zookeeper3:2888:3888
 
   zookeeper-setup:
-    image: zookeeper:3.8
+    image: zookeeper:3.6.2
     command: /faas/tmp/zk_setup.sh
     depends_on:
        - zookeeper
@@ -60,7 +60,7 @@ services:
       - --zookeeper_host=zookeeper:2181
       - --listen_iface=eth0
       - --root_path_for_ipc=/tmp/faas/ipc
-      - --func_config_file=/faas/tmp/produce_consume.json
+      - --func_config_file=/exp/lat_tp/specs/produce_consume.json
       - --num_io_workers=4
       - --socket_listen_backlog=1024
       - --instant_rps_p_norm=0.8
@@ -80,6 +80,7 @@ services:
       - zookeeper-setup
     volumes:
       - ${FAAS_DIR:?}:/faas
+      - ${EXP_DIR:?}:/exp
       - /mnt/inmem/faas:/tmp/faas
       - /mnt/inmem/log:/tmp/log
       - /sys/fs/cgroup:/tmp/root_cgroupfs
@@ -95,7 +96,7 @@ services:
       - --zookeeper_host=zookeeper:2181
       - --metalog_replicas=3
       - --userlog_replicas=3
-      - --index_replicas=1
+      - --index_replicas=2
       # - --v=1
     depends_on:
       - zookeeper-setup
@@ -113,7 +114,7 @@ services:
       - --zookeeper_host=zookeeper:2181
       - --listen_iface=eth0
       - --http_port=8080
-      - --func_config_file=/faas/tmp/produce_consume.json
+      - --func_config_file=/exp/lat_tp/specs/produce_consume.json
       - --num_io_workers=8
       - --socket_listen_backlog=1024
       - --io_uring_entries=2048
@@ -126,6 +127,7 @@ services:
     depends_on:
       - zookeeper-setup
     volumes:
+      - ${EXP_DIR:?}:/exp
       - ${FAAS_DIR:?}:/faas
       - /mnt/inmem:/tmp
     restart: always
@@ -201,6 +203,21 @@ services:
       - /mnt/inmem/log:/tmp/log
     environment:
       - FAAS_NODE_ID={{.Task.Slot}}
+    restart: always
+
+  scale:
+    image: ubuntu:focal
+    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/lat_tp_handler", "40"]
+    volumes:
+      - ${SRC_DIR:?}:/src
+      - ${FAAS_DIR:?}:/faas
+      - /mnt/inmem/faas:/tmp/faas
+    environment:
+       - FAAS_BUILD_TYPE=${FAAS_BUILD_TYPE:-release}
+       - FAAS_GO_MAX_PROC_FACTOR=1
+       - GOGC=200
+    depends_on:
+       - faas-engine
     restart: always
 
   produce:
