@@ -4,9 +4,14 @@ source /etc/lsb-release
 echo $DISTRIB_RELEASE
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
+sudo apt install gnupg ca-certificates curl
+curl -s https://repos.azul.com/azul-repo.key | sudo gpg --dearmor -o /usr/share/keyrings/azul.gpg
+echo "deb [signed-by=/usr/share/keyrings/azul.gpg] https://repos.azul.com/zulu/deb stable main" | sudo tee /etc/apt/sources.list.d/zulu.list
+
 sudo apt-get update
 sudo apt-get install -y build-essential autoconf automake pkg-config libtool numactl \
   clang
+sudo apt install zulu21-jdk
 
 go_tar=go1.21.5.linux-amd64.tar.gz
 wget https://go.dev/dl/${go_tar} -O $HOME/${go_tar}
