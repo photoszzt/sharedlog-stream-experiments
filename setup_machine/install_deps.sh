@@ -6,7 +6,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 sudo apt-get update
 sudo apt-get install -y build-essential autoconf automake pkg-config libtool numactl \
-  clang-15
+  clang
 
 go_tar=go1.21.5.linux-amd64.tar.gz
 wget https://go.dev/dl/${go_tar} -O $HOME/${go_tar}
