@@ -54,6 +54,12 @@ for ((iter=0; iter < 3; ++iter)); do
                     --gua 2pc --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
                     --tps ${TPS} --warm_duration ${WARM_DURATION} \
                     --flushms ${FLUSH_MS[j]} --src_flushms $SRC_FLUSH_MS --snapshot_s $SNAPSHOT_S
+
+                ./run_once.sh --app ${APP} \
+                    --exp_dir ./${NUM_WORKER[w]}src_align_chkpt/$subdir/$iter/${TPS_PER_WORKER[idx]}tps_2pc/ \
+                    --gua align_chkpt --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
+                    --tps ${TPS} --warm_duration ${WARM_DURATION} \
+                    --flushms ${FLUSH_MS[j]} --src_flushms $SRC_FLUSH_MS --snapshot_s $SNAPSHOT_S
             done
         done
     done

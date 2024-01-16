@@ -227,6 +227,21 @@ services:
        - faas-engine
     restart: always
 
+  chkptmngr:
+    image: ubuntu:focal
+    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "90"]
+    volumes:
+      - ${SRC_DIR:?}:/src
+      - ${FAAS_DIR:?}:/faas
+      - /mnt/inmem/faas:/tmp/faas
+    environment:
+       - FAAS_BUILD_TYPE=${FAAS_BUILD_TYPE:-release}
+       - FAAS_GO_MAX_PROC_FACTOR=1
+       - GOGC=200
+    depends_on:
+       - faas-engine
+    restart: always
+
   nexmark-source:
     image: ubuntu:focal
     entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "20"]

@@ -12,45 +12,49 @@ TPS_PER_WORKER=(8000 16000 32000 48000 64000 80000 96000 112000 128000)
 NUM_WORKER=(4)
 DURATION=180
 WARM_DURATION=0
-APP=(q3)
-DIR=(q3_boki/mem)
+APP=q3
+DIR=q3_boki/mem
 FLUSH_MS=100
 SRC_FLUSH_MS=100
 SNAPSHOT_S=10
 
 for ((iter=0; iter < 3; ++iter)); do
-    for ((k = 0; k < ${#APP[@]}; ++k)); do
-        cd ${DIR[k]}
-        for ((idx = 0; idx < ${#TPS_PER_WORKER[@]}; ++idx)); do
-            for ((w = 0; w < ${#NUM_WORKER[@]}; ++w)); do
-                TPS=$(expr ${TPS_PER_WORKER[idx]} \* ${NUM_WORKER[w]})
-                EVENTS=$(expr $TPS \* $DURATION)
-                echo ${APP[k]}, ${DIR[k]}, ${EVENTS} events, ${TPS} tps
-                subdir=${DURATION}s_${WARM_DURATION}swarm_${FLUSH_MS}ms_src${SRC_FLUSH_MS}ms
-                # ./run_once.sh --app ${APP[k]} --exp_dir ./${NUM_WORKER[w]}src_generics/$subdir/${TPS_PER_WORKER[idx]}tps_alo/ \
-                #     --gua alo --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
-                #     --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS
+    cd ${DIR}
+    for ((idx = 0; idx < ${#TPS_PER_WORKER[@]}; ++idx)); do
+        for ((w = 0; w < ${#NUM_WORKER[@]}; ++w)); do
+            TPS=$(expr ${TPS_PER_WORKER[idx]} \* ${NUM_WORKER[w]})
+            EVENTS=$(expr $TPS \* $DURATION)
+            echo ${APP}, ${DIR}, ${EVENTS} events, ${TPS} tps
+            subdir=${DURATION}s_${WARM_DURATION}swarm_${FLUSH_MS}ms_src${SRC_FLUSH_MS}ms
+            # ./run_once.sh --app ${APP} --exp_dir ./${NUM_WORKER[w]}src_generics/$subdir/${TPS_PER_WORKER[idx]}tps_alo/ \
+            #     --gua alo --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
+            #     --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS
 
-                ./run_once.sh --app ${APP[k]} \
-                    --exp_dir ./${NUM_WORKER[w]}src_rds2/$subdir/$iter/${TPS_PER_WORKER[idx]}tps_epoch/ \
-                    --gua epoch --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
-                    --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS \
-                    --snapshot_s ${SNAPSHOT_S}
+            ./run_once.sh --app ${APP} \
+                --exp_dir ./${NUM_WORKER[w]}src_rds2/$subdir/$iter/${TPS_PER_WORKER[idx]}tps_epoch/ \
+                --gua epoch --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
+                --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS \
+                --snapshot_s ${SNAPSHOT_S}
 
-                # ./run_once.sh --app ${APP[k]} --exp_dir ./${NUM_WORKER[w]}src_none_gm1/$subdir/$iter/${TPS_PER_WORKER[idx]}tps_epoch/ \
-                #     --gua none --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
-                #     --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS \
-                #     --snapshot_s 0
+            # ./run_once.sh --app ${APP} --exp_dir ./${NUM_WORKER[w]}src_none_gm1/$subdir/$iter/${TPS_PER_WORKER[idx]}tps_epoch/ \
+            #     --gua none --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
+            #     --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS \
+            #     --snapshot_s 0
 
-                ./run_once.sh --app ${APP[k]} \
-                    --exp_dir ./${NUM_WORKER[w]}src_2pcSync/$subdir/$iter/${TPS_PER_WORKER[idx]}tps_2pc/ \
-                    --gua 2pc --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
-                    --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS \
-                    --snapshot_s ${SNAPSHOT_S}
-            done
+            ./run_once.sh --app ${APP} \
+                --exp_dir ./${NUM_WORKER[w]}src_2pc/$subdir/$iter/${TPS_PER_WORKER[idx]}tps_2pc/ \
+                --gua 2pc --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
+                --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS \
+                --snapshot_s ${SNAPSHOT_S}
+
+            ./run_once.sh --app ${APP} \
+                --exp_dir ./${NUM_WORKER[w]}src_2pc/$subdir/$iter/${TPS_PER_WORKER[idx]}tps_2pc/ \
+                --gua align_chkpt --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
+                --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS \
+                --snapshot_s 0
         done
-        cd -
     done
+    cd -
 done
 
 cd q3_boki/mem

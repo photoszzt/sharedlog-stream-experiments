@@ -204,6 +204,21 @@ services:
     environment:
       - FAAS_NODE_ID={{.Task.Slot}}
     restart: always
+
+  chkptmngr:
+    image: ubuntu:focal
+    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "50"]
+    volumes:
+      - ${SRC_DIR:?}:/src
+      - ${FAAS_DIR:?}:/faas
+      - /mnt/inmem/faas:/tmp/faas
+    environment:
+       - FAAS_BUILD_TYPE=${FAAS_BUILD_TYPE:-release}
+       - FAAS_GO_MAX_PROC_FACTOR=1
+       - GOGC=200
+    depends_on:
+       - faas-engine
+    restart: always
     
   scale:
     image: ubuntu:focal
