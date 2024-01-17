@@ -2,9 +2,9 @@
 /mnt/efs/workspace/research-helper-scripts/microservice_helper start-machines --use-spot-instances
 
 TPS=(10 50 100)
-DURATION=180
+DURATION=240
 payload=(16Kb)
-warm_duration=30
+warm_duration=60
 
 for ((iter = 0; iter < 3; ++iter)); do
     for ((idx = 0; idx < ${#TPS[@]}; ++idx)); do
