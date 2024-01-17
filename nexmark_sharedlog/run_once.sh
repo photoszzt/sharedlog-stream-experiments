@@ -167,11 +167,12 @@ fi
 ALL_ENGINE_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=engine_node)
 mkdir -p $EXP_DIR/engine_sar/
 for HOST in $ALL_ENGINE_HOSTS; do
-    ssh -q $HOST -oStrictHostKeyChecking=no -- 'ls -l /dev/nvme*' >>$EXP_DIR/engine_sar/${HOST}_dev
-    ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
-    ssh -q $HOST -oStrictHostKeyChecking=no -- sudo apt-get install -y jq
-    ssh -q $HOST -oStrictHostKeyChecking=no -- sleep 1 && rm -f /home/ubuntu/docker_stats.txt
-    ssh -q $HOST -oStrictHostKeyChecking=no -- $SCRIPT_DIR/docker_stats.sh &
+    SSH_CMD="ssh -q $HOST -oStrictHostKeyChecking=no"
+    $SSH_CMD -- 'ls -l /dev/nvme*' >>$EXP_DIR/engine_sar/${HOST}_dev
+    $SSH_CMD -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
+    $SSH_CMD -- sudo apt-get install -y jq
+    $SSH_CMD -- sleep 1 && rm -f /home/ubuntu/docker_stats.txt
+    $SSH_CMD -- $SCRIPT_DIR/docker_stats.sh &
 done
 
 ALL_SEQUENCER_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=sequencer_node)
@@ -182,8 +183,10 @@ done
 
 mkdir -p $EXP_DIR/storage_sar/
 for HOST in $ALL_STORAGE_HOSTS; do
-    ssh -q $HOST -oStrictHostKeyChecking=no -- 'ls -l /dev/nvme*' >>$EXP_DIR/storage_sar/${HOST}_dev
-    ssh -q $HOST -oStrictHostKeyChecking=no -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
+    SSH_CMD="ssh -q $HOST -oStrictHostKeyChecking=no"
+    $SSH_CMD -- "sudo sysctl vm.overcommit_memory=1"
+    $SSH_CMD -- 'ls -l /dev/nvme*' >>$EXP_DIR/storage_sar/${HOST}_dev
+    $SSH_CMD -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
 done
 
 WCONFIG=$SRC_DIR/workload_config/$CONFIG_SUBPATH
@@ -201,8 +204,9 @@ ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name ${APP_NAME} \
     -snapshot_everyS=$SNAPSHOT_S >$EXP_DIR/results.log 2>&1
 
 for HOST in $ALL_ENGINE_HOSTS; do
-    ssh -q $HOST -oStrictHostKeyChecking=no -- pkill sar
-    ssh -q $HOST -oStrictHostKeyChecking=no -- sync && pkill docker_stats.sh
+    SSH_CMD=ssh -q $HOST -oStrictHostKeyChecking=no
+    $SSH_CMD -- pkill sar
+    $SSH_CMD -- sync && pkill docker_stats.sh
     mkdir -p $EXP_DIR/engine_sar/$HOST
     scp $HOST:/home/ubuntu/sar_st $EXP_DIR/engine_sar/$HOST
     ssh -q $HOST -oStrictHostKeyChecking=no -- rm /home/ubuntu/sar_st
@@ -210,31 +214,34 @@ for HOST in $ALL_ENGINE_HOSTS; do
     scp $HOST:/home/ubuntu/docker_stats.txt $EXP_DIR/docker_stats/stats.txt
     cat $EXP_DIR/docker_stats/stats.txt | jq '[inputs]' >> $EXP_DIR/docker_stats/${HOST}_stats.txt
     rm $EXP_DIR/docker_stats/stats.txt
-    ssh -q $HOST -oStrictHostKeyChecking=no -- rm /home/ubuntu/stats.txt
+    $SSH_CMD -- rm /home/ubuntu/stats.txt
 done
 
 for HOST in $ALL_STORAGE_HOSTS; do
-    ssh -q $HOST -oStrictHostKeyChecking=no -- pkill sar
+    SSH_CMD=ssh -q $HOST -oStrictHostKeyChecking=no
+    $SSH_CMD -- pkill sar
     mkdir -p $EXP_DIR/storage_sar/$HOST
     scp $HOST:/home/ubuntu/sar_st $EXP_DIR/storage_sar/$HOST
-    ssh -q $HOST -oStrictHostKeyChecking=no -- rm /home/ubuntu/sar_st
+    $SSH_CMD -- rm /home/ubuntu/sar_st
 done
 
 mkdir $EXP_DIR/sequencer_netstats
 for HOST in $ALL_SEQUENCER_HOSTS; do
-	NETDEVS=$(ssh -q $HOST -oStrictHostKeyChecking=no -- ls /sys/class/net | grep -e ^e)
-	for NETDEV in $NETDEVS; do
-		ssh -q $HOST -oStrictHostKeyChecking=no -- ethtool -S $NETDEV >>$EXP_DIR/sequencer_netstats/$HOST
-	done
+    SSH_CMD=ssh -q $HOST -oStrictHostKeyChecking=no
+    NETDEVS=$(ssh -q $HOST -oStrictHostKeyChecking=no -- ls /sys/class/net | grep -e ^e)
+    for NETDEV in $NETDEVS; do
+        $SSH_CMD -- ethtool -S $NETDEV >>$EXP_DIR/sequencer_netstats/$HOST
+    done
 done
 
 mkdir $EXP_DIR/engine_netstats
 ALL_ENGINE_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=engine_node)
 for HOST in $ALL_ENGINE_HOSTS; do
-	NETDEVS=$(ssh -q $HOST -oStrictHostKeyChecking=no -- ls /sys/class/net | grep -e ^e)
-	for NETDEV in $NETDEVS; do
-		ssh -q $HOST -oStrictHostKeyChecking=no -- ethtool -S $NETDEV >>$EXP_DIR/engine_netstats/$HOST
-	done
+    SSH_CMD=ssh -q $HOST -oStrictHostKeyChecking=no
+    NETDEVS=$(ssh -q $HOST -oStrictHostKeyChecking=no -- ls /sys/class/net | grep -e ^e)
+    for NETDEV in $NETDEVS; do
+        $SSH_CMD -- ethtool -S $NETDEV >>$EXP_DIR/engine_netstats/$HOST
+    done
 done
 
 mkdir $EXP_DIR/storage_netstats
