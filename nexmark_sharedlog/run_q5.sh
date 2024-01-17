@@ -17,7 +17,7 @@ APP=q5
 FLUSH_MS=100
 SRC_FLUSH_MS=100
 SNAPSHOT_S=10
-modes=(alo epoch none 2pc align_chkpt)
+modes=(epoch none 2pc align_chkpt)
 
 for ((iter=0; iter < 3; ++iter)); do
     cd ${DIR}
@@ -28,7 +28,7 @@ for ((iter=0; iter < 3; ++iter)); do
             echo ${APP}, ${DIR}, ${EVENTS} events, ${TPS} tps
             subdir=${DURATION}s_${WARM_DURATION}swarm_${FLUSH_MS}ms_src${SRC_FLUSH_MS}ms
             for mode in ${modes[@]}; do
-                ./run_once.sh --app ${APP} 
+                ./run_once.sh --app ${APP} \
                     --exp_dir ./${NUM_WORKER[w]}src_1/${subdir}/${iter}/${TPS_PER_WORKER[idx]}tps_${mode}/ \
                     --gua $mode --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
                     --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS \
