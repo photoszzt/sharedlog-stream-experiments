@@ -204,7 +204,7 @@ ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name ${APP_NAME} \
     -snapshot_everyS=$SNAPSHOT_S >$EXP_DIR/results.log 2>&1
 
 for HOST in $ALL_ENGINE_HOSTS; do
-    SSH_CMD=ssh -q $HOST -oStrictHostKeyChecking=no
+    SSH_CMD="ssh -q $HOST -oStrictHostKeyChecking=no"
     $SSH_CMD -- pkill sar
     $SSH_CMD -- sync && pkill docker_stats.sh
     mkdir -p $EXP_DIR/engine_sar/$HOST
@@ -218,7 +218,7 @@ for HOST in $ALL_ENGINE_HOSTS; do
 done
 
 for HOST in $ALL_STORAGE_HOSTS; do
-    SSH_CMD=ssh -q $HOST -oStrictHostKeyChecking=no
+    SSH_CMD="ssh -q $HOST -oStrictHostKeyChecking=no"
     $SSH_CMD -- pkill sar
     mkdir -p $EXP_DIR/storage_sar/$HOST
     scp $HOST:/home/ubuntu/sar_st $EXP_DIR/storage_sar/$HOST
@@ -227,7 +227,7 @@ done
 
 mkdir $EXP_DIR/sequencer_netstats
 for HOST in $ALL_SEQUENCER_HOSTS; do
-    SSH_CMD=ssh -q $HOST -oStrictHostKeyChecking=no
+    SSH_CMD="ssh -q $HOST -oStrictHostKeyChecking=no"
     NETDEVS=$(ssh -q $HOST -oStrictHostKeyChecking=no -- ls /sys/class/net | grep -e ^e)
     for NETDEV in $NETDEVS; do
         $SSH_CMD -- ethtool -S $NETDEV >>$EXP_DIR/sequencer_netstats/$HOST
@@ -237,7 +237,7 @@ done
 mkdir $EXP_DIR/engine_netstats
 ALL_ENGINE_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=engine_node)
 for HOST in $ALL_ENGINE_HOSTS; do
-    SSH_CMD=ssh -q $HOST -oStrictHostKeyChecking=no
+    SSH_CMD="ssh -q $HOST -oStrictHostKeyChecking=no"
     NETDEVS=$(ssh -q $HOST -oStrictHostKeyChecking=no -- ls /sys/class/net | grep -e ^e)
     for NETDEV in $NETDEVS; do
         $SSH_CMD -- ethtool -S $NETDEV >>$EXP_DIR/engine_netstats/$HOST
