@@ -6,11 +6,12 @@ WORKSPACE_DIR=$(realpath $SCRIPT_DIR/../../)
 DIR=q8_boki/mem
 cd $DIR
 $WORKSPACE_DIR/research-helper-scripts/microservice_helper start-machines --use-spot-instances
+./update_docker.sh
 cd ../..
 
 TPS_PER_WORKER=(4000 8000 12000 16000 20000 24000 28000 32000 36000)
 # TPS_PER_WORKER=(12000 16000 20000 28000 32000)
-# TPS_PER_WORKER=(36000)
+# TPS_PER_WORKER=(20000)
 NUM_WORKER=(4)
 DURATION=180
 WARM_DURATION=0
@@ -18,9 +19,10 @@ APP=q8
 FLUSH_MS=100
 SNAPSHOT_S=10
 SRC_FLUSH_MS=${FLUSH_MS}
-modes=(alo epoch none 2pc align_chkpt)
+# modes=(align_chkpt)
+modes=(epoch none 2pc)
 
-for ((iter=0; iter < 3; ++iter)); do
+for ((iter=0; iter < 4; ++iter)); do
     cd ${DIR}
     for ((idx = 0; idx < ${#TPS_PER_WORKER[@]}; ++idx)); do
         for ((w = 0; w < ${#NUM_WORKER[@]}; ++w)); do

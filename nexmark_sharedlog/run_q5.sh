@@ -6,6 +6,7 @@ DIR=q5_boki/mem
 
 cd $DIR
 $WORKSPACE_DIR/research-helper-scripts/microservice_helper start-machines --use-spot-instances
+./update_docker.sh
 cd ../..
 
 TPS_PER_WORKER=(1000 8000 16000 24000 32000 40000 48000 56000 64000)

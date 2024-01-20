@@ -6,6 +6,7 @@ DIR=q4_boki
 
 cd $DIR
 $WORKSPACE_DIR/research-helper-scripts/microservice_helper start-machines --use-spot-instances
+./update_docker.sh
 cd ..
 
 # TPS_PER_WORKER=(1250)
@@ -17,7 +18,7 @@ APP=q4
 FLUSH_MS=100
 SRC_FLUSH_MS=100
 SNAPSHOT_S=10
-modes=(alo epoch none 2pc align_chkpt)
+modes=(epoch none 2pc align_chkpt)
 
 for ((iter=0; iter < 3; ++iter)); do
     cd ${DIR}

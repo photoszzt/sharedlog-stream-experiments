@@ -22,65 +22,49 @@ MANAGER_HOST=$($HELPER_SCRIPT get-docker-manager-host --base-dir=$BASE_DIR)
 ALL_HOSTS=$($HELPER_SCRIPT get-all-server-hosts --base-dir=$BASE_DIR)
 
 ssh -q $MANAGER_HOST -- docker stack rm faas-test
-sleep 40
-
-i=0
+sleep 20
 for HOST in $ALL_HOSTS; do
     SSH_CMD="ssh -q $HOST -oStrictHostKeyChecking=no"
-    $SSH_CMD -- "sudo apt-get update && sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin" &
-    pids[$i]=$!
-    i=$((i + 1))
-done
-for pid in ${pids[*]}; do
-    wait $pid
+    scp -q $SCRIPT_DIR/kill-containers.sh $HOST:
+    $SSH_CMD -- ./kill-containers.sh
 done
 
 scp -q $BASE_DIR/docker-compose-base.yml $MANAGER_HOST:~
 $HELPER_SCRIPT generate-docker-compose --base-dir=$BASE_DIR
 scp -q $BASE_DIR/docker-compose.yml $MANAGER_HOST:~
+scp -q $SCRIPT_DIR/docker-stack-wait.sh $MANAGER_HOST:~
 
 
 ALL_SEQUENCER_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=sequencer_node)
 for HOST in $ALL_SEQUENCER_HOSTS; do
     SSH_CMD="ssh -q $HOST -oStrictHostKeyChecking=no"
-    $SSH_CMD -- sudo rm -rf /mnt/inmem/log_seq
-    $SSH_CMD -- sudo mkdir -p /mnt/inmem/log_seq
-    $SSH_CMD -- sudo rm -rf /mnt/storage_seq/journal
-    $SSH_CMD -- sudo mkdir -p /mnt/storage_seq/journal
+    $SSH_CMD -- "sudo rm -rf /mnt/inmem/log_seq; \
+	    sudo mkdir -p /mnt/inmem/log_seq; \
+	    sudo rm -rf /mnt/storage_seq/journal; \
+	    sudo mkdir -p /mnt/storage_seq/journal"
 done
 
 ALL_ENGINE_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=engine_node)
 for HOST in $ALL_ENGINE_HOSTS; do
     SSH_CMD="ssh -q $HOST -oStrictHostKeyChecking=no"
-    $SSH_CMD -- sudo rm -rf /mnt/inmem/log
-    $SSH_CMD -- sudo mkdir -p /mnt/inmem/log
-    $SSH_CMD -- sudo rm -rf /mnt/inmem/faas
-    $SSH_CMD -- sudo mkdir -p /mnt/inmem/faas
-    $SSH_CMD -- sudo mkdir -p /mnt/inmem/faas/output /mnt/inmem/faas/ipc
+    $SSH_CMD -- "sudo rm -rf /mnt/inmem/log; sudo mkdir -p /mnt/inmem/log \
+	    sudo rm -rf /mnt/inmem/faas; sudo mkdir -p /mnt/inmem/faas; \
+	    sudo mkdir -p /mnt/inmem/faas/output /mnt/inmem/faas/ipc"
 done
 
 ALL_STORAGE_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=storage_node)
 for HOST in $ALL_STORAGE_HOSTS; do
     SSH_CMD="ssh -q $HOST -oStrictHostKeyChecking=no"
-    $SSH_CMD -- sudo rm -rf /mnt/inmem/log || true
-    $SSH_CMD -- sudo mkdir -p /mnt/inmem/log || true
+    $SSH_CMD -- "sudo rm -rf /mnt/inmem/log || true; sudo mkdir -p /mnt/inmem/log; \
+	    sudo rm -rf /mnt/storage/logdata; sudo mkdir -p /mnt/storage/logdata; \
+	    sudo rm -rf /mnt/storage/journal; sudo mkdir -p /mnt/storage/journal"
     $SSH_CMD -- 'sudo rm -rf /mnt/inmem/redis; sudo mkdir -p /mnt/inmem/redis; sudo chown $(id -u):$(id -g) /mnt/inmem/redis' || true
-    $SSH_CMD -- sudo rm -rf /mnt/storage/logdata || true
-    $SSH_CMD -- sudo mkdir -p /mnt/storage/logdata || true
-    $SSH_CMD -- sudo rm -rf /mnt/storage/journal || true
-    $SSH_CMD -- sudo mkdir -p /mnt/storage/journal || true
 done
 
 ssh -q $MANAGER_HOST -- docker network rm faas-test_default
 ssh -q $MANAGER_HOST -- SRC_DIR=$SRC_DIR FAAS_DIR=$FAAS_DIR EXP_DIR=$EXP_DIR USE_CACHE=${USE_CACHE} FAAS_BUILD_TYPE=$FAAS_BUILD_TYPE \
     docker stack deploy -c ~/docker-compose-base.yml -c ~/docker-compose.yml faas-test
-# ssh -q $MANAGER_HOST -- 'docker exec $(docker container ls -q --filter name=faas-test_zookeeper-setup) bash -c "test -f /tmp/zksetup_down"'
-# ret=$?
-# while [ $ret != "0" ]; do
-#     sleep 5
-#     ssh -q $MANAGER_HOST -- 'docker exec $(docker container ls -q --filter name=faas-test_zookeeper-setup) bash -c "test -f /tmp/zksetup_down"'
-#     ret=$?
-# done
+ssh -q $MANAGER_HOST -- ./docker-stack-wait.sh faas-test
 sleep 80
 
 # for HOST in $ALL_ENGINE_HOSTS; do

@@ -2,8 +2,10 @@
 set -x
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 WORKSPACE_DIR=$(realpath $SCRIPT_DIR/../../)
-cd q1_boki
+DIR=q1_boki
+cd $DIR
 $WORKSPACE_DIR/research-helper-scripts/microservice_helper start-machines --use-spot-instances
+./update_docker.sh
 cd ..
 
 TPS_PER_WORKER=(4000 16000 32000 48000 64000 80000 88000)
@@ -12,11 +14,10 @@ NUM_WORKER=4
 DURATION=180
 WARM_DURATION=0
 APP=q1
-DIR=q1_boki
 FLUSH_MS=100
 SRC_FLUSH_MS=10
 SNAPSHOT_S=0
-modes=(alo epoch none 2pc align_chkpt)
+modes=(epoch none 2pc align_chkpt)
 
 for ((iter=0; iter < 3; ++iter)); do
     cd ${DIR}
@@ -36,6 +37,6 @@ for ((iter=0; iter < 3; ++iter)); do
     cd -
 done
 
-cd q1_boki
+cd $DIR
 $WORKSPACE_DIR/research-helper-scripts/microservice_helper stop-machines
 cd ..
