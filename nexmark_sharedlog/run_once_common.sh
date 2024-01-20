@@ -47,7 +47,7 @@ done
 ALL_ENGINE_HOSTS=$($HELPER_SCRIPT get-machine-with-label --machine-label=engine_node)
 for HOST in $ALL_ENGINE_HOSTS; do
     SSH_CMD="ssh -q $HOST -oStrictHostKeyChecking=no"
-    $SSH_CMD -- "sudo rm -rf /mnt/inmem/log; sudo mkdir -p /mnt/inmem/log \
+    $SSH_CMD -- "sudo rm -rf /mnt/inmem/log; sudo mkdir -p /mnt/inmem/log; \
 	    sudo rm -rf /mnt/inmem/faas; sudo mkdir -p /mnt/inmem/faas; \
 	    sudo mkdir -p /mnt/inmem/faas/output /mnt/inmem/faas/ipc"
 done
@@ -57,7 +57,7 @@ for HOST in $ALL_STORAGE_HOSTS; do
     SSH_CMD="ssh -q $HOST -oStrictHostKeyChecking=no"
     $SSH_CMD -- "sudo rm -rf /mnt/inmem/log || true; sudo mkdir -p /mnt/inmem/log; \
 	    sudo rm -rf /mnt/storage/logdata; sudo mkdir -p /mnt/storage/logdata; \
-	    sudo rm -rf /mnt/storage/journal; sudo mkdir -p /mnt/storage/journal"
+	    sudo rm -rf /mnt/storage/journal; sudo mkdir -p /mnt/storage/journal;"
     $SSH_CMD -- 'sudo rm -rf /mnt/inmem/redis; sudo mkdir -p /mnt/inmem/redis; sudo chown $(id -u):$(id -g) /mnt/inmem/redis' || true
 done
 
