@@ -22,7 +22,7 @@ fi
 i=0
 for HOST in $ALL_HOSTS; do
     SSH_CMD="ssh -q $HOST -oStrictHostKeyChecking=no"
-    $SSH_CMD -- "sudo apt-get update && sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin" &
+    $SSH_CMD -- "sudo apt-get update && sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin jq" &
     pids[$i]=$!
     i=$((i + 1))
 done
