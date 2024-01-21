@@ -170,7 +170,6 @@ for HOST in $ALL_ENGINE_HOSTS; do
     SSH_CMD="ssh -q $HOST -oStrictHostKeyChecking=no"
     $SSH_CMD -- 'ls -l /dev/nvme*' >>$EXP_DIR/engine_sar/${HOST}_dev
     $SSH_CMD -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
-    $SSH_CMD -- sudo apt-get install -y jq
     $SSH_CMD -- sleep 1 && rm -f /home/ubuntu/docker_stats.txt
     $SSH_CMD -- $SCRIPT_DIR/docker_stats.sh &
 done
@@ -184,7 +183,6 @@ done
 mkdir -p $EXP_DIR/storage_sar/
 for HOST in $ALL_STORAGE_HOSTS; do
     SSH_CMD="ssh -q $HOST -oStrictHostKeyChecking=no"
-    $SSH_CMD -- "sudo sysctl vm.overcommit_memory=1"
     $SSH_CMD -- 'ls -l /dev/nvme*' >>$EXP_DIR/storage_sar/${HOST}_dev
     $SSH_CMD -- sar -o /home/ubuntu/sar_st 1 >/dev/null 2>&1 &
 done
