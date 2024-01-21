@@ -212,8 +212,9 @@ for HOST in $ALL_ENGINE_HOSTS; do
     ssh -q $HOST -oStrictHostKeyChecking=no -- rm /home/ubuntu/sar_st
     mkdir -p $EXP_DIR/docker_stats
     scp $HOST:/home/ubuntu/docker_stats.txt $EXP_DIR/docker_stats/stats.txt
-    cat $EXP_DIR/docker_stats/stats.txt | jq '[inputs]' >> $EXP_DIR/docker_stats/${HOST}_stats.txt
-    rm $EXP_DIR/docker_stats/stats.txt
+    mv $EXP_DIR/docker_stats/stats.txt $EXP_DIR/docker_stats/${HOST}_stats.txt
+    # cat $EXP_DIR/docker_stats/stats.txt | jq '[inputs]' >> $EXP_DIR/docker_stats/${HOST}_stats.txt
+    # rm $EXP_DIR/docker_stats/stats.txt
     $SSH_CMD -- rm /home/ubuntu/stats.txt
 done
 
