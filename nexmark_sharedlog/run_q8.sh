@@ -17,20 +17,20 @@ DURATION=180
 WARM_DURATION=0
 APP=q8
 FLUSH_MS=100
-SNAPSHOT_S=10
 SRC_FLUSH_MS=${FLUSH_MS}
-# modes=(align_chkpt)
-modes=(epoch none 2pc)
+SNAPSHOT_S=10
+modes=(align_chkpt)
+# modes=(epoch none 2pc align_chkpt)
 
-for ((iter=0; iter < 4; ++iter)); do
-    cd ${DIR}
-    for ((idx = 0; idx < ${#TPS_PER_WORKER[@]}; ++idx)); do
-        for ((w = 0; w < ${#NUM_WORKER[@]}; ++w)); do
-            TPS=$(expr ${TPS_PER_WORKER[idx]} \* ${NUM_WORKER[w]})
-            EVENTS=$(expr $TPS \* $DURATION)
-            echo ${APP}, ${DIR}, ${EVENTS} events, ${TPS} tps
-            subdir=${DURATION}s_${WARM_DURATION}swarm_${FLUSH_MS[j]}ms_src${SRC_FLUSH_MS}ms
-            for mode in ${modes[@]}; do
+cd ${DIR}
+for ((idx = 0; idx < ${#TPS_PER_WORKER[@]}; ++idx)); do
+    for ((w = 0; w < ${#NUM_WORKER[@]}; ++w)); do
+        TPS=$(expr ${TPS_PER_WORKER[idx]} \* ${NUM_WORKER[w]})
+        EVENTS=$(expr $TPS \* $DURATION)
+        echo ${APP}, ${DIR}, ${EVENTS} events, ${TPS} tps
+        subdir=${DURATION}s_${WARM_DURATION}swarm_${FLUSH_MS[j]}ms_src${SRC_FLUSH_MS}ms
+        for mode in ${modes[@]}; do
+            for ((iter=0; iter < 3; ++iter)); do
                 ./run_once.sh --app ${APP} \
                     --exp_dir ./${NUM_WORKER[w]}src_1/${subdir}/${iter}/${TPS_PER_WORKER[idx]}tps_${mode}/ \
                     --gua $mode --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
@@ -39,8 +39,8 @@ for ((iter=0; iter < 4; ++iter)); do
             done
         done
     done
-    cd -
 done
+cd -
 
 cd $DIR
 $WORKSPACE_DIR/research-helper-scripts/microservice_helper stop-machines
