@@ -2,9 +2,11 @@
 set -x
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 WORKSPACE_DIR=$(realpath $SCRIPT_DIR/../../)
+DIR=q7_boki/mem
 
-cd q7_boki/mem
+cd $DIR
 $WORKSPACE_DIR/research-helper-scripts/microservice_helper start-machines --use-spot-instances
+./update_docker.sh
 cd ../..
 
 # TPS_PER_WORKER=(4000 8000 12000 16000 20000 24000 28000 32000 36000 40000)
@@ -13,14 +15,13 @@ NUM_WORKER=4
 DURATION=180
 WARM_DURATION=0
 APP=q7
-DIR=q7_boki/mem
 FLUSH_MS=100
 SRC_FLUSH_MS=100
 SNAPSHOT_S=10
 BUF_MAX_SIZES=(65536 131072 262144)
 
+cd ${DIR}
 for ((iter=0; iter < 3; ++iter)); do
-    cd ${DIR}
     for ((idx = 0; idx < ${#TPS_PER_WORKER[@]}; ++idx)); do
         for BUF_MAX_SIZE in "${BUF_MAX_SIZES[@]}"; do
             TPS=$(expr ${TPS_PER_WORKER[idx]} \* ${NUM_WORKER})
@@ -46,9 +47,9 @@ for ((iter=0; iter < 3; ++iter)); do
             #     --snapshot_s 0
         done
     done
-    cd -
 done
+cd -
 
-cd q7_boki/mem
+cd $DIR
 $WORKSPACE_DIR/research-helper-scripts/microservice_helper stop-machines
 cd ../..

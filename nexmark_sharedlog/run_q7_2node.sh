@@ -6,6 +6,7 @@ DIR=q7_boki/mem_2node
 
 cd $DIR
 $WORKSPACE_DIR/research-helper-scripts/microservice_helper start-machines --use-spot-instances
+./update_docker.sh
 cd ../..
 
 # TPS_PER_WORKER=(4000 8000 12000 16000 20000 24000 28000 32000 36000 40000)
@@ -18,8 +19,8 @@ FLUSH_MS=100
 SRC_FLUSH_MS=100
 SNAPSHOT_S=10
 
+cd ${DIR}
 for ((iter=0; iter < 1; ++iter)); do
-    cd ${DIR}
     for ((idx = 0; idx < ${#TPS_PER_WORKER[@]}; ++idx)); do
         for ((w = 0; w < ${#NUM_WORKER[@]}; ++w)); do
             TPS=$(expr ${TPS_PER_WORKER[idx]} \* ${NUM_WORKER[w]})
@@ -48,8 +49,8 @@ for ((iter=0; iter < 1; ++iter)); do
             #     --snapshot_s $SNAPSHOT_S
         done
     done
-    cd -
 done
+cd -
 
 cd $DIR
 $WORKSPACE_DIR/research-helper-scripts/microservice_helper stop-machines

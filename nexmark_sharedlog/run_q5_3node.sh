@@ -6,6 +6,7 @@ DIR=q5_boki/mem_3node
 
 cd $DIR
 $WORKSPACE_DIR/research-helper-scripts/microservice_helper start-machines --use-spot-instances
+./update_docker.sh
 cd ../..
 
 TPS_PER_WORKER=(60000)
@@ -20,8 +21,8 @@ TPS=240000
 EVENTS=$(expr $TPS \* $DURATION)
 echo ${APP}, ${DIR}, ${EVENTS} events, ${TPS} tps
 
+cd ${DIR}
 for ((iter=0; iter < 2; ++iter)); do
-    cd ${DIR}
     for ((idx = 0; idx < ${#TPS_PER_WORKER[@]}; ++idx)); do
         subdir=${DURATION}s_${WARM_DURATION}swarm_${FLUSH_MS}ms_src${SRC_FLUSH_MS}ms
         ./run_once.sh --app ${APP} \
@@ -31,8 +32,8 @@ for ((iter=0; iter < 2; ++iter)); do
             --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS \
             --snapshot_s ${SNAPSHOT_S} --config_subpath 3node/6_ins/q5.json
     done
-    cd -
 done
+cd -
 
 cd $DIR
 $WORKSPACE_DIR/research-helper-scripts/microservice_helper stop-machines

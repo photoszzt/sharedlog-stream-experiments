@@ -6,6 +6,7 @@ WORKSPACE_DIR=$(realpath $SCRIPT_DIR/../../)
 DIR=q6_boki/mem_4node
 cd $DIR
 $WORKSPACE_DIR/research-helper-scripts/microservice_helper start-machines --use-spot-instances
+./update_docker.sh
 cd ../..
 
 # TPS_PER_WORKER=(250 500 750 1000 1250 1500)
@@ -18,8 +19,8 @@ FLUSH_MS=100
 SRC_FLUSH_MS=100
 SNAPSHOT_S=10
 
+cd ${DIR}
 for ((iter=2; iter < 3; ++iter)); do
-    cd ${DIR}
     for ((idx = 0; idx < ${#TPS_PER_WORKER[@]}; ++idx)); do
         for ((w = 0; w < ${#NUM_WORKER[@]}; ++w)); do
             TPS=$(expr ${TPS_PER_WORKER[idx]} \* ${NUM_WORKER[w]})
@@ -49,8 +50,8 @@ for ((iter=2; iter < 3; ++iter)); do
             #     --snapshot_s $SNAPSHOT_S
         done
     done
-    cd -
 done
+cd -
 
 cd $DIR
 $WORKSPACE_DIR/research-helper-scripts/microservice_helper stop-machines

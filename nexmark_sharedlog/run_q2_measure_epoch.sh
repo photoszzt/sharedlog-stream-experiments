@@ -4,6 +4,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 WORKSPACE_DIR=$(realpath $SCRIPT_DIR/../../)
 cd q2_measure_epoch
 $WORKSPACE_DIR/research-helper-scripts/microservice_helper start-machines --use-spot-instances
+./update_docker.sh
 cd ..
 
 TPS_PER_WORKER=(10)
