@@ -3,64 +3,50 @@ set -x
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 WORKSPACE_DIR=$(realpath $SCRIPT_DIR/../../)
-DIR=q8_boki/mem_4node
+
+DIR=q8_boki/mem
+DIRS=(q8_boki/mem q8_boki/mem_4node_8ins q8_boki/mem_4node_16ins)
 
 cd $DIR
 $WORKSPACE_DIR/research-helper-scripts/microservice_helper start-machines --use-spot-instances
 ./update_docker.sh
+cp $DIR/machines.json $DIR/../q8_boki/mem_4node_8ins
+cp $DIR/machines.json $DIR/../q8_boki/mem_4node_16ins
 cd ../..
 
 # TPS_PER_WORKER=(4000 8000 12000 16000 20000 24000 28000 32000 36000)
 # TPS_PER_WORKER=(12000 16000 20000 28000 32000)
 TPS_PER_WORKER=(24000)
-NUM_WORKER=(4)
+NUM_WORKER=(4 8 16)
 DURATION=180
 WARM_DURATION=0
 APP=q8
-FLUSH_MS=(100)
+FLUSH_MS=100
+SRC_FLUSH_MS=${FLUSH_MS}
 SNAPSHOT_S=10
+modes=(align_chkpt epoch 2pc)
 
-cd ${DIR}
-for ((iter=0; iter < 1; ++iter)); do
-    for ((j=0; j<${#FLUSH_MS[@]}; ++j)); do
-        for ((idx = 0; idx < ${#TPS_PER_WORKER[@]}; ++idx)); do
-            for ((w = 0; w < ${#NUM_WORKER[@]}; ++w)); do
-                SRC_FLUSH_MS=${FLUSH_MS[j]}
-                TPS=$(expr ${TPS_PER_WORKER[idx]} \* ${NUM_WORKER[w]})
-                EVENTS=$(expr $TPS \* $DURATION)
-                echo ${APP}, ${DIR}, ${EVENTS} events, ${TPS} tps
-                subdir=${DURATION}s_${WARM_DURATION}swarm_${FLUSH_MS[j]}ms_src${SRC_FLUSH_MS}ms
-
-                # ./run_once.sh --app ${APP} \
-                #     --exp_dir ./${NUM_WORKER[w]}src_generics/$subdir/$iter/${TPS_PER_WORKER[idx]}tps_alo/ \
-                #     --gua alo --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
-                #     --tps ${TPS} --warm_duration ${WARM_DURATION} \
-                #     --flushms ${FLUSH_MS[j]} --src_flushms $SRC_FLUSH_MS
-
+for ((idx = 0; idx < ${#TPS_PER_WORKER[@]}; ++idx)); do
+    for ((w = 0; w < ${#NUM_WORKER[@]}; ++w)); do
+        cd ${DIRS[w]}
+        TPS=$(expr ${TPS_PER_WORKER[idx]} \* ${NUM_WORKER[w]})
+        EVENTS=$(expr $TPS \* $DURATION)
+        echo ${APP}, ${DIRS[w]}, ${EVENTS} events, ${TPS} tps
+        subdir=${DURATION}s_${WARM_DURATION}swarm_${FLUSH_MS[j]}ms_src${SRC_FLUSH_MS}ms
+        exp_dir=${NUM_WORKER[w]}src_4node_${NUM_WORKER[w]}ins
+        for mode in ${modes[@]}; do
+            for ((iter=0; iter < 1; ++iter)); do
                 ./run_once.sh --app ${APP} \
-                    --exp_dir ./${NUM_WORKER[w]}src_4node_4ins/$subdir/$iter/${TPS_PER_WORKER[idx]}tps_epoch/ \
-                    --gua epoch --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
+                    --exp_dir ./${exp_dir}/${subdir}/$iter/${TPS_PER_WORKER[idx]}tps_epoch/ \
+                    --gua $mode --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
                     --tps ${TPS} --warm_duration ${WARM_DURATION} \
                     --flushms ${FLUSH_MS[j]} --src_flushms $SRC_FLUSH_MS \
-                    --snapshot_s ${SNAPSHOT_S} --config_subpath 4node/4_ins/q8.json
-
-                # ./run_once.sh --app ${APP} \
-                #     --exp_dir ./${NUM_WORKER[w]}src_none_gm1/$subdir/$iter/${TPS_PER_WORKER[idx]}tps_epoch/ \
-                #     --gua none --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
-                #     --tps ${TPS} --warm_duration ${WARM_DURATION} \
-                #     --flushms ${FLUSH_MS[j]} --src_flushms $SRC_FLUSH_MS \
-                #     --snapshot_s 0
-
-                # ./run_once.sh --app ${APP} \
-                #     --exp_dir ./${NUM_WORKER[w]}src_2pcSync/$subdir/$iter/${TPS_PER_WORKER[idx]}tps_2pc/ \
-                #     --gua 2pc --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
-                #     --tps ${TPS} --warm_duration ${WARM_DURATION} \
-                #     --flushms ${FLUSH_MS[j]} --src_flushms $SRC_FLUSH_MS --snapshot_s $SNAPSHOT_S
+                    --snapshot_s ${SNAPSHOT_S} --config_subpath 4node/${NUM_WORKER[w]}_ins/q8.json
             done
         done
+        cd -
     done
 done
-cd -
 
 cd $DIR
 $WORKSPACE_DIR/research-helper-scripts/microservice_helper stop-machines
