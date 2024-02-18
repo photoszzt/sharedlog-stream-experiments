@@ -10,8 +10,8 @@ DIRS=(q8_boki/mem q8_boki/mem_4node_8ins q8_boki/mem_4node_16ins)
 cd $DIR
 $WORKSPACE_DIR/research-helper-scripts/microservice_helper start-machines --use-spot-instances
 ./update_docker.sh
-cp $DIR/machines.json $DIR/../q8_boki/mem_4node_8ins
-cp $DIR/machines.json $DIR/../q8_boki/mem_4node_16ins
+cp machines.json ../q8_boki/mem_4node_8ins
+cp machines.json ../q8_boki/mem_4node_16ins
 cd ../..
 
 # TPS_PER_WORKER=(4000 8000 12000 16000 20000 24000 28000 32000 36000)
@@ -37,7 +37,7 @@ for ((idx = 0; idx < ${#TPS_PER_WORKER[@]}; ++idx)); do
         for mode in ${modes[@]}; do
             for ((iter=0; iter < 1; ++iter)); do
                 ./run_once.sh --app ${APP} \
-                    --exp_dir ./${exp_dir}/${subdir}/$iter/${TPS_PER_WORKER[idx]}tps_epoch/ \
+                    --exp_dir ./${exp_dir}/${subdir}/$iter/${TPS_PER_WORKER[idx]}tps_${mode}/ \
                     --gua $mode --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
                     --tps ${TPS} --warm_duration ${WARM_DURATION} \
                     --flushms ${FLUSH_MS[j]} --src_flushms $SRC_FLUSH_MS \
