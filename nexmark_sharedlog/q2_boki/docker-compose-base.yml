@@ -205,6 +205,16 @@ services:
       - FAAS_NODE_ID={{.Task.Slot}}
     restart: always
 
+  snapcache:
+    image: redis:7.2.4-bookworm
+    hostname: snapcache-{{.Task.Slot}}
+    restart: always
+    ports:
+      - '6379'
+    command: ["redis-server", "--save", "\"\"", "--appendonly", "no"]
+    volumes:
+      - /mnt/storage/redis:/data
+
   chkptmngr:
     image: ubuntu:focal
     entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "50"]
