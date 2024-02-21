@@ -1,0 +1,299 @@
+wait for last: true
+warmup: 0
+config: map[NodeConstraint:"1,2,3,4" NumInstance:4 OutputTopicName:["nexmark_src"] funcName:"source"]
+config: map[InputTopicNames:["nexmark_src"] NodeConstraint:"5,6,7,8" NumInstance:4 NumSrcProducer:[1] OutputTopicName:["q46_aucsByID","q46_bidsByAucID"] funcName:"q46GroupBy"]
+config: map[InputTopicNames:["q46_aucsByID","q46_bidsByAucID"] NodeConstraint:"5,6,7,8" NumInstance:4 NumSrcProducer:[4,4] OutputTopicName:["q6_aucIDSeller"] funcName:"q6JoinStream"]
+config: map[InputTopicNames:["q6_aucIDSeller"] NodeConstraint:"5,6,7,8" NumInstance:4 NumSrcProducer:[1] OutputTopicName:["q6_maxBids"] funcName:"q6MaxBid"]
+config: map[InputTopicNames:["q6_maxBids"] NodeConstraint:"5,6,7,8" NumInstance:4 NumSrcProducer:[4] OutputTopicName:["q6_out"] funcName:"q6Avg"]
+srcInvokeConfig: {TopicName:nexmark_src AppId:q6 NodeConstraint:1,2,3,4 ScaleEpoch:0 NumOutPartition:4 InstanceID:0 NumSrcInstance:4}
+cliNodes: [0xc00013a220 0xc00013a280 0xc00013a2c0 0xc00013a320]
+inParamsMap: map[q46GroupBy:[0xc00011ebe0 0xc00011ec80 0xc00011ed20 0xc00011edc0] q6Avg:[0xc00011f360 0xc00011f400 0xc00011f4a0 0xc00011f540] q6JoinStream:[0xc00011ee60 0xc00011ef00 0xc00011efa0 0xc00011f040] q6MaxBid:[0xc00011f0e0 0xc00011f180 0xc00011f220 0xc00011f2c0]]
+configScaleInput: {Config:map[changelog:4 nexmark_src:4 q46GroupBy:4 q46_aucsByID:4 q46_bidsByAucID:4 q6Avg:4 q6JoinStream:4 q6MaxBid:4 q6_aucIDSeller:4 q6_maxBids:4 q6_out:4 source:4] AppId:q6 FuncNames:[source q46GroupBy q6JoinStream q6MaxBid q6Avg] ScaleEpoch:0 SerdeFormat:1 Bootstrap:false}
+encoded json is {"sg":{"changelog":4,"nexmark_src":4,"q46GroupBy":4,"q46_aucsByID":4,"q46_bidsByAucID":4,"q6Avg":4,"q6JoinStream":4,"q6MaxBid":4,"q6_aucIDSeller":4,"q6_maxBids":4,"q6_out":4,"source":4},"aid":"q6","fns":["source","q46GroupBy","q6JoinStream","q6MaxBid","q6Avg"],"epoch":1,"serdeFormat":1,"bs":true}, node constraint is 1
+func source url is http://ip-172-31-2-1.us-east-2.compute.internal:8080/function/source
+func source url is http://ip-172-31-2-1.us-east-2.compute.internal:8080/function/source
+func source url is http://ip-172-31-2-1.us-east-2.compute.internal:8080/function/source
+func source url is http://ip-172-31-2-1.us-east-2.compute.internal:8080/function/source
+src instance: 4
+encoded json is {"topic_name":"nexmark_src","rate_shape":"square","aid":"q6","events_num":720000,"rate_period":10000000000,"bid_avg_size":100,"first_event_rate":4000,"next_event_rate":4000,"person_avg_size":200,"auction_avg_size":500,"duration":180,"person_proportion":1,"auction_proportion":3,"bid_proportion":46,"bid_hot_ratio_auctions":2,"bid_hot_ratio_bidders":4,"auction_hot_ratio_sellers":4,"flushms":100,"rate_limited":false,"waitEnd":true,"serde_format":1,"numOutPar":4,"parNum":1,"nSrcIns":4}, node constraint is 1,2,3,4
+encoded json is {"topic_name":"nexmark_src","rate_shape":"square","aid":"q6","events_num":720000,"rate_period":10000000000,"bid_avg_size":100,"first_event_rate":4000,"next_event_rate":4000,"person_avg_size":200,"auction_avg_size":500,"duration":180,"person_proportion":1,"auction_proportion":3,"bid_proportion":46,"bid_hot_ratio_auctions":2,"bid_hot_ratio_bidders":4,"auction_hot_ratio_sellers":4,"flushms":100,"rate_limited":false,"waitEnd":true,"serde_format":1,"numOutPar":4,"parNum":3,"nSrcIns":4}, node constraint is 1,2,3,4
+encoded json is {"topic_name":"nexmark_src","rate_shape":"square","aid":"q6","events_num":720000,"rate_period":10000000000,"bid_avg_size":100,"first_event_rate":4000,"next_event_rate":4000,"person_avg_size":200,"auction_avg_size":500,"duration":180,"person_proportion":1,"auction_proportion":3,"bid_proportion":46,"bid_hot_ratio_auctions":2,"bid_hot_ratio_bidders":4,"auction_hot_ratio_sellers":4,"flushms":100,"rate_limited":false,"waitEnd":true,"serde_format":1,"numOutPar":4,"nSrcIns":4}, node constraint is 1,2,3,4
+encoded json is {"topic_name":"nexmark_src","rate_shape":"square","aid":"q6","events_num":720000,"rate_period":10000000000,"bid_avg_size":100,"first_event_rate":4000,"next_event_rate":4000,"person_avg_size":200,"auction_avg_size":500,"duration":180,"person_proportion":1,"auction_proportion":3,"bid_proportion":46,"bid_hot_ratio_auctions":2,"bid_hot_ratio_bidders":4,"auction_hot_ratio_sellers":4,"flushms":100,"rate_limited":false,"waitEnd":true,"serde_format":1,"numOutPar":4,"parNum":2,"nSrcIns":4}, node constraint is 1,2,3,4
+Waiting for all client to return
+func name is q6Avg
+func url is http://ip-172-31-2-1.us-east-2.compute.internal:8080/function/q6Avg
+func name is q6JoinStream
+func url is http://ip-172-31-2-1.us-east-2.compute.internal:8080/function/q6JoinStream
+func name is q6MaxBid
+func name is q6MaxBid
+func url is http://ip-172-31-2-1.us-east-2.compute.internal:8080/function/q6MaxBid
+func url is http://ip-172-31-2-1.us-east-2.compute.internal:8080/function/q6MaxBid
+func name is q6MaxBid
+func url is http://ip-172-31-2-1.us-east-2.compute.internal:8080/function/q6MaxBid
+func name is q6Avg
+func url is http://ip-172-31-2-1.us-east-2.compute.internal:8080/function/q6Avg
+func name is q46GroupBy
+func url is http://ip-172-31-2-1.us-east-2.compute.internal:8080/function/q46GroupBy
+func name is q46GroupBy
+func name is q6MaxBid
+func url is http://ip-172-31-2-1.us-east-2.compute.internal:8080/function/q6MaxBid
+func name is q6Avg
+func name is q46GroupBy
+func url is http://ip-172-31-2-1.us-east-2.compute.internal:8080/function/q46GroupBy
+func name is q6JoinStream
+func url is http://ip-172-31-2-1.us-east-2.compute.internal:8080/function/q6JoinStream
+func name is q6JoinStream
+func name is q46GroupBy
+func url is http://ip-172-31-2-1.us-east-2.compute.internal:8080/function/q46GroupBy
+func url is http://ip-172-31-2-1.us-east-2.compute.internal:8080/function/q6Avg
+func url is http://ip-172-31-2-1.us-east-2.compute.internal:8080/function/q46GroupBy
+func url is http://ip-172-31-2-1.us-east-2.compute.internal:8080/function/q6JoinStream
+func name is q6JoinStream
+func url is http://ip-172-31-2-1.us-east-2.compute.internal:8080/function/q6JoinStream
+func name is q6Avg
+func url is http://ip-172-31-2-1.us-east-2.compute.internal:8080/function/q6Avg
+encoded json is {"aid":"q6","numOutPartition":"BA==","numSubstreamProducer":"BA==","outputTopicName":["q6_out"],"inputTopicName":["q6_maxBids"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"ParNum":3,"gua":3,"serdeFormat":1}, node constraint is 5,6,7,8
+encoded json is {"aid":"q6","numOutPartition":"BA==","numSubstreamProducer":"AQ==","outputTopicName":["q6_maxBids"],"inputTopicName":["q6_aucIDSeller"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"ParNum":1,"gua":3,"serdeFormat":1}, node constraint is 5,6,7,8
+encoded json is {"aid":"q6","numOutPartition":"BA==","numSubstreamProducer":"AQ==","outputTopicName":["q6_maxBids"],"inputTopicName":["q6_aucIDSeller"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"ParNum":2,"gua":3,"serdeFormat":1}, node constraint is 5,6,7,8
+encoded json is {"aid":"q6","numOutPartition":"BA==","numSubstreamProducer":"BA==","outputTopicName":["q6_out"],"inputTopicName":["q6_maxBids"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"ParNum":1,"gua":3,"serdeFormat":1}, node constraint is 5,6,7,8
+encoded json is {"aid":"q6","numOutPartition":"BA==","numSubstreamProducer":"AQ==","outputTopicName":["q6_maxBids"],"inputTopicName":["q6_aucIDSeller"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"ParNum":3,"gua":3,"serdeFormat":1}, node constraint is 5,6,7,8
+encoded json is {"aid":"q6","numOutPartition":"BAQ=","numSubstreamProducer":"AQ==","outputTopicName":["q46_aucsByID","q46_bidsByAucID"],"inputTopicName":["nexmark_src"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"gua":3,"serdeFormat":1}, node constraint is 5,6,7,8
+encoded json is {"aid":"q6","numOutPartition":"BA==","numSubstreamProducer":"AQ==","outputTopicName":["q6_maxBids"],"inputTopicName":["q6_aucIDSeller"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"gua":3,"serdeFormat":1}, node constraint is 5,6,7,8
+encoded json is {"aid":"q6","numOutPartition":"BA==","numSubstreamProducer":"BA==","outputTopicName":["q6_out"],"inputTopicName":["q6_maxBids"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"gua":3,"serdeFormat":1}, node constraint is 5,6,7,8
+encoded json is {"aid":"q6","numOutPartition":"BA==","numSubstreamProducer":"BAQ=","outputTopicName":["q6_aucIDSeller"],"inputTopicName":["q46_aucsByID","q46_bidsByAucID"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"ParNum":3,"gua":3,"serdeFormat":1}, node constraint is 5,6,7,8
+encoded json is {"aid":"q6","numOutPartition":"BA==","numSubstreamProducer":"BAQ=","outputTopicName":["q6_aucIDSeller"],"inputTopicName":["q46_aucsByID","q46_bidsByAucID"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"gua":3,"serdeFormat":1}, node constraint is 5,6,7,8
+encoded json is {"aid":"q6","numOutPartition":"BAQ=","numSubstreamProducer":"AQ==","outputTopicName":["q46_aucsByID","q46_bidsByAucID"],"inputTopicName":["nexmark_src"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"ParNum":1,"gua":3,"serdeFormat":1}, node constraint is 5,6,7,8
+encoded json is {"aid":"q6","numOutPartition":"BAQ=","numSubstreamProducer":"AQ==","outputTopicName":["q46_aucsByID","q46_bidsByAucID"],"inputTopicName":["nexmark_src"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"ParNum":2,"gua":3,"serdeFormat":1}, node constraint is 5,6,7,8
+encoded json is {"aid":"q6","numOutPartition":"BA==","numSubstreamProducer":"BAQ=","outputTopicName":["q6_aucIDSeller"],"inputTopicName":["q46_aucsByID","q46_bidsByAucID"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"ParNum":2,"gua":3,"serdeFormat":1}, node constraint is 5,6,7,8
+encoded json is {"aid":"q6","numOutPartition":"BA==","numSubstreamProducer":"BAQ=","outputTopicName":["q6_aucIDSeller"],"inputTopicName":["q46_aucsByID","q46_bidsByAucID"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"ParNum":1,"gua":3,"serdeFormat":1}, node constraint is 5,6,7,8
+encoded json is {"aid":"q6","numOutPartition":"BA==","numSubstreamProducer":"BA==","outputTopicName":["q6_out"],"inputTopicName":["q6_maxBids"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"ParNum":2,"gua":3,"serdeFormat":1}, node constraint is 5,6,7,8
+encoded json is {"aid":"q6","numOutPartition":"BAQ=","numSubstreamProducer":"AQ==","outputTopicName":["q46_aucsByID","q46_bidsByAucID"],"inputTopicName":["nexmark_src"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"ParNum":3,"gua":3,"serdeFormat":1}, node constraint is 5,6,7,8
+source-1 invoke done
+source-3 invoke done
+source-0 invoke done
+q46GroupBy-3 call done
+source-2 invoke done
+q46GroupBy-1 call done
+q46GroupBy-0 call done
+q46GroupBy-2 call done
+q6JoinStream-1 call done
+q6MaxBid-1 call done
+q6JoinStream-0 call done
+q6MaxBid-0 call done
+q6JoinStream-2 call done
+q6MaxBid-2 call done
+q6JoinStream-3 call done
+q6MaxBid-3 call done
+q6Avg-1 call done
+q6Avg-3 call done
+q6Avg-0 call done
+q6Avg-2 call done
+sink_ctrl processed: 1, throughput: (event/s) 0.005555467372078774
+sink processed: 180001, throughput: (event/s) 999.9896824415513
+source-0 duration: 180.00285719
+
+sink processed: 180001, throughput: (event/s) 999.9920452019173
+sink_ctrl processed: 1, throughput: (event/s) 0.005555480498452327
+source-1 duration: 180.002431883
+
+sink_ctrl processed: 1, throughput: (event/s) 0.005555502640442278
+sink processed: 180001, throughput: (event/s) 999.9960307822504
+source-2 duration: 180.001714466
+
+sink processed: 180001, throughput: (event/s) 999.9907096712577
+sink_ctrl processed: 1, throughput: (event/s) 0.005555473078878772
+source-3 duration: 180.002672284
+
+sink_ctrl processed 4 events, duration: 180.00285719, tp: 0.022222
+sink processed 720004 events, duration: 180.00285719, tp: 3999.958730
+
+aucsByIDSrc processed: 16129, throughput: (event/s) 88.88050082773302
+aucsByIDSrc_epoch processed: 5225, throughput: (event/s) 28.79289582893577
+sink processed: 434523, throughput: (event/s) 2394.4833443591688
+bidsByAucIDSrc_ctrl processed: 4, throughput: (event/s) 0.022042408290094368
+bidsByAucIDSrc_epoch processed: 6131, throughput: (event/s) 33.785501306642146
+aucsByIDSrc_ctrl processed: 4, throughput: (event/s) 0.022042408290094368
+aucsByIDSrc_logEntry processed: 5225, throughput: (event/s) 28.79289582893577
+bidsByAucIDSrc processed: 163546, throughput: (event/s) 901.2369265529435
+aucsByIDSrc_data processed: 10900, throughput: (event/s) 60.065562590507156
+bidsByAucIDSrc_data processed: 157411, throughput: (event/s) 867.4293828380112
+bidsByAucIDSrc_logEntry processed: 6131, throughput: (event/s) 33.785501306642146
+q6JoinStream-0 duration: 181.468374388
+
+bidsByAucIDSrc processed: 149478, throughput: (event/s) 828.340099218936
+sink processed: 402303, throughput: (event/s) 2229.3829656275543
+bidsByAucIDSrc_ctrl processed: 4, throughput: (event/s) 0.02216620771535439
+bidsByAucIDSrc_logEntry processed: 6131, throughput: (event/s) 33.975254875709446
+aucsByIDSrc_epoch processed: 5175, throughput: (event/s) 28.677531231739742
+bidsByAucIDSrc_data processed: 143343, throughput: (event/s) 794.3426781355112
+aucsByIDSrc processed: 15883, throughput: (event/s) 88.01646928574345
+aucsByIDSrc_logEntry processed: 5175, throughput: (event/s) 28.677531231739742
+bidsByAucIDSrc_epoch processed: 6131, throughput: (event/s) 33.975254875709446
+aucsByIDSrc_ctrl processed: 4, throughput: (event/s) 0.02216620771535439
+aucsByIDSrc_data processed: 10704, throughput: (event/s) 59.316771846288354
+q6JoinStream-1 duration: 180.45486406
+
+bidsByAucIDSrc_data processed: 165511, throughput: (event/s) 907.1441684855204
+bidsByAucIDSrc_epoch processed: 6131, throughput: (event/s) 33.60321004032799
+bidsByAucIDSrc_logEntry processed: 6131, throughput: (event/s) 33.60321004032799
+aucsByIDSrc_ctrl processed: 4, throughput: (event/s) 0.021923477436195066
+aucsByIDSrc_logEntry processed: 5195, throughput: (event/s) 28.47311632025834
+sink processed: 479592, throughput: (event/s) 2628.581097644916
+aucsByIDSrc processed: 16003, throughput: (event/s) 87.71035235285741
+aucsByIDSrc_data processed: 10804, throughput: (event/s) 59.215312555162875
+aucsByIDSrc_epoch processed: 5195, throughput: (event/s) 28.47311632025834
+bidsByAucIDSrc processed: 171646, throughput: (event/s) 940.7693020032846
+bidsByAucIDSrc_ctrl processed: 4, throughput: (event/s) 0.021923477436195066
+q6JoinStream-2 duration: 182.452807117
+
+bidsByAucIDSrc processed: 202269, throughput: (event/s) 1084.773746373847
+aucsByIDSrc processed: 15924, throughput: (event/s) 85.40081345760912
+aucsByIDSrc_data processed: 10792, throughput: (event/s) 57.87776807551606
+bidsByAucIDSrc_logEntry processed: 6130, throughput: (event/s) 32.875344542523486
+aucsByIDSrc_epoch processed: 5128, throughput: (event/s) 27.50159328124966
+aucsByIDSrc_logEntry processed: 5128, throughput: (event/s) 27.50159328124966
+bidsByAucIDSrc_ctrl processed: 4, throughput: (event/s) 0.02145210084340847
+bidsByAucIDSrc_data processed: 196135, throughput: (event/s) 1051.8769497304802
+aucsByIDSrc_ctrl processed: 4, throughput: (event/s) 0.02145210084340847
+sink processed: 581187, throughput: (event/s) 3116.9205332195097
+bidsByAucIDSrc_epoch processed: 6130, throughput: (event/s) 32.875344542523486
+q6JoinStream-3 duration: 186.461924135
+
+bidsByAucIDSrc_epoch processed 24523 events, duration: 186.461924135
+aucsByIDSrc_ctrl processed 16 events, duration: 186.461924135
+bidsByAucIDSrc processed 686939 events, duration: 186.461924135
+aucsByIDSrc_data processed 43200 events, duration: 186.461924135
+bidsByAucIDSrc_logEntry processed 24523 events, duration: 186.461924135
+aucsByIDSrc processed 63939 events, duration: 186.461924135
+aucsByIDSrc_epoch processed 20723 events, duration: 186.461924135
+sink processed 1897605 events, duration: 186.461924135
+bidsByAucIDSrc_ctrl processed 16 events, duration: 186.461924135
+aucsByIDSrc_logEntry processed 20723 events, duration: 186.461924135
+bidsByAucIDSrc_data processed 662400 events, duration: 186.461924135
+
+sink processed: 86006, throughput: (event/s) 473.89231742588896
+q6_aucIDSeller_src processed: 435696, throughput: (event/s) 2400.6811982093122
+q6_aucIDSeller_src_ctrl processed: 1, throughput: (event/s) 0.005509991366019684
+q6_aucIDSeller_src_data processed: 434523, throughput: (event/s) 2394.217978336971
+q6_aucIDSeller_src_epoch processed: 1172, throughput: (event/s) 6.45770988097507
+q6_aucIDSeller_src_logEntry processed: 1358, throughput: (event/s) 7.482568275054731
+q6MaxBid-0 duration: 181.488487653
+
+q6_aucIDSeller_src_ctrl processed: 1, throughput: (event/s) 0.005540922856804055
+q6_aucIDSeller_src_data processed: 402303, throughput: (event/s) 2229.1298880608415
+q6_aucIDSeller_src_epoch processed: 1229, throughput: (event/s) 6.809794191012183
+q6_aucIDSeller_src_logEntry processed: 1374, throughput: (event/s) 7.6132280052487715
+sink processed: 94885, throughput: (event/s) 525.7504652678527
+q6_aucIDSeller_src processed: 403533, throughput: (event/s) 2235.945223174711
+q6MaxBid-1 duration: 180.475351461
+
+q6_aucIDSeller_src_epoch processed: 1185, throughput: (event/s) 6.494296819215912
+q6_aucIDSeller_src_logEntry processed: 1414, throughput: (event/s) 7.749312829005317
+sink processed: 90272, throughput: (event/s) 494.72840714283444
+q6_aucIDSeller_src processed: 480778, throughput: (event/s) 2634.8650094084287
+q6_aucIDSeller_src_ctrl processed: 1, throughput: (event/s) 0.005480419256722289
+q6_aucIDSeller_src_data processed: 479592, throughput: (event/s) 2628.365232169956
+q6MaxBid-2 duration: 182.467791816
+
+q6_aucIDSeller_src_logEntry processed: 1483, throughput: (event/s) 7.952708894183766
+sink processed: 93919, throughput: (event/s) 503.64832544359075
+q6_aucIDSeller_src processed: 582348, throughput: (event/s) 3122.8888193594926
+q6_aucIDSeller_src_ctrl processed: 1, throughput: (event/s) 0.005362581857170442
+q6_aucIDSeller_src_data processed: 581187, throughput: (event/s) 3116.6628618233176
+q6_aucIDSeller_src_epoch processed: 1160, throughput: (event/s) 6.220594954317713
+q6MaxBid-3 duration: 186.477339952
+
+q6_aucIDSeller_src_logEntry processed 5629 events, duration: 186.477339952
+sink processed 365082 events, duration: 186.477339952
+q6_aucIDSeller_src processed 1902355 events, duration: 186.477339952
+q6_aucIDSeller_src_ctrl processed 4 events, duration: 186.477339952
+q6_aucIDSeller_src_data processed 1897605 events, duration: 186.477339952
+q6_aucIDSeller_src_epoch processed 4746 events, duration: 186.477339952
+
+eventTimeLatency_sink, p50: 189 ms, p90: 320 ms, p99: 2120 ms
+q6_maxBids_src_epoch processed: 4955, throughput: (event/s) 26.57102571886199
+q6_maxBids_src_logEntry processed: 4955, throughput: (event/s) 26.57102571886199
+sink processed: 95354, throughput: (event/s) 511.33271168443315
+q6_maxBids_src processed: 100313, throughput: (event/s) 537.9251872726948
+q6_maxBids_src_ctrl processed: 4, throughput: (event/s) 0.021449869399686773
+q6_maxBids_src_data processed: 95354, throughput: (event/s) 511.33271168443315
+q6Avg-0 duration: 186.481321889
+
+eventTimeLatency_sink, p50: 199 ms, p90: 360 ms, p99: 3296 ms
+q6_maxBids_src_ctrl processed: 4, throughput: (event/s) 0.02144981536247754
+q6_maxBids_src_data processed: 74695, throughput: (event/s) 400.548489625065
+q6_maxBids_src_epoch processed: 4939, throughput: (event/s) 26.48515951881914
+q6_maxBids_src_logEntry processed: 4939, throughput: (event/s) 26.48515951881914
+sink processed: 74695, throughput: (event/s) 400.548489625065
+q6_maxBids_src processed: 79638, throughput: (event/s) 427.0550989592466
+q6Avg-1 duration: 186.48179168
+
+eventTimeLatency_sink, p50: 188 ms, p90: 355 ms, p99: 3838 ms
+q6_maxBids_src_logEntry processed: 5015, throughput: (event/s) 26.89235478389109
+sink processed: 110401, throughput: (event/s) 592.0125344957846
+q6_maxBids_src processed: 115420, throughput: (event/s) 618.9263388148972
+q6_maxBids_src_ctrl processed: 4, throughput: (event/s) 0.021449535221448525
+q6_maxBids_src_data processed: 110401, throughput: (event/s) 592.0125344957846
+q6_maxBids_src_epoch processed: 5015, throughput: (event/s) 26.89235478389109
+q6Avg-2 duration: 186.48422722
+
+eventTimeLatency_sink, p50: 201 ms, p90: 358 ms, p99: 2429 ms
+q6_maxBids_src_data processed: 84632, throughput: (event/s) 453.8302772108946
+q6_maxBids_src_epoch processed: 4968, throughput: (event/s) 26.64038209168783
+q6_maxBids_src_logEntry processed: 4968, throughput: (event/s) 26.64038209168783
+sink processed: 84632, throughput: (event/s) 453.8302772108946
+q6_maxBids_src processed: 89604, throughput: (event/s) 480.492108885587
+q6_maxBids_src_ctrl processed: 4, throughput: (event/s) 0.021449583004579574
+q6Avg-3 duration: 186.48381179
+
+q6_maxBids_src_epoch processed 19877 events, duration: 186.48422722
+q6_maxBids_src_logEntry processed 19877 events, duration: 186.48422722
+sink processed 365082 events, duration: 186.48422722
+q6_maxBids_src processed 384975 events, duration: 186.48422722
+q6_maxBids_src_ctrl processed 16 events, duration: 186.48422722
+q6_maxBids_src_data processed 365082 events, duration: 186.48422722
+
+aucsByIDSink processed: 10800, throughput: (event/s) 59.98822902871588
+bidsByAucIDSink processed: 165600, throughput: (event/s) 919.8195117736434
+nexmark_src_src processed: 180001, throughput: (event/s) 999.8093716109154
+nexmark_src_src_ctrl processed: 1, throughput: (event/s) 0.005554465650807026
+nexmark_src_src_data processed: 180000, throughput: (event/s) 999.8038171452646
+nexmark_src_src_epoch processed: 0, throughput: (event/s) 0
+nexmark_src_src_logEntry processed: 1764, throughput: (event/s) 9.798077408023593
+q46GroupBy-0 duration: 180.035319843
+
+bidsByAucIDSink processed: 165600, throughput: (event/s) 919.8111613888501
+nexmark_src_src processed: 180001, throughput: (event/s) 999.8002950552803
+nexmark_src_src_ctrl processed: 1, throughput: (event/s) 0.00555441522577808
+nexmark_src_src_data processed: 180000, throughput: (event/s) 999.7947406400546
+nexmark_src_src_epoch processed: 0, throughput: (event/s) 0
+nexmark_src_src_logEntry processed: 1767, throughput: (event/s) 9.814651703949869
+aucsByIDSink processed: 10800, throughput: (event/s) 59.98768443840327
+q46GroupBy-1 duration: 180.03695427
+
+nexmark_src_src_ctrl processed: 1, throughput: (event/s) 0.005554081211769225
+nexmark_src_src_data processed: 180000, throughput: (event/s) 999.7346181184605
+nexmark_src_src_epoch processed: 0, throughput: (event/s) 0
+nexmark_src_src_logEntry processed: 1767, throughput: (event/s) 9.814061501196221
+aucsByIDSink processed: 10800, throughput: (event/s) 59.98407708710763
+bidsByAucIDSink processed: 165600, throughput: (event/s) 919.7558486689836
+nexmark_src_src processed: 180001, throughput: (event/s) 999.7401721996722
+q46GroupBy-2 duration: 180.047781419
+
+nexmark_src_src_epoch processed: 0, throughput: (event/s) 0
+nexmark_src_src_logEntry processed: 1767, throughput: (event/s) 9.815475173878628
+aucsByIDSink processed: 10800, throughput: (event/s) 59.99271753134646
+bidsByAucIDSink processed: 165600, throughput: (event/s) 919.8883354806457
+nexmark_src_src processed: 180001, throughput: (event/s) 999.8841804036938
+nexmark_src_src_ctrl processed: 1, throughput: (event/s) 0.005554881252902449
+nexmark_src_src_data processed: 180000, throughput: (event/s) 999.8786255224409
+q46GroupBy-3 duration: 180.021850058
+
+aucsByIDSink processed 43200 events, duration: 180.047781419
+bidsByAucIDSink processed 662400 events, duration: 180.047781419
+nexmark_src_src processed 720004 events, duration: 180.047781419
+nexmark_src_src_ctrl processed 4 events, duration: 180.047781419
+nexmark_src_src_data processed 720000 events, duration: 180.047781419
+nexmark_src_src_epoch processed 0 events, duration: 180.047781419
+nexmark_src_src_logEntry processed 7065 events, duration: 180.047781419
+
