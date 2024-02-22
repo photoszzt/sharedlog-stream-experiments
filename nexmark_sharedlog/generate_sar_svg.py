@@ -13,7 +13,7 @@ def main():
 
     for root, dirs, _ in os.walk(args.dir):
         for d in dirs:
-            if "epoch" in d:
+            if "epoch" in d or "align_chkpt":
                 try:
                     tps_per_work = int(d.split("_")[0][:-3])
                     if tps_per_work not in dirs_dict:
@@ -60,26 +60,38 @@ def main():
                 os.makedirs(tps_storage_out, exist_ok=True)
 
                 cpu_cmd = ["sadf", "-g", os.path.join(dirname, "sar_st"), 
-                    "--", "-P", "ALL", ">",
-                    os.path.join(tps_storage_out, f"{base_dirname}_storage_cpu.svg")]
-                print(" ".join(cpu_cmd))
+                    "--", "-P", "ALL"]
+                p = sp.run(cpu_cmd, stdout=sp.PIPE, stderr=sp.PIPE)
+                storage_cpu_out = os.path.join(tps_storage_out, f"{base_dirname}_storage_cpu.svg")
+                with open(storage_cpu_out, "wb") as f:
+                    f.write(p.stdout)
+                # print(" ".join(cpu_cmd))
 
 
                 disk_cmd = ["sadf", "-g", os.path.join(dirname, "sar_st"), 
-                    "--", "-d", f"--dev={dev_name}", ">",
-                    os.path.join(tps_storage_out, f"{base_dirname}_storage_disk.svg")]
-                print(" ".join(disk_cmd))
-                # sp.run(disk_cmd, shell=True)
+                        "--", "-d", f"--dev={dev_name}"]
+                p = sp.run(disk_cmd, stdout=sp.PIPE, stderr=sp.PIPE)
+                storage_disk_out = os.path.join(tps_storage_out, f"{base_dirname}_storage_disk.svg")
+                with open(storage_disk_out, "wb") as f:
+                    f.write(p.stdout)
+                # print(" ".join(disk_cmd))
+
                 net_cmd = ["sadf", "-g", os.path.join(dirname, "sar_st"), 
-                    "--", "-n", "DEV", "--iface=ens5", ">",
-                    os.path.join(tps_storage_out, f"{base_dirname}_storage_net.svg")]
-                print(" ".join(net_cmd))
-                # sp.run(net_cmd, shell=True)
+                    "--", "-n", "DEV", "--iface=ens5"]
+                storage_net_out = os.path.join(tps_storage_out, f"{base_dirname}_storage_net.svg")
+                p = sp.run(net_cmd, stdout=sp.PIPE, stderr=sp.PIPE)
+                storage_net_out = os.path.join(tps_storage_out, f"{base_dirname}_storage_disk.svg")
+                with open(storage_net_out, "wb") as f:
+                    f.write(p.stdout)
+                # print(" ".join(net_cmd))
 
                 mem_cmd = ["sadf", "-g", os.path.join(dirname, "sar_st"), 
-                    "--", "-r", ">",
-                    os.path.join(tps_storage_out, f"{base_dirname}_storage_mem.svg")]
-                print(" ".join(mem_cmd))
+                    "--", "-r"]
+                storage_mem_out = os.path.join(tps_storage_out, f"{base_dirname}_storage_mem.svg")
+                p = sp.run(mem_cmd, stdout=sp.PIPE, stderr=sp.PIPE)
+                with open(storage_mem_out, "wb") as f:
+                    f.write(p.stdout)
+                # print(" ".join(mem_cmd))
 
             for dirname in Path(engine_sar).glob("*.compute.internal"):
                 base_dirname = os.path.basename(dirname)
@@ -91,19 +103,28 @@ def main():
                 os.makedirs(tps_engine_out, exist_ok=True)
 
                 cpu_cmd = ["sadf", "-g", os.path.join(dirname, "sar_st"), 
-                    "--", "-P", "ALL", ">",
-                    os.path.join(tps_engine_out, f"{base_dirname}_{name}_cpu.svg")]
-                print(" ".join(cpu_cmd))
+                    "--", "-P", "ALL"]
+                c_cpu_out = os.path.join(tps_engine_out, f"{base_dirname}_{name}_cpu.svg")
+                p = sp.run(cpu_cmd, stdout=sp.PIPE, stderr=sp.PIPE)
+                with open(c_cpu_out, "wb") as f:
+                    f.write(p.stdout)
+                # print(" ".join(cpu_cmd))
 
                 net_cmd = ["sadf", "-g", os.path.join(dirname, "sar_st"), 
-                    "--", "-n", "DEV", "--iface=ens5", ">",
-                    os.path.join(tps_engine_out, f"{base_dirname}_{name}_net.svg")]
-                print(" ".join(net_cmd))
+                    "--", "-n", "DEV", "--iface=ens5"]
+                c_net_out = os.path.join(tps_engine_out, f"{base_dirname}_{name}_net.svg")
+                p = sp.run(net_cmd, stdout=sp.PIPE, stderr=sp.PIPE)
+                with open(c_net_out, "wb") as f:
+                    f.write(p.stdout)
+                # print(" ".join(net_cmd))
 
                 mem_cmd = ["sadf", "-g", os.path.join(dirname, "sar_st"), 
-                    "--", "-r", ">",
-                    os.path.join(tps_engine_out, f"{base_dirname}_{name}_mem.svg")]
-                print(" ".join(mem_cmd))
+                    "--", "-r"]
+                c_mem_out = os.path.join(tps_engine_out, f"{base_dirname}_{name}_mem.svg")
+                p = sp.run(mem_cmd, stdout=sp.PIPE, stderr=sp.PIPE)
+                with open(c_mem_out, "wb") as f:
+                    f.write(p.stdout)
+                # print(" ".join(mem_cmd))
 
 
 if __name__ == '__main__':
