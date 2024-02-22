@@ -201,14 +201,22 @@ ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name ${APP_NAME} \
     -tps $TPS -warmup_time $WARM_DURATION $FAIL_SPEC_ARG \
     -snapshot_everyS=$SNAPSHOT_S >$EXP_DIR/results.log 2>&1
 
+mkdir -p $EXP_DIR/docker_stats
+for HOST in $ALL_STORAGE_HOSTS; do
+    SSH_CMD="ssh -q $HOST -oStrictHostKeyChecking=no"
+    redis_id=$($SSH_CMD -- docker ps --filter 'name=redis' --format '{{.ID}}')
+    for id in $redis_id; do
+        $SSH_CMD -- docker exec $id redis-cli INFO >$EXP_DIR/docker_stats/${HOST}_${id}_redis.txt 2>&1
+    done
+done
+
 for HOST in $ALL_ENGINE_HOSTS; do
     SSH_CMD="ssh -q $HOST -oStrictHostKeyChecking=no"
     $SSH_CMD -- pkill sar
     $SSH_CMD -- sync && pkill docker_stats.sh
     mkdir -p $EXP_DIR/engine_sar/$HOST
     scp $HOST:/home/ubuntu/sar_st $EXP_DIR/engine_sar/$HOST
-    ssh -q $HOST -oStrictHostKeyChecking=no -- rm /home/ubuntu/sar_st
-    mkdir -p $EXP_DIR/docker_stats
+    $SSH_CMD -- rm /home/ubuntu/sar_st
     scp $HOST:/home/ubuntu/docker_stats.txt $EXP_DIR/docker_stats/stats.txt
     mv $EXP_DIR/docker_stats/stats.txt $EXP_DIR/docker_stats/${HOST}_stats.txt
     # cat $EXP_DIR/docker_stats/stats.txt | jq '[inputs]' >> $EXP_DIR/docker_stats/${HOST}_stats.txt
