@@ -204,9 +204,11 @@ ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name ${APP_NAME} \
 mkdir -p $EXP_DIR/docker_stats
 for HOST in $ALL_STORAGE_HOSTS; do
     SSH_CMD="ssh -q $HOST -oStrictHostKeyChecking=no"
-    redis_id=$($SSH_CMD -- docker ps --filter 'name=redis' --format '{{.ID}}')
+    redis_id=$($SSH_CMD -- docker ps --filter 'name=snapcache' --format '{{.ID}}')
     for id in $redis_id; do
-        $SSH_CMD -- docker exec $id redis-cli INFO >$EXP_DIR/docker_stats/${HOST}_${id}_redis.txt 2>&1
+        $SSH_CMD -- docker exec $id redis-cli INFO >$EXP_DIR/docker_stats/${HOST}_${id}_redis_info.txt 2>&1
+        $SSH_CMD -- docker exec $id redis-cli MEMORY STATS >$EXP_DIR/docker_stats/${HOST}_${id}_redis_memory_stats.txt 2>&1
+        $SSH_CMD -- docker exec $id redis-cli LATENCY HISTOGRAM >$EXP_DIR/docker_stats/${HOST}_${id}_redis_latency_hist.txt 2>&1
     done
 done
 
