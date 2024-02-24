@@ -30,7 +30,7 @@ for HOST in $ALL_HOSTS; do
 done
 
 scp -q $BASE_DIR/docker-compose-base.yml $MANAGER_HOST:~
-$HELPER_SCRIPT generate-docker-compose --base-dir=$BASE_DIR
+# $HELPER_SCRIPT generate-docker-compose --base-dir=$BASE_DIR
 scp -q $BASE_DIR/docker-compose.yml $MANAGER_HOST:~
 scp -q $SCRIPT_DIR/docker-stack-wait.sh $MANAGER_HOST:~
 
@@ -59,6 +59,7 @@ for HOST in $ALL_STORAGE_HOSTS; do
 	    sudo rm -rf /mnt/storage/logdata; sudo mkdir -p /mnt/storage/logdata; \
 	    sudo rm -rf /mnt/storage/journal; sudo mkdir -p /mnt/storage/journal;"
     $SSH_CMD -- 'sudo rm -rf /mnt/storage/redis; sudo mkdir -p /mnt/storage/redis; sudo chown $(id -u):$(id -g) /mnt/storage/redis' || true
+    $SSH_CMD -- 'for ((i=1; i <=8; i++)); do sudo mkdir -p /mnt/storage/redis/$i; done'
 done
 
 ssh -q $MANAGER_HOST -- docker network rm faas-test_default
