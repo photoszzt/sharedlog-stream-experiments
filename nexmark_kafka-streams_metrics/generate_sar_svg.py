@@ -54,14 +54,20 @@ def main():
 
                 if dev_name != "":
                     disk_cmd = ["sadf", "-g", os.path.join(dirname, "sar_st"), 
-                        "--", "-d", f"--dev={dev_name}", ">",
-                        os.path.join(tps_broker_out, f"{base_dirname}_broker_disk.svg")]
-                    print(" ".join(disk_cmd))
+                        "--", "-d", f"--dev={dev_name}"]
+                    disk_out = os.path.join(tps_broker_out, f"{base_dirname}_broker_disk.svg")
+                    p = sp.run(disk_cmd, stdout=sp.PIPE, stderr=sp.PIPE)
+                    with open(disk_out, "wb") as f:
+                        f.write(p.stdout)
+                    # print(" ".join(disk_cmd))
                 # sp.run(disk_cmd, shell=True)
                 net_cmd = ["sadf", "-g", os.path.join(dirname, "sar_st"), 
-                    "--", "-n", "DEV", "--iface=ens5", ">",
-                    os.path.join(tps_broker_out, f"{base_dirname}_broker_net.svg")]
-                print(" ".join(net_cmd))
+                    "--", "-n", "DEV", "--iface=ens5"]
+                net_out = os.path.join(tps_broker_out, f"{base_dirname}_broker_net.svg")
+                p = sp.run(net_cmd, stdout=sp.PIPE, stderr=sp.PIPE)
+                with open(net_out, "wb") as f:
+                    f.write(p.stdout)
+                # print(" ".join(net_cmd))
                 # sp.run(net_cmd, shell=True)
 
             for dirname in Path(app_sar).glob("*.compute.internal"):
@@ -70,9 +76,12 @@ def main():
                 os.makedirs(tps_app_out, exist_ok=True)
 
                 net_cmd = ["sadf", "-g", os.path.join(dirname, "sar_st"), 
-                    "--", "-n", "DEV", "--iface=ens5", ">",
-                    os.path.join(tps_app_out, f"{base_dirname}_app_net.svg")]
-                print(" ".join(net_cmd))
+                    "--", "-n", "DEV", "--iface=ens5"]
+                net_out = os.path.join(tps_app_out, f"{base_dirname}_app_net.svg")]
+                p = sp.run(net_cmd, stdout=sp.PIPE, stderr=sp.PIPE)
+                with open(net_out, "wb") as f:
+                    f.write(p.stdout)
+                # print(" ".join(net_cmd))
 
 
 
