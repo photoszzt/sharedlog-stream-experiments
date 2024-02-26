@@ -40,6 +40,17 @@ twopcs = [
     "./q38_rerun/2pc/q8-180s-0swarm-100ms-src100ms",
 ]
 
+alignchkpts = [
+    "./q38_rerun/align_chkpt/q1-align_chkpt-180s-0swarm-100ms-src10ms",
+    "./q38_rerun/align_chkpt/q2-align_chkpt-180s-0swarm-100ms-src10ms",
+    "./q38_rerun/align_chkpt/q3-align_chkpt-180s-0swarm-100ms-src100ms",
+    "./q38_rerun/align_chkpt/q4-align_chkpt-180s-0swarm-100ms-src100ms",
+    "./q38_rerun/align_chkpt/q5-align_chkpt-180s-0swarm-100ms-src100ms",
+    "./q38_rerun/align_chkpt/q6-align_chkpt-180s-0swarm-100ms-src100ms",
+    "./q38_rerun/align_chkpt/q7-align_chkpt-180s-0swarm-100ms-src100ms",
+    "./q38_rerun/align_chkpt/q8-align_chkpt-180s-0swarm-100ms-src100ms",
+]
+
 throughputs = [
     [4000, 16000, 32000, 48000, 64000, 80000, 88000],
     [4000, 16000, 32000, 48000, 64000, 80000, 88000],
@@ -52,35 +63,41 @@ throughputs = [
     [4000, 8000, 12000, 16000, 20000, 24000, 28000, 32000, 36000],
 ]
 
-colors = ['blue', 'orange', 'green', 'purple']
+colors = ['blue', 'orange', 'green', 'purple', 'olive']
 
 def load(system, experiment):
     rows = subprocess.run(["latency", "query", system[experiment]], stdout=subprocess.PIPE)
     rows = rows.stdout.decode('utf-8').strip().split('\n')
     rows = [row for row in csv.DictReader(rows, fieldnames=headers) 
-            if (row['del'] == 'eo' or row['del'] == '2pc') and int(row['tps']) in throughputs[experiment]]
+            if (row['del'] == 'eo' or row['del'] == '2pc' or row['del'] == 'align_chkpt') and int(row['tps']) in throughputs[experiment]]
     rows.sort(key=lambda row: int(row['tps']))
     return rows
 
 if __name__ == "__main__":
-    fig, axs = plt.subplots(2, 4, figsize=(28, 10), layout='constrained')
+    fig, axs = plt.subplots(2, 4, figsize=(36, 12), layout='constrained')
     handles = None
     letters=[f'({i})' for i in ascii_lowercase]
     for ax1, experiment in zip(axs.flat, range(0, len(kafkas))):
         kafka = load(kafkas, experiment)
         sys = load(syss, experiment)
         twopc = load(twopcs, experiment)
+        ackpt = load(alignchkpts, experiment)
 
         sys_in_per_worker_tp = [int(row['tps']) for row in sys]
         kafka_in_per_worker_tp = [int(row['tps']) for row in kafka]
+        ackpt_in_per_worker_tp = [int(row['tps']) for row in ackpt]
 
         kafka_in_tp = [i*4 for i in kafka_in_per_worker_tp]
         sys_in_tp = [i*4 for i in sys_in_per_worker_tp]
+        ackpt_in_tp = [i*4 for i in ackpt_in_per_worker_tp]
 
-        sys_p50 = np.array([int(row['p50']) for row in sys])
-        sys_p99 = np.array([int(row['p99']) for row in sys])
+        sys_p50 = [int(row['p50']) for row in sys]
+        sys_p99 = [int(row['p99']) for row in sys]
         twopc_p50 = np.array([int(row['p50']) for row in twopc])
         twopc_p99 = np.array([int(row['p99']) for row in twopc])
+        ackpt_p50 = [int(row['p50']) for row in ackpt]
+        ackpt_p99 = [int(row['p99']) for row in ackpt]
+
         print('Q' + str(experiment + 1))
         print(f"sys tp: {sys_in_tp}") 
         print(f"sys p50: {sys_p50}")
@@ -91,31 +108,35 @@ if __name__ == "__main__":
         print(f"2pc tp: {sys_in_tp}") 
         print(f"2pc p50: {twopc_p50}")
         print(f"2pc p99: {twopc_p99}")
-        print(f"2pc/sys p50: {twopc_p50/sys_p50}")
-        print(f"2pc/sys p99: {twopc_p99/sys_p99}")
+        print(f"2pc/sys p50: {np.array(twopc_p50)/np.array(sys_p50)}")
+        print(f"2pc/sys p99: {np.array(twopc_p99)/np.array(sys_p99)}")
+        print(f"alignchkpt p50: {ackpt_p50}")
+        print(f"alignchkpt p99: {ackpt_p99}")
 
-        l1, = ax1.plot(sys_in_tp, [int(row['p50']) for row in sys], label='Impeller p50',  marker='o',color=colors[0])
+        l1, = ax1.plot(sys_in_tp, sys_p50, label='Impeller p50',  marker='o',color=colors[0])
+        l3, = ax1.plot(sys_in_tp, sys_p99, label='Impeller p99', ls='--', marker='o', color=colors[0])
         l2, = ax1.plot(kafka_in_tp, [int(row['p50']) for row in kafka], label='Kafka Streams p50',  marker='v',color=colors[1])
-        l3, = ax1.plot(sys_in_tp, [int(row['p99']) for row in sys], label='Impeller p99', ls='--', marker='o', color=colors[0])
         l4, = ax1.plot(kafka_in_tp, [int(row['p99']) for row in kafka], label='Kafka Streams p99', ls='--', marker='v', color=colors[1])
-        l5, = ax1.plot(sys_in_tp, [int(row['p50']) for row in twopc], label='2pc on Impeller p50',  marker='s', color=colors[3])
-        l6, = ax1.plot(sys_in_tp, [int(row['p99']) for row in twopc], label='2pc on Impeller p99',  ls='--', marker='s',color=colors[3])
+        l5, = ax1.plot(sys_in_tp, twopc_p50, label='2pc on Impeller p50',  marker='s', color=colors[3])
+        l6, = ax1.plot(sys_in_tp, twopc_p99, label='2pc on Impeller p99',  ls='--', marker='s',color=colors[3])
+        l7, = ax1.plot(ackpt_in_tp, ackpt_p50, label='Align checkpoint on Impeller p50',  marker='p', color=colors[4])
+        l8, = ax1.plot(ackpt_in_tp, ackpt_p99, label='Align checkpoint on Impeller p99',  ls='--', marker='p',color=colors[4])
 
         # ax1.set_xlabel('input throughput(events/s)', fontsize=16)
         # ax1.set_ylabel('event time latency(ms)', fontsize=16)
         if experiment == 2:
-            handles = [l1, l3, l2, l4, l5, l6]
+            handles = [l1, l3, l2, l4, l5, l6, l7, l8]
             # ax1.legend(loc=(3, 1.05), ncol=2, handles=[l1, l5, l2, l3, l6, l4], handlelength=3, fontsize=11)
         ax1.set_title(f'{letters[experiment]} Query{experiment+1}', fontsize=18)
         ax1.tick_params(labelsize=18)
 
         if experiment < 2:
             ax1.set_ylim([0, 60])
-        else:
+        elif experiment != 6:
             ax1.set_ylim([0, 1000])
 
         # plt.title('Q' + str(experiment + 1))
-    fig.legend(ncol=6, handles=handles, fontsize=18, loc='upper center', bbox_to_anchor=(0.5, 1.07))
-    fig.supxlabel('input throughput(events/s)', fontsize=18)
-    fig.supylabel('event time latency(ms)', fontsize=18)
+    fig.legend(ncol=6, handles=handles, fontsize=18, loc='upper center', bbox_to_anchor=(0.5, 1.10))
+    fig.supxlabel('Input throughput(events/s)', fontsize=18)
+    fig.supylabel('Event time latency(ms)', fontsize=18)
     plt.savefig('q1-8.pdf', bbox_inches='tight')
