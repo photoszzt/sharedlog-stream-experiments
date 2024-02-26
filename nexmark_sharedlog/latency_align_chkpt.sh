@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 OUT_DIR=$SCRIPT_DIR/../pub_data/fig10_fig11/q38_rerun/align_chkpt/
 mkdir -p $OUT_DIR
