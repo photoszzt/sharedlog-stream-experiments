@@ -14,7 +14,10 @@ for j in ${instances[@]}; do
 done
 
 for j in ${instances[@]}; do
-  mv $OUT_DIR/${j}ins/q8-180s-0swarm-100ms-src100ms/2pc* $OUT_DIR/2pc/${j}ins/
-  mv $OUT_DIR/${j}ins/q8-180s-0swarm-100ms-src100ms/eo* $OUT_DIR/impeller/${j}ins/
-  mv $OUT_DIR/${j}ins/q8-180s-0swarm-100ms-src100ms/align_chkpt* $OUT_DIR/align_chkpt/${j}ins/
+  mkdir -p $OUT_DIR/2pc/${j}ins/q8-180s-0swarm-100ms-src100ms/
+  mv $OUT_DIR/${j}ins/q8-180s-0swarm-100ms-src100ms/2pc* $OUT_DIR/2pc/${j}ins/q8-180s-0swarm-100ms-src100ms/
+  mkdir -p $OUT_DIR/impeller/${j}ins/q8-180s-0swarm-100ms-src100ms/
+  mv $OUT_DIR/${j}ins/q8-180s-0swarm-100ms-src100ms/eo* $OUT_DIR/impeller/${j}ins/q8-180s-0swarm-100ms-src100ms/
+  mkdir -p $OUT_DIR/align_chkpt/${j}ins/q8-180s-0swarm-100ms-src100ms/
+  mv $OUT_DIR/${j}ins/q8-180s-0swarm-100ms-src100ms/align_chkpt* $OUT_DIR/align_chkpt/${j}ins/q8-180s-0swarm-100ms-src100ms/
 done
