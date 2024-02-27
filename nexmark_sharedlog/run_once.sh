@@ -21,6 +21,7 @@ FAIL=""
 SNAPSHOT_S=0
 CONFIG_SUBPATH=""
 BUF_MAX_SIZE=$(expr 128 \* 1024)
+EXTRA_BYTES=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -84,6 +85,10 @@ while [ $# -gt 0 ]; do
             if [[ "$1" != *=* ]]; then shift; fi
             BUF_MAX_SIZE="${1#*=}"
             ;;
+        --extra_bytes*)
+            if [[ "$1" != *=* ]]; then shift; fi
+            EXTRA_BYTES="${1#*=}"
+            ;;
         --help|-h)
             printf -- "--app <appname> one of q1,q2,q3,q5,q7,q8\n"
             printf -- "--exp_dir <exp_dir> required\n"
@@ -143,7 +148,7 @@ fi
 echo "app: ${APP_NAME}, exp_dir: ${EXP_DIR}, guarantee: ${GUA}, duration: ${DURATION}, \
     events_num: ${EVENTS_NUM}, tps: ${TPS}, warmup time: ${WARM_DURATION}, flushms: ${FLUSH_MS}, \
     src_flushms: ${SRC_FLUSH_MS}, num_worker: ${NUM_WORKER}, fail_spec: ${FAIL_SPEC}, \
-    snapshot_s: ${SNAPSHOT_S}, buf_max_size: ${BUF_MAX_SIZE}"
+    snapshot_s: ${SNAPSHOT_S}, buf_max_size: ${BUF_MAX_SIZE}, extra_bytes: ${EXTRA_BYTES}"
 
 SOURCE=${BASH_SOURCE[0]}
 while [ -L "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
@@ -208,7 +213,7 @@ ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name ${APP_NAME} \
     -wconfig $WCONFIG -buf_max_size ${BUF_MAX_SIZE} \
     -stat_dir /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats -waitForLast=true \
     -tps $TPS -warmup_time $WARM_DURATION $FAIL_SPEC_ARG \
-    -snapshot_everyS=$SNAPSHOT_S >$EXP_DIR/results.log 2>&1
+    -snapshot_everyS=$SNAPSHOT_S -extraBytes=$EXTRA_BYTES >$EXP_DIR/results.log 2>&1
 
 mkdir -p $EXP_DIR/docker_stats
 for HOST in $ALL_STORAGE_HOSTS; do
@@ -276,5 +281,5 @@ ssh -q $CLIENT_HOST -- "$WORKSPACE_DIR/sharedlog-stream-experiments/nexmark_shar
 scp -r $CLIENT_HOST:/home/ubuntu/${APP_NAME}/${EXP_DIR}/stats ${EXP_DIR}
 # scp -r $CLIENT_HOST:/home/ubuntu/${APP_NAME}/${EXP_DIR}/dump ${EXP_DIR}
 
-$HELPER_SCRIPT collect-func-output --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
-# $HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
+# $HELPER_SCRIPT collect-func-output --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
+$HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
