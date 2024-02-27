@@ -30,7 +30,8 @@ for ((iter=0; iter < 2; ++iter)); do
             --gua epoch --duration $DURATION --events_num ${EVENTS} \
             --tps ${TPS} --warm_duration ${WARM_DURATION} --nworker ${NUM_WORKER} \
             --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS \
-            --snapshot_s ${SNAPSHOT_S} --config_subpath 3node/6_ins/q5.json
+            --snapshot_s ${SNAPSHOT_S} --config_subpath 3node/6_ins/q5.json \
+            --comm_everyMs ${COMM_EVERY_MS}
     done
 done
 cd -

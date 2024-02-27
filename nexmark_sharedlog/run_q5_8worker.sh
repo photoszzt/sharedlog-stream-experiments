@@ -18,6 +18,7 @@ APP=q5
 FLUSH_MS=100
 SRC_FLUSH_MS=100
 SNAPSHOT_S=10
+COMM_EVERY_MS=100
 
 cd ${DIR}
 for ((iter=2; iter < 3; ++iter)); do
@@ -27,29 +28,13 @@ for ((iter=2; iter < 3; ++iter)); do
             EVENTS=$(expr $TPS \* $DURATION)
             echo ${APP}, ${DIR}, ${EVENTS} events, ${TPS} tps
             subdir=${DURATION}s_${WARM_DURATION}swarm_${FLUSH_MS}ms_src${SRC_FLUSH_MS}ms
-            # ./run_once.sh --app ${APP} 
-            #     --exp_dir ./${NUM_WORKER[w]}src_cache/${subdir}/${iter}/${TPS_PER_WORKER[idx]}tps_alo/ \
-            #     --gua alo --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
-            #     --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS
 
             ./run_once.sh --app ${APP} \
                 --exp_dir ./${NUM_WORKER[w]}src_8ins_2cpu2gm/${subdir}/${iter}/${TPS_PER_WORKER[idx]}tps_epoch/ \
                 --gua epoch --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
                 --tps ${TPS} --warm_duration ${WARM_DURATION} \
                 --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS \
-                --snapshot_s ${SNAPSHOT_S} --config_subpath 4node/8_ins/q5.json
-
-            # ./run_once.sh --app ${APP} \
-            #     --exp_dir ./${NUM_WORKER[w]}src_none_gm1/${subdir}/${iter}/${TPS_PER_WORKER[idx]}tps_epoch/ \
-            #     --gua none --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
-            #     --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS \
-            #     --snapshot_s 0
-
-            # ./run_once.sh --app ${APP} \
-            #     --exp_dir ./${NUM_WORKER[w]}src_2pcSync/${subdir}/${iter}/${TPS_PER_WORKER[idx]}tps_2pc/ \
-            #     --gua 2pc --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
-            #     --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS \
-            #     --snapshot_s $SNAPSHOT_S
+                --snapshot_s ${SNAPSHOT_S} --config_subpath 4node/8_ins/q5.json  --comm_everyMs ${COMM_EVERY_MS}
         done
     done
 done

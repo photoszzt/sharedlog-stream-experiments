@@ -10,7 +10,7 @@ $WORKSPACE_DIR/research-helper-scripts/microservice_helper start-machines --use-
 cd ../..
 
 TPS_PER_WORKER=(1000 8000 16000 24000 32000 40000 48000 56000 64000)
-# TPS_PER_WORKER=(56000 64000)
+# TPS_PER_WORKER=(64000)
 NUM_WORKER=(4)
 DURATION=180
 WARM_DURATION=0
@@ -18,7 +18,9 @@ APP=q5
 FLUSH_MS=100
 SRC_FLUSH_MS=100
 SNAPSHOT_S=10
-modes=(epoch none 2pc align_chkpt)
+COMM_EVERY_MS=100
+# modes=(align_chkpt epoch 2pc none)
+modes=(align_chkpt)
 
 cd ${DIR}
 for ((idx = 0; idx < ${#TPS_PER_WORKER[@]}; ++idx)); do
@@ -33,7 +35,7 @@ for ((idx = 0; idx < ${#TPS_PER_WORKER[@]}; ++idx)); do
                     --exp_dir ./${NUM_WORKER[w]}src_1/${subdir}/${iter}/${TPS_PER_WORKER[idx]}tps_${mode}/ \
                     --gua $mode --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
                     --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS \
-                    --snapshot_s ${SNAPSHOT_S}
+                    --snapshot_s ${SNAPSHOT_S} --comm_everyMs ${COMM_EVERY_MS}
             done
         done
     done

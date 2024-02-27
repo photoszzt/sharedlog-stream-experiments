@@ -16,6 +16,7 @@ WARM_DURATION=0
 APP=q8
 FLUSH_MS=100
 SRC_FLUSH_MS=100
+COMM_EVERY_MS=100
 
 cd ${DIR}
 for ((i = 0; i < 1; ++i)); do
@@ -28,7 +29,9 @@ for ((i = 0; i < 1; ++i)); do
             ./run_once_frequent_fail.sh --app ${APP} \
                 --exp_dir ./${NUM_WORKER[w]}src_freq_fail2/$subdir/$i/${TPS_PER_WORKER[idx]}tps_epoch/ \
                 --gua epoch --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
-                --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS --fail_script ./q8_freq_fail.sh
+                --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS \
+                --src_flushms $SRC_FLUSH_MS --fail_script ./q8_freq_fail.sh \
+                --comm_everyMs ${COMM_EVERY_MS}
         done
     done
 done

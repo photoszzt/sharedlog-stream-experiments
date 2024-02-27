@@ -17,6 +17,7 @@ DIR=(q2_measure_epoch)
 FLUSH_MS=100
 SRC_FLUSH_MS=10
 SNAPSHOT_S=0
+COMM_EVERY_MS=100
 
 for ((iter=0; iter < 1; ++iter)); do
     for ((k = 0; k < ${#APP[@]}; ++k)); do
@@ -30,7 +31,7 @@ for ((iter=0; iter < 1; ++iter)); do
                 ./run_once.sh --app ${APP[k]} --exp_dir ./${NUM_WORKER[w]}src_mea1/$subdir/$iter/${TPS_PER_WORKER[idx]}tps_epoch/ \
                     --gua epoch --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
                     --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS \
-                    --snapshot_s ${SNAPSHOT_S}
+                    --snapshot_s ${SNAPSHOT_S} --comm_everyMs ${COMM_EVERY_MS}
             done
         done
         cd -

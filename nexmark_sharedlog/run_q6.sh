@@ -18,6 +18,7 @@ APP=q6
 FLUSH_MS=100
 SRC_FLUSH_MS=100
 SNAPSHOT_S=10
+COMM_EVERY_MS=100
 # modes=(epoch none 2pc align_chkpt)
 modes=(align_chkpt)
 
@@ -34,7 +35,7 @@ for ((idx = 0; idx < ${#TPS_PER_WORKER[@]}; ++idx)); do
                     --exp_dir ./${NUM_WORKER[w]}src_1/${subdir}/${iter}/${TPS_PER_WORKER[idx]}tps_${mode}/ \
                     --gua $mode --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
                     --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS \
-                    --snapshot_s ${SNAPSHOT_S}
+                    --snapshot_s ${SNAPSHOT_S} --comm_everyMs ${COMM_EVERY_MS}
             done
         done
     done

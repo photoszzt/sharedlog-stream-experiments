@@ -18,6 +18,7 @@ APP=q8
 FLUSH_MS=100
 SRC_FLUSH_MS=0
 SNAPSHOT_S=10
+COMM_EVERY_MS=100
 
 cd ${DIR}
 for ((iter=0; iter < 5; ++iter)); do
@@ -36,7 +37,7 @@ for ((iter=0; iter < 5; ++iter)); do
             ./run_once.sh --app ${APP} --exp_dir ./${NUM_WORKER[w]}src_nobatch_2ms/$subdir/$iter/${TPS_PER_WORKER[idx]}tps_epoch/ \
                 --gua epoch --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
                 --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS \
-                --snapshot_s ${SNAPSHOT_S}
+                --snapshot_s ${SNAPSHOT_S}  --comm_everyMs ${COMM_EVERY_MS}
 
             # ./run_once.sh --app ${APP} --exp_dir ./${NUM_WORKER[w]}src_none_gm1/$subdir/$iter/${TPS_PER_WORKER[idx]}tps_epoch/ \
             #     --gua none --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \

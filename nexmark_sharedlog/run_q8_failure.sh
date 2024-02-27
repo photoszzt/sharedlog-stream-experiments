@@ -17,6 +17,7 @@ APP=q8
 FLUSH_MS=100
 SRC_FLUSH_MS=100
 SNAPSHOT_S=0
+COMM_EVERY_MS=100
 
 cd ${DIR}
 for ((i = 0; i < 1; ++i)); do
@@ -31,7 +32,8 @@ for ((i = 0; i < 1; ++i)); do
                 --exp_dir ./${NUM_WORKER[w]}src_nosnap_300_gm2/$subdir/$i/${TPS_PER_WORKER[idx]}tps_epoch/ \
                 --gua epoch --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
                 --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS \
-                --src_flushms $SRC_FLUSH_MS --fail true --snapshot_s ${SNAPSHOT_S}
+                --src_flushms $SRC_FLUSH_MS --fail true --snapshot_s ${SNAPSHOT_S} \
+                --comm_everyMs ${COMM_EVERY_MS}
         done
     done
 done

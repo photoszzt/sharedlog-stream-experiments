@@ -14,6 +14,7 @@ EVENTS_NUM=""
 TPS=""
 WARM_DURATION=""
 FLUSH_MS=""
+COMM_EVERY_MS=""
 SRC_FLUSH_MS=""
 NUM_WORKER=""
 FAIL=""
@@ -54,6 +55,10 @@ while [ $# -gt 0 ]; do
         --tps*)
             if [[ "$1" != *=* ]]; then shift; fi
             TPS="${1#*=}"
+            ;;
+        --comm_everyMs*)
+            if [[ "$1" != *=* ]]; then shift; fi
+            COMM_EVERY_MS="${1#*=}"
             ;;
         --flushms*)
             if [[ "$1" != *=* ]]; then shift; fi
@@ -129,6 +134,10 @@ if [[ "$NUM_WORKER" = "" ]]; then
     echo "need to specify num worker"
     exit 1
 fi
+if [[ "$COMM_EVERY_MS" = "" ]]; then
+    echo "need to specify commit every ms"
+    exit 1
+fi
 
 
 echo "app: ${APP_NAME}, exp_dir: ${EXP_DIR}, guarantee: ${GUA}, duration: ${DURATION}, \
@@ -194,7 +203,7 @@ fi
 
 ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name ${APP_NAME} \
     -faas_gateway $ENTRY_HOST:8080 -duration ${DURATION} -serde msgp \
-    -guarantee $GUA -comm_everyMS ${FLUSH_MS} -flushms ${FLUSH_MS} \
+    -guarantee $GUA -comm_everyMS ${COMM_EVERY_MS} -flushms ${FLUSH_MS} \
     -src_flushms ${SRC_FLUSH_MS} -events_num ${EVENTS_NUM} \
     -wconfig $WCONFIG -buf_max_size ${BUF_MAX_SIZE} \
     -stat_dir /home/ubuntu/${APP_NAME}/${EXP_DIR}/stats -waitForLast=true \

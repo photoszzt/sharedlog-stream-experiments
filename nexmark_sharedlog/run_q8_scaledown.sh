@@ -20,6 +20,7 @@ SRC_FLUSH_MS=100
 SNAPSHOT_S=10
 INIT_NUM_WORKER=4
 SCALE_SCENE=4_to_2_ins
+COMM_EVERY_MS=100
 
 cd ${DIR}
 for ((iter=0; iter < 2; ++iter)); do
@@ -35,7 +36,8 @@ for ((iter=0; iter < 2; ++iter)); do
             --exp_dir ./${topdir}/$subdir/$iter/${TPS_PER_WORKER[idx]}tps_epoch/ \
             --beforeScale ${BEFORE_SCALE} --afterScale ${AFTER_SCALE} --events_num ${EVENTS} \
             --tps ${TPS} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS \
-            --snapshot_s ${SNAPSHOT_S} --init_nworker $INIT_NUM_WORKER --scale_scene $SCALE_SCENE
+            --snapshot_s ${SNAPSHOT_S} --init_nworker $INIT_NUM_WORKER --scale_scene $SCALE_SCENE \
+            --comm_everyMs ${COMM_EVERY_MS}
     done
 done
 cd -

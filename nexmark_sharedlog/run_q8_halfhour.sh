@@ -19,6 +19,8 @@ WARM_DURATION=0
 APP=q8
 FLUSH_MS=(100)
 SNAPSHOT_S=10
+COMM_EVERY_MS=100
+
 
 cd ${DIR}
 for ((iter=0; iter < 1; ++iter)); do
@@ -31,31 +33,12 @@ for ((iter=0; iter < 1; ++iter)); do
                 echo ${APP}, ${DIR}, ${EVENTS} events, ${TPS} tps
                 subdir=${DURATION}s_${WARM_DURATION}swarm_${FLUSH_MS[j]}ms_src${SRC_FLUSH_MS}ms
 
-                # ./run_once.sh --app ${APP} \
-                #     --exp_dir ./${NUM_WORKER[w]}src_generics/$subdir/$iter/${TPS_PER_WORKER[idx]}tps_alo/ \
-                #     --gua alo --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
-                #     --tps ${TPS} --warm_duration ${WARM_DURATION} \
-                #     --flushms ${FLUSH_MS[j]} --src_flushms $SRC_FLUSH_MS
-
                 ./run_once.sh --app ${APP} \
                     --exp_dir ./${NUM_WORKER[w]}src_rds2/$subdir/$iter/${TPS_PER_WORKER[idx]}tps_epoch/ \
                     --gua epoch --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
                     --tps ${TPS} --warm_duration ${WARM_DURATION} \
                     --flushms ${FLUSH_MS[j]} --src_flushms $SRC_FLUSH_MS \
-                    --snapshot_s ${SNAPSHOT_S}
-
-                # ./run_once.sh --app ${APP} \
-                #     --exp_dir ./${NUM_WORKER[w]}src_none_gm1/$subdir/$iter/${TPS_PER_WORKER[idx]}tps_epoch/ \
-                #     --gua none --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
-                #     --tps ${TPS} --warm_duration ${WARM_DURATION} \
-                #     --flushms ${FLUSH_MS[j]} --src_flushms $SRC_FLUSH_MS \
-                #     --snapshot_s 0
-
-                # ./run_once.sh --app ${APP} \
-                #     --exp_dir ./${NUM_WORKER[w]}src_ets2/$subdir/${TPS_PER_WORKER[idx]}tps_2pc/ \
-                #     --gua 2pc --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
-                #     --tps ${TPS} --warm_duration ${WARM_DURATION} \
-                #     --flushms ${FLUSH_MS[j]} --src_flushms $SRC_FLUSH_MS
+                    --snapshot_s ${SNAPSHOT_S} --comm_everyMs ${COMM_EVERY_MS}
             done
         done
     done
