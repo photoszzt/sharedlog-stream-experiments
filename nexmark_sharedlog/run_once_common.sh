@@ -30,7 +30,7 @@ for HOST in $ALL_HOSTS; do
 done
 
 scp -q $BASE_DIR/docker-compose-base.yml $MANAGER_HOST:~
-# $HELPER_SCRIPT generate-docker-compose --base-dir=$BASE_DIR
+$HELPER_SCRIPT generate-docker-compose --base-dir=$BASE_DIR
 scp -q $BASE_DIR/docker-compose.yml $MANAGER_HOST:~
 scp -q $SCRIPT_DIR/docker-stack-wait.sh $MANAGER_HOST:~
 

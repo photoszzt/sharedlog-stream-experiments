@@ -207,13 +207,13 @@ services:
     restart: always
 
   snapcache:
-    image: redis:7.2.4-bookworm
+    image: apache/kvrocks:2.7.0
     restart: always
     ports:
-      - '6379'
+      - '6666'
     command: ["redis-server", "--save", "\"\"", "--appendonly", "no"]
     volumes:
-      - /mnt/storage/redis:/data
+      - /mnt/storage/redis:/kvrocks_data
 
   scale:
     image: ubuntu:focal
@@ -245,7 +245,7 @@ services:
        - MEASURE_SRC=1
        - MEASURE_SINK=1
          # - BUFPUSH=1
-       - REDIS_ADDR=snapcache-1:6379,snapcache-2:6379,snapcache-3:6379,snapcache-4:6379,snapcache-5:6379,snapcache-6:6379,snapcache-7:6379,snapcache-8:6379
+       - REDIS_ADDR=snapcache-1:6666,snapcache-2:6666,snapcache-3:6666,snapcache-4:6666
     depends_on:
        - faas-engine
        - snapcache
@@ -265,7 +265,7 @@ services:
          # - MEASURE_PROC=1
        - MEASURE_SRC=1
        - MEASURE_SINK=1
-       - REDIS_ADDR=snapcache-1:6379,snapcache-2:6379,snapcache-3:6379,snapcache-4:6379,snapcache-5:6379,snapcache-6:6379,snapcache-7:6379,snapcache-8:6379
+       - REDIS_ADDR=snapcache-1:6666,snapcache-2:6666,snapcache-3:6666,snapcache-4:6666
          # - BUFPUSH=1
     depends_on:
        - faas-engine
@@ -289,7 +289,7 @@ services:
          # - BUFPUSH=1
        - PARALLEL_RESTORE=1
        - CREATE_SNAPSHOT=1
-       - REDIS_ADDR=snapcache-1:6379,snapcache-2:6379,snapcache-3:6379,snapcache-4:6379,snapcache-5:6379,snapcache-6:6379,snapcache-7:6379,snapcache-8:6379
+       - REDIS_ADDR=snapcache-1:6666,snapcache-2:6666,snapcache-3:6666,snapcache-4:6666
     depends_on:
        - faas-engine
        - snapcache
