@@ -47,7 +47,7 @@ alignchkpts = [
     "./q38_rerun/align_chkpt_kvrocks/q4-180s-0swarm-100ms-src100ms",
     "./q38_rerun/align_chkpt_kvrocks/q5-180s-0swarm-100ms-src100ms",
     "./q38_rerun/align_chkpt_kvrocks/q6-180s-0swarm-100ms-src100ms",
-    "./q38_rerun/align_chkpt/q7-align_chkpt-180s-0swarm-100ms-src100ms",
+    "./q38_rerun/align_chkpt_kvrocks/q7-180s-0swarm-100ms-src100ms",
     "./q38_rerun/align_chkpt_kvrocks/q8-180s-0swarm-100ms-src100ms",
 ]
 
