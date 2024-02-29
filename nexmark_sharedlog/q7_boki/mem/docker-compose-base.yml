@@ -210,8 +210,9 @@ services:
     hostname: snapcache-{{.Task.Slot}}
     restart: always
     ports:
-      - '6666'
-    command: ["kvrocks", "--dir", "/kvrocks_data"]
+      - '6666:6666'
+    entrypoint: "kvrocks"
+    command: ["--dir", "/kvrocks_data", "-c", "/var/lib/kvrocks/kvrocks.conf", "--pidfile", "/var/run/kvrocks/kvrocks.pid", "--bind", "0.0.0.0"]
     volumes:
       - /mnt/storage/redis/{{.Task.Slot}}:/kvrocks_data
     
