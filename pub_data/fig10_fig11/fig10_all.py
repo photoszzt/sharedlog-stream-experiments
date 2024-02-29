@@ -41,14 +41,14 @@ twopcs = [
 ]
 
 alignchkpts = [
-    "./q38_rerun/align_chkpt/q1-align_chkpt-180s-0swarm-100ms-src10ms",
-    "./q38_rerun/align_chkpt/q2-align_chkpt-180s-0swarm-100ms-src10ms",
-    "./q38_rerun/align_chkpt/q3-align_chkpt-180s-0swarm-100ms-src100ms",
-    "./q38_rerun/align_chkpt/q4-align_chkpt-180s-0swarm-100ms-src100ms",
-    "./q38_rerun/align_chkpt/q5-align_chkpt-180s-0swarm-100ms-src100ms",
-    "./q38_rerun/align_chkpt/q6-align_chkpt-180s-0swarm-100ms-src100ms",
+    "./q38_rerun/align_chkpt_kvrocks/q1-180s-0swarm-100ms-src10ms",
+    "./q38_rerun/align_chkpt_kvrocks/q2-180s-0swarm-100ms-src10ms",
+    "./q38_rerun/align_chkpt_kvrocks/q3-180s-0swarm-100ms-src100ms",
+    "./q38_rerun/align_chkpt_kvrocks/q4-180s-0swarm-100ms-src100ms",
+    "./q38_rerun/align_chkpt_kvrocks/q5-180s-0swarm-100ms-src100ms",
+    "./q38_rerun/align_chkpt_kvrocks/q6-180s-0swarm-100ms-src100ms",
     "./q38_rerun/align_chkpt/q7-align_chkpt-180s-0swarm-100ms-src100ms",
-    "./q38_rerun/align_chkpt/q8-align_chkpt-180s-0swarm-100ms-src100ms",
+    "./q38_rerun/align_chkpt_kvrocks/q8-180s-0swarm-100ms-src100ms",
 ]
 
 throughputs = [
@@ -63,10 +63,10 @@ throughputs = [
     [4000, 8000, 12000, 16000, 20000, 24000, 28000, 32000, 36000],
 ]
 
-colors = ['blue', 'orange', 'green', 'purple', 'olive']
+colors = ['blue', 'orange', 'green', 'purple', 'red']
 
 def load(system, experiment):
-    rows = subprocess.run(["latency", "query", system[experiment]], stdout=subprocess.PIPE)
+    rows = subprocess.run(["./latency", "query", system[experiment]], stdout=subprocess.PIPE)
     rows = rows.stdout.decode('utf-8').strip().split('\n')
     rows = [row for row in csv.DictReader(rows, fieldnames=headers) 
             if (row['del'] == 'eo' or row['del'] == '2pc' or row['del'] == 'align_chkpt') and int(row['tps']) in throughputs[experiment]]
@@ -136,7 +136,7 @@ if __name__ == "__main__":
             ax1.set_ylim([0, 1000])
 
         # plt.title('Q' + str(experiment + 1))
-    fig.legend(ncol=6, handles=handles, fontsize=18, loc='upper center', bbox_to_anchor=(0.5, 1.10))
+    fig.legend(ncol=4, handles=handles, fontsize=18, loc='upper center', bbox_to_anchor=(0.5, 1.10))
     fig.supxlabel('Input throughput(events/s)', fontsize=18)
     fig.supylabel('Event time latency(ms)', fontsize=18)
     plt.savefig('q1-8.pdf', bbox_inches='tight')
