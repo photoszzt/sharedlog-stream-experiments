@@ -2,6 +2,7 @@ import os
 import numpy as np
 from pathlib import Path
 from statistics import quantiles, mean, stdev
+import subprocess as sp
 
 dirs = {
     "q1": "../q1_boki/4src_2/180s_0swarm_100ms_src10ms/",
@@ -26,20 +27,20 @@ def gen_path():
 
 
 def parse_e2eChkptElapsed(fname, tps_stat):
-    with open(fname, "r") as f:
-        for line in f:
-            if "e2eChkptElapsed" in line:
-                l = line.strip().split(": ")[1]
-                data = l.split(", ")
-                if "data" in l:
-                    d = data[1].split('=')[1].strip("[]{}").split(" ")
-                    d = [int(i) for i in d]
-                    tps_stat['raw_data'].append(d)
-                else:
-                    p50 = int(data[1].split('=')[1])
-                    p99 = int(data[3].split('=')[1])
-                    tps_stat['p50'].append(p50)
-                    tps_stat['p99'].append(p99)
+    p = sp.run(['rg', 'e2eChkptElapsed', fname], stdout=sp.PIPE, stderr=sp.PIPE, encoding='utf-8')
+    for line in p.stdout.splitlines():
+        if "e2eChkptElapsed" in line:
+            l = line.strip().split(": ")[1]
+            data = l.split(", ")
+            if "data" in l:
+                d = data[1].split('=')[1].strip("[]{}").split(" ")
+                d = [int(i) for i in d]
+                tps_stat['raw_data'].append(d)
+            else:
+                p50 = int(data[1].split('=')[1])
+                p99 = int(data[3].split('=')[1])
+                tps_stat['p50'].append(p50)
+                tps_stat['p99'].append(p99)
 
 
 def parse_files(dirs_dict):
