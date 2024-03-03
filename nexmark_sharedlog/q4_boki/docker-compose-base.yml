@@ -213,10 +213,9 @@ services:
       - '6666:6666'
         # command: ["redis-server", "--save", "\"\"", "--appendonly", "no"]
     entrypoint: "kvrocks"
-    command: ["--dir", "/kvrocks_data", "-c", "/kvrocks_conf/kvrocks.conf", "--pidfile", "/var/run/kvrocks/kvrocks.pid", "--bind", "0.0.0.0"]
+    command: ["--dir", "/kvrocks_data", "-c", "/var/lib/kvrocks/kvrocks.conf", "--pidfile", "/var/run/kvrocks/kvrocks.pid", "--bind", "0.0.0.0", "--rocksdb.write_options.sync", "yes"]
     volumes:
       - /mnt/storage/redis/{{.Task.Slot}}:/kvrocks_data
-      - ${EXP_DIR:?}/nexmark_sharedlog/kvrocks_conf:/kvrocks_conf
 
   chkptmngr:
     image: ubuntu:focal
