@@ -15,7 +15,7 @@ def main():
         for d in dirs:
             if "epoch" in d or "align_chkpt":
                 try:
-                    tps_per_work = int(d.split("_")[0][:-3])
+                    tps_per_work = d.split("_")[0][:-3]
                     if tps_per_work not in dirs_dict:
                         dirs_dict[tps_per_work] = []
                     dirs_dict[tps_per_work].append(os.path.join(root, d))
@@ -80,7 +80,6 @@ def main():
                     "--", "-n", "DEV", "--iface=ens5"]
                 storage_net_out = os.path.join(tps_storage_out, f"{base_dirname}_storage_net.svg")
                 p = sp.run(net_cmd, stdout=sp.PIPE, stderr=sp.PIPE)
-                storage_net_out = os.path.join(tps_storage_out, f"{base_dirname}_storage_disk.svg")
                 with open(storage_net_out, "wb") as f:
                     f.write(p.stdout)
                 # print(" ".join(net_cmd))
