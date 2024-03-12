@@ -54,6 +54,19 @@ def update_dict(dic, tps_per_work, stage, item):
     dic[tps_per_work][stage].append(item)
 
 
+def get_sorted_keys(dic):
+    tp = sorted(dic.keys())
+    fa_keys = None
+    i = 0
+    while i < len(tp):
+        fa_keys = dic[tp[i]].keys()
+        if len(fa_keys) != 0:
+            break
+        i = i + 1
+    fak = sorted(fa_keys)
+    return tp, fak
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--dir', required=True)
@@ -78,6 +91,9 @@ def main():
     flush_all = {}
     flush_at_least_one = {}
     epochMarkTimes = {}
+    commitTxnAPITime = {}
+    sendOffsetTime = {}
+    txnCommitTime = {}
     for tps_per_work, dirpaths in dirs_dict.items():
         if tps_per_work not in stats:
             stats[tps_per_work] = {}
@@ -87,6 +103,12 @@ def main():
             epochMarkTimes[tps_per_work] = {}
         if tps_per_work not in flush_at_least_one:
             flush_at_least_one[tps_per_work] = {}
+        if tps_per_work not in commitTxnAPITime:
+            commitTxnAPITime[tps_per_work] = {}
+        if tps_per_work not in sendOffsetTime:
+            sendOffsetTime[tps_per_work] = {}
+        if tps_per_work not in txnCommitTime:
+            txnCommitTime[tps_per_work] = {}
         visited_files = set()
         for dirpath in dirpaths:
             for fname in Path(dirpath).glob("**/*.stderr"):
@@ -97,40 +119,58 @@ def main():
                 stage = basename.split("_")[0]
                 with open(fname, "r") as f:
                     for line in f:
-                        if "epoch mark time" in line or (("flushStage" in line or "flushAtLeastOne" in line) and "[" in line):
+                        if args.mode == "epoch" and "epoch mark time" in line:
                             nums = get_nums(line)
-                            if "epoch mark time" in line:
-                                update_dict(stats, tps_per_work, stage, nums)
-                            elif "flushStage" in line and "[" in line:
-                                update_dict(flush_all, tps_per_work, stage, nums)
-                            elif "flushAtLeastOne" in line and "[" in line:
-                                update_dict(flush_at_least_one, tps_per_work, stage, nums)
-                        elif "epoch_mark_times" in line:
+                            update_dict(stats, tps_per_work, stage, nums)
+                        elif "flushStage" in line and "[" in line:
+                            nums = get_nums(line)
+                            update_dict(flush_all, tps_per_work, stage, nums)
+                        elif "flushAtLeastOne" in line and "[" in line:
+                            nums = get_nums(line)
+                            update_dict(flush_at_least_one, tps_per_work, stage, nums)
+                        elif args.mode == "2pc" and "commitTxnAPITime" in line and "[" in line:
+                            nums = get_nums(line)
+                            update_dict(commitTxnAPITime, tps_per_work, stage, nums)
+                        elif args.mode == "2pc" and "txnCommitTime" in line and "[" in line:
+                            nums = get_nums(line)
+                            update_dict(txnCommitTime, tps_per_work, stage, nums)
+                        elif args.mode == "2pc" and "sendOffsetTime" in line and "[" in line:
+                            nums = get_nums(line)
+                            update_dict(sendOffsetTime, tps_per_work, stage, nums)
+                        elif args.mode == "epoch" and "epoch_mark_times" in line:
                             l = int(line.strip().split(": ")[1])
                             update_dict(epochMarkTimes, tps_per_work, stage, l)
-    tp = sorted(stats.keys())
-    statk = sorted(stats[tp[0]].keys())
-    all_mark_stats = {}
-    print("progress marking(us)")
-    summary = printStats(tp, statk, stats, all_mark_stats)
-    # os.makedirs(args.out_dir, exist_ok=True)
-    # p = os.path.join(args.out_dir, "mark_time.json")
-    # with open(p, "w") as f:
-    #     json.dump(summary, f)
+    if args.mode == "epoch":
+        tp = sorted(stats.keys())
+        statk = sorted(stats[tp[0]].keys())
+        all_mark_stats = {}
+        print("progress marking(us)")
+        summary = printStats(tp, statk, stats, all_mark_stats)
+        # os.makedirs(args.out_dir, exist_ok=True)
+        # p = os.path.join(args.out_dir, "mark_time.json")
+        # with open(p, "w") as f:
+        #     json.dump(summary, f)
                          
     print("flush all(us)")
-    tp = sorted(flush_all.keys())
-    fa_keys = None
-    i = 0
-    while i < len(tp):
-        fa_keys = flush_all[tp[i]].keys()
-        if len(fa_keys) != 0:
-            break
-        i = i + 1
-    fak = sorted(fa_keys)
-    print(tp, fak)
+    tp, fak = get_sorted_keys(flush_all)
     all_flush_stats = {}
     printStats(tp, fak, flush_all, all_flush_stats)
+
+    if args.mode == "2pc":
+        print("commit txn api(us)")
+        tp, fak = get_sorted_keys(commitTxnAPITime)
+        all_cmt_txn_api = {}
+        printStats(tp, fak, commitTxnAPITime, all_cmt_txn_api)
+
+        print("txn commit time(us)")
+        tp, fak = get_sorted_keys(txnCommitTime)
+        all_txn_commit = {}
+        printStats(tp, fak, txnCommitTime, all_txn_commit)
+
+        print("send offset time(us)")
+        tp, fak = get_sorted_keys(sendOffsetTime)
+        all_send_offset = {}
+        printStats(tp, fak, sendOffsetTime, all_send_offset)
 
     # print("flush at least one(us)")
     # all_flush_at_least_one_stats = {}
