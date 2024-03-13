@@ -61,10 +61,30 @@ def get_nums(line):
     return nums
 
 
+def get_name_nums(line):
+    sps = line.strip().split(": ")
+    name = sps[0].split(" ")[0]
+    nsp = name.rsplit("_", 1)
+    name = nsp[0]
+    idx = int(nsp[1])
+    l = sps[1]
+    if '=' in l:
+        l = l.split('=')[1]
+    nums = l.strip("[]{}").split(" ")
+    nums = [int(i) for i in nums]
+    return nums, name, idx
+
+
 def update_dict(dic, tps_per_work, stage, item):
     if stage not in dic[tps_per_work]:
         dic[tps_per_work][stage] = []
     dic[tps_per_work][stage].append(item)
+
+
+def update_idx_dict(dic, tps_per_work, idx, stage, item):
+    if stage not in dic[tps_per_work][idx]:
+        dic[tps_per_work][idx][stage] = []
+    dic[tps_per_work][idx][stage].append(item)
 
 
 def get_sorted_keys(dic):
@@ -109,7 +129,12 @@ def parse_single_topdir(directory, mode):
     waitPrevTxn = {}
     epochMarkerSize = {}
     all_stats_in_dir = {}
-    for tps_per_work, dirpaths in dirs_dict.items():
+    q8_personsByID_out_flushBuf = {}
+    q8_aucsBySellerID_out_flushBuf = {}
+    q8_out_flushBuf = {}
+    q8AuctionsBySellerIDWinTab_changelog_flushBuf = {}
+    q8PersonsByIDWinTab_changelog_flushBuf = {}
+    for tps_per_work in dirs_dict:
         if tps_per_work not in progress_mark:
             progress_mark[tps_per_work] = {}
         if tps_per_work not in flush_all:
@@ -134,7 +159,23 @@ def parse_single_topdir(directory, mode):
             waitPrevTxn[tps_per_work] = {}
         if tps_per_work not in epochMarkerSize:
             epochMarkerSize[tps_per_work] = {}
-
+        for i in range(0, 32):
+            q8_personsByID_out_flushBuf[i] = {}
+            q8_aucsBySellerID_out_flushBuf[i] = {}
+            q8_out_flushBuf[i] = {}
+            q8AuctionsBySellerIDWinTab_changelog_flushBuf[i] = {}
+            q8PersonsByIDWinTab_changelog_flushBuf[i] = {}
+            if tps_per_work not in q8_personsByID_out_flushBuf[i]:
+                q8_personsByID_out_flushBuf[i][tps_per_work] = {}
+            if tps_per_work not in q8_aucsBySellerID_out_flushBuf[i]:
+                q8_aucsBySellerID_out_flushBuf[i][tps_per_work] = {}
+            if tps_per_work not in q8_out_flushBuf[i]:
+                q8_out_flushBuf[i][tps_per_work] = {}
+            if tps_per_work not in q8AuctionsBySellerIDWinTab_changelog_flushBuf[i]:
+                q8AuctionsBySellerIDWinTab_changelog_flushBuf[i][tps_per_work] = {}
+            if tps_per_work not in q8PersonsByIDWinTab_changelog_flushBuf[i]:
+                q8PersonsByIDWinTab_changelog_flushBuf[i][tps_per_work] = {}
+    for tps_per_work, dirpaths in dirs_dict.items():
         visited_files = set()
         for dirpath in dirpaths:
             for fname in Path(dirpath).glob("**/*.stderr"):
@@ -166,6 +207,22 @@ def parse_single_topdir(directory, mode):
                         elif "flushAtLeastOne" in line and "[" in line:
                             nums = get_nums(line)
                             update_dict(flush_at_least_one, tps_per_work, stage, nums)
+                        elif "q8_personsByID_out_flushBuf" in line and "[" in line:
+                            nums, name, idx = get_name_nums(line)
+                            update_dict(q8_personsByID_out_flushBuf[idx], tps_per_work, stage, nums)
+                        elif "q8_aucsBySellerID_out_flushBuf" in line and "[" in line:
+                            nums, name, idx = get_name_nums(line)
+                            update_dict(q8_aucsBySellerID_out_flushBuf[idx], tps_per_work, stage, nums)
+                        elif "q8_out_flushBuf" in line and "[" in line:
+                            nums, name, idx = get_name_nums(line)
+                            update_dict(q8_out_flushBuf[idx], tps_per_work, stage, nums)
+                        elif "q8AuctionsBySellerIDWinTab-changelog_flushBuf" in line and "[" in line:
+                            nums, name, idx = get_name_nums(line)
+                            update_dict(q8AuctionsBySellerIDWinTab_changelog_flushBuf[idx], tps_per_work, stage, nums)
+                        elif "q8PersonsByIDWinTab-changelog_flushBuf" in line and "[" in line:
+                            nums, name, idx = get_name_nums(line)
+                            update_dict(q8PersonsByIDWinTab_changelog_flushBuf[idx], tps_per_work, stage, nums)
+
                         elif mode == "2pc" and "commitTxnAPITime" in line and "[" in line:
                             nums = get_nums(line)
                             update_dict(commitTxnAPITime, tps_per_work, stage, nums)
@@ -249,6 +306,65 @@ def parse_single_topdir(directory, mode):
             'per_stage': per_stage,
             'summary': summ,
     }
+    all_stats_in_dir['q8_personsByID_out_flushBuf'] = {}
+    all_stats_in_dir['q8_aucsBySellerID_out_flushBuf'] = {}
+    all_stats_in_dir['q8_out_flushBuf'] = {}
+    all_stats_in_dir['q8AuctionsBySellerIDWinTab-changelog_flushBuf'] = {}
+    all_stats_in_dir['q8PersonsByIDWinTab-changelog_flushBuf'] = {}
+    for i in range(0, 32):
+        tp, fak = get_sorted_keys(q8_personsByID_out_flushBuf[i])
+        if len(fak) != 0:
+            print(f"q8_personsByID_out_flushBuf_{i}")
+            s = {}
+            summ, per_stage = printStats(tp, fak, q8_personsByID_out_flushBuf[i], s)
+            all_stats_in_dir['q8_personsByID_out_flushBuf'][i] = {
+                'per_stage': per_stage,
+                'summary': summ,
+            }
+
+    for i in range(0, 32):
+        tp, fak = get_sorted_keys(q8_aucsBySellerID_out_flushBuf[i])
+        if len(fak) != 0:
+            print(f"q8_aucsBySellerID_out_flushBuf_{i}")
+            s = {}
+            summ, per_stage = printStats(tp, fak, q8_aucsBySellerID_out_flushBuf[i], s)
+            all_stats_in_dir['q8_aucsBySellerID_out_flushBuf'][i] = {
+                'per_stage': per_stage,
+                'summary': summ,
+            }
+
+    for i in range(0, 32):
+        tp, fak = get_sorted_keys(q8_out_flushBuf[i])
+        if len(fak) != 0:
+            print(f"q8_out_flushBuf_{i}")
+            s = {}
+            summ, per_stage = printStats(tp, fak, q8_out_flushBuf[i], s)
+            all_stats_in_dir['q8_out_flushBuf'][i] = {
+                'per_stage': per_stage,
+                'summary': summ,
+            }
+
+    for i in range(0, 32):
+        tp, fak = get_sorted_keys(q8PersonsByIDWinTab_changelog_flushBuf[i])
+        if len(fak) != 0:
+            print(f"q8PersonsByIDWinTab-changelog_flushBuf_{i}")
+            s = {}
+            summ, per_stage = printStats(tp, fak, q8PersonsByIDWinTab_changelog_flushBuf[i], s)
+            all_stats_in_dir['q8PersonsByIDWinTab-changelog_flushBuf'][i] = {
+                'per_stage': per_stage,
+                'summary': summ,
+            }
+
+    for i in range(0, 32):
+        tp, fak = get_sorted_keys(q8PersonsByIDWinTab_changelog_flushBuf[i])
+        if len(fak) != 0:
+            print(f"q8PersonsByIDWinTab-changelog_flushBuf_{i}")
+            s = {}
+            summ, per_stage = printStats(tp, fak, q8PersonsByIDWinTab_changelog_flushBuf[i], s)
+            all_stats_in_dir['q8PersonsByIDWinTab-changelog_flushBuf'][i] = {
+                'per_stage': per_stage,
+                'summary': summ,
+            }
 
     if mode == "2pc":
         print("commit txn api(us)")
