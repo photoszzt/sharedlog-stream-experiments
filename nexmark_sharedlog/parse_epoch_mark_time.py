@@ -96,7 +96,7 @@ def parse_single_topdir(directory, mode):
                 except Exception:
                     pass
     print(dirs_dict)
-    stats = {}
+    progress_mark = {}
     flush_all = {}
     flush_at_least_one = {}
     epochMarkTimes = {}
@@ -106,10 +106,12 @@ def parse_single_topdir(directory, mode):
     markPartTime = {}
     appendEpochMark = {}
     markEpochPrepare = {}
+    waitPrevTxn = {}
+    epochMarkerSize = {}
     all_stats_in_dir = {}
     for tps_per_work, dirpaths in dirs_dict.items():
-        if tps_per_work not in stats:
-            stats[tps_per_work] = {}
+        if tps_per_work not in progress_mark:
+            progress_mark[tps_per_work] = {}
         if tps_per_work not in flush_all:
             flush_all[tps_per_work] = {}
         if tps_per_work not in epochMarkTimes:
@@ -128,6 +130,11 @@ def parse_single_topdir(directory, mode):
             appendEpochMark[tps_per_work] = {}
         if tps_per_work not in markEpochPrepare:
             markEpochPrepare[tps_per_work] = {}
+        if tps_per_work not in waitPrevTxn:
+            waitPrevTxn[tps_per_work] = {}
+        if tps_per_work not in epochMarkerSize:
+            epochMarkerSize[tps_per_work] = {}
+
         visited_files = set()
         for dirpath in dirpaths:
             for fname in Path(dirpath).glob("**/*.stderr"):
@@ -140,7 +147,7 @@ def parse_single_topdir(directory, mode):
                     for line in f:
                         if mode == "epoch" and "epochMarkTime" in line:
                             nums = get_nums(line)
-                            update_dict(stats, tps_per_work, stage, nums)
+                            update_dict(progress_mark, tps_per_work, stage, nums)
                         elif mode == "epoch" and "markPart" in line:
                             nums = get_nums(line)
                             update_dict(markPartTime, tps_per_work, stage, nums)
@@ -150,6 +157,9 @@ def parse_single_topdir(directory, mode):
                         elif mode == "epoch" and "markEpochPrepare" in line:
                             nums = get_nums(line)
                             update_dict(markEpochPrepare, tps_per_work, stage, nums)
+                        elif mode == "epoch" and "epochMarkerSize" in line:
+                            nums = get_nums(line)
+                            update_dict(epochMarkerSize, tps_per_work, stage, nums)
                         elif "flushStage" in line and "[" in line:
                             nums = get_nums(line)
                             update_dict(flush_all, tps_per_work, stage, nums)
@@ -165,15 +175,17 @@ def parse_single_topdir(directory, mode):
                         elif mode == "2pc" and "sendOffsetTime" in line and "[" in line:
                             nums = get_nums(line)
                             update_dict(sendOffsetTime, tps_per_work, stage, nums)
+                        elif mode == "2pc" and "waitPrevTxn" in line and "[" in line:
+                            nums = get_nums(line)
+                            update_dict(waitPrevTxn, tps_per_work, stage, nums)
                         elif mode == "epoch" and "epoch_mark_times" in line:
                             l = int(line.strip().split(": ")[1])
                             update_dict(epochMarkTimes, tps_per_work, stage, l)
     if mode == "epoch":
-        tp = sorted(stats.keys())
-        statk = sorted(stats[tp[0]].keys())
+        tp, fak = get_sorted_keys(progress_mark)
         all_mark_stats = {}
         print("progress marking(us)")
-        summary, per_stage_stats = printStats(tp, statk, stats, all_mark_stats)
+        summary, per_stage_stats = printStats(tp, fak, progress_mark, all_mark_stats)
         all_stats_in_dir['progress_mark'] = {
                 'per_stage': per_stage_stats,
                 'summary': summary,
@@ -205,6 +217,16 @@ def parse_single_topdir(directory, mode):
                 'per_stage': per_stage,
                 'summary': summ,
         }
+
+        print("epoch marker size(B)")
+        tp, fak = get_sorted_keys(epochMarkerSize)
+        all_marker_size = {}
+        summ, per_stage = printStats(tp, fak, epochMarkerSize, all_marker_size)
+        all_stats_in_dir['marker_size'] = {
+                'per_stage': per_stage,
+                'summary': summ,
+        }
+
         # os.makedirs(args.out_dir, exist_ok=True)
         # p = os.path.join(args.out_dir, "mark_time.json")
         # with open(p, "w") as f:
@@ -255,6 +277,15 @@ def parse_single_topdir(directory, mode):
                 'per_stage': per_stage,
                 'summary': summ,
         }
+
+        print("wait prev txn(us)")
+        tp, fak = get_sorted_keys(waitPrevTxn)
+        all_wait_prev_txn = {}
+        summ, per_stage = printStats(tp, fak, waitPrevTxn, all_wait_prev_txn)
+        all_stats_in_dir['waitPrevTxn'] = {
+                'per_stage': per_stage,
+                'summary': summ,
+        }
     return all_stats_in_dir
 
 
@@ -263,7 +294,6 @@ def main():
     parser.add_argument('--dir', required=True)
     parser.add_argument('--mode', required=True, help='2pc, epoch, align_chkpt')
     args = parser.parse_args()
-    #         print(f"{tps_per_work},{stage},{mean(data)},{stdev(data)}")
     parse_single_topdir(args.dir, args.mode)
 
 
