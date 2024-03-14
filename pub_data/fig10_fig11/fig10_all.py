@@ -41,14 +41,14 @@ twopcs = [
 ]
 
 alignchkpts = [
-    "./q38_rerun/align_chkpt_kvrocks/q1-180s-0swarm-100ms-src10ms",
-    "./q38_rerun/align_chkpt_kvrocks/q2-180s-0swarm-100ms-src10ms",
-    "./q38_rerun/align_chkpt_kvrocks/q3-180s-0swarm-100ms-src100ms",
-    "./q38_rerun/align_chkpt_kvrocks/q4-180s-0swarm-100ms-src100ms",
-    "./q38_rerun/align_chkpt_kvrocks/q5-180s-0swarm-100ms-src100ms",
-    "./q38_rerun/align_chkpt_kvrocks/q6-180s-0swarm-100ms-src100ms",
-    "./q38_rerun/align_chkpt_kvrocks/q7-180s-0swarm-100ms-src100ms",
-    "./q38_rerun/align_chkpt_kvrocks/q8-180s-0swarm-100ms-src100ms",
+    "./q38_rerun/align_chkpt_kvrocks2/q1-180s-0swarm-100ms-src10ms",
+    "./q38_rerun/align_chkpt_kvrocks2/q2-180s-0swarm-100ms-src10ms",
+    "./q38_rerun/align_chkpt_kvrocks2/q3-180s-0swarm-100ms-src100ms",
+    "./q38_rerun/align_chkpt_kvrocks2/q4-180s-0swarm-100ms-src100ms",
+    "./q38_rerun/align_chkpt_kvrocks2/q5-180s-0swarm-100ms-src100ms",
+    "./q38_rerun/align_chkpt_kvrocks2/q6-180s-0swarm-100ms-src100ms",
+    "./q38_rerun/align_chkpt_kvrocks2/q7-180s-0swarm-100ms-src100ms",
+    "./q38_rerun/align_chkpt_kvrocks2/q8-180s-0swarm-100ms-src100ms",
 ]
 
 throughputs = [
@@ -110,6 +110,7 @@ if __name__ == "__main__":
         print(f"2pc p99: {twopc_p99}")
         print(f"2pc/sys p50: {np.array(twopc_p50)/np.array(sys_p50)}")
         print(f"2pc/sys p99: {np.array(twopc_p99)/np.array(sys_p99)}")
+        print(f"ackpt tp: {ackpt_in_tp}")
         print(f"alignchkpt p50: {ackpt_p50}")
         print(f"alignchkpt p99: {ackpt_p99}")
 
@@ -132,7 +133,7 @@ if __name__ == "__main__":
 
         if experiment < 2:
             ax1.set_ylim([0, 60])
-        elif experiment != 6:
+        else:
             ax1.set_ylim([0, 1000])
 
         # plt.title('Q' + str(experiment + 1))
