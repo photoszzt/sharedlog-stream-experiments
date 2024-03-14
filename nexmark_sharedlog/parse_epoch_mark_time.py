@@ -134,6 +134,12 @@ def parse_single_topdir(directory, mode):
     q8_out_flushBuf = {}
     q8AuctionsBySellerIDWinTab_changelog_flushBuf = {}
     q8PersonsByIDWinTab_changelog_flushBuf = {}
+    for i in range(0, 32):
+        q8_personsByID_out_flushBuf[i] = {}
+        q8_aucsBySellerID_out_flushBuf[i] = {}
+        q8_out_flushBuf[i] = {}
+        q8AuctionsBySellerIDWinTab_changelog_flushBuf[i] = {}
+        q8PersonsByIDWinTab_changelog_flushBuf[i] = {}
     for tps_per_work in dirs_dict:
         if tps_per_work not in progress_mark:
             progress_mark[tps_per_work] = {}
@@ -160,11 +166,6 @@ def parse_single_topdir(directory, mode):
         if tps_per_work not in epochMarkerSize:
             epochMarkerSize[tps_per_work] = {}
         for i in range(0, 32):
-            q8_personsByID_out_flushBuf[i] = {}
-            q8_aucsBySellerID_out_flushBuf[i] = {}
-            q8_out_flushBuf[i] = {}
-            q8AuctionsBySellerIDWinTab_changelog_flushBuf[i] = {}
-            q8PersonsByIDWinTab_changelog_flushBuf[i] = {}
             if tps_per_work not in q8_personsByID_out_flushBuf[i]:
                 q8_personsByID_out_flushBuf[i][tps_per_work] = {}
             if tps_per_work not in q8_aucsBySellerID_out_flushBuf[i]:
