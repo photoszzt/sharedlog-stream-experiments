@@ -91,6 +91,29 @@ def main():
     plt.title(f"{m}")
     plt.legend(ncol=2, loc='upper center', bbox_to_anchor=(0.5, 1.4))
     plt.savefig(f"q8_metrics/q8_{m}.pdf")
+    print()
+
+    metrics = ['q8_personsByID_out_flushBuf', 'q8_aucsBySellerID_out_flushBuf', 
+               'q8_out_flushBuf', 'q8AuctionsBySellerIDWinTab-changelog_flushBuf',
+               'q8PersonsByIDWinTab-changelog_flushBuf']
+    methods=['epoch', '2pc']
+    for m in metrics:
+        if len(stats["4"]['epoch'][m]) > 0:
+            stages = stats["4"]['epoch'][m]['0']['per_stage'].keys()
+        elif len(stats["4"]['2pc'][m]) > 0:
+            stages = stats["4"]['2pc'][m]['0']['per_stage'].keys()
+        else:
+            continue
+        for i in ins:
+            for idx, st in enumerate(stages):
+                for mth in methods:
+                    if len(stats[i][mth][m]) > 0:
+                        for j in range(0, int(i)):
+                            p50 = stats[i][mth][m][str(j)]['per_stage'][st][tps_map[i]]['p50']
+                            p99 = stats[i][mth][m][str(j)]['per_stage'][st][tps_map[i]]['p99']
+                            print(f'{st} {m}_{j} {mth}, p50: {p50}, p99: {p99}')
+            print()
+
 
 
 if __name__ == '__main__':
