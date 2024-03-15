@@ -13,21 +13,24 @@ def main():
 
     for root, dirs, _ in os.walk(args.dir):
         for d in dirs:
-            if "epoch" in d or "align_chkpt":
+            if "epoch" in d or "align_chkpt" or "2pc" in d or "align_chkpt" in d:
                 try:
-                    tps_per_work = d.split("_")[0][:-3]
+                    tps_per_work = int(d.split("_")[0][:-3])
                     if tps_per_work not in dirs_dict:
                         dirs_dict[tps_per_work] = []
                     dirs_dict[tps_per_work].append(os.path.join(root, d))
                 except Exception:
                     pass
+    print(dirs_dict)
     for tps_per_work, dirpaths in dirs_dict.items():
         for dirpath in dirpaths:
+            dname = os.path.basename(dirpath)
+            mode = dname.split("_")[1]
             logs_path = os.path.join(dirpath, "logs")
             source_paths = set()
             for source_file in Path(logs_path).glob("**/source*.stderr"):
                 size = os.stat(source_file).st_size
-                if size > 4100:
+                if size > 8192:
                     d = os.path.dirname(os.path.dirname(source_file))
                     d = os.path.basename(os.path.dirname(d))
                     source_paths.add(d)
@@ -56,7 +59,7 @@ def main():
                 if dev_name == "":
                     raise Exception("doesn't find nvme1n1 in _dev file")
 
-                tps_storage_out = os.path.join(out_storage_dir, str(tps_per_work))
+                tps_storage_out = os.path.join(out_storage_dir, str(tps_per_work), mode)
                 os.makedirs(tps_storage_out, exist_ok=True)
 
                 cpu_cmd = ["sadf", "-g", os.path.join(dirname, "sar_st"), 
@@ -98,7 +101,7 @@ def main():
                     name = "sourcegen"
                 else:
                     name = "app"
-                tps_engine_out = os.path.join(out_engine_dir, str(tps_per_work))
+                tps_engine_out = os.path.join(out_engine_dir, str(tps_per_work), mode)
                 os.makedirs(tps_engine_out, exist_ok=True)
 
                 cpu_cmd = ["sadf", "-g", os.path.join(dirname, "sar_st"), 
