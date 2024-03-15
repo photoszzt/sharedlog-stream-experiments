@@ -23,25 +23,30 @@ colors = ['blue', 'orange', 'green', 'purple', 'olive']
 
 
 def main():
+    plot('./multi_instances_0extra_kvrocks', 'q8_4-32_0extra.pdf')
+    plot('./multi_instances_200extra_kvrocks', 'q8_4-32_200extra.pdf')
+
+
+def plot(dir, fname):
     ins=[4, 8, 16, 32]
     fig = plt.figure(figsize=(7, 3.2), layout='constrained')
     ax1 = plt.subplot(111)
-    impeller_tps = get_tps(ins, './multi_instances_0extra_kvrocks/impeller/')
-    twopc_tps = get_tps(ins, './multi_instances_0extra_kvrocks/2pc/')
-    align_chkpt_tps = get_tps(ins, './multi_instances_0extra_kvrocks/align_chkpt/')
+    impeller_tps = get_tps(ins, f'{dir}/impeller/')
+    twopc_tps = get_tps(ins, f'{dir}/2pc/')
+    # align_chkpt_tps = get_tps(ins, f'{dir}/align_chkpt/')
 
     impeller_p50 = [int(row['p50']) for row in impeller_tps]
     impeller_p99 = [int(row['p99']) for row in impeller_tps]
     twopc_p50 = [int(row['p50']) for row in twopc_tps]
     twopc_p99 = [int(row['p99']) for row in twopc_tps]
-    align_chkpt_p50 = [int(row['p50']) for row in align_chkpt_tps]
-    align_chkpt_p99 = [int(row['p99']) for row in align_chkpt_tps]
+    # align_chkpt_p50 = [int(row['p50']) for row in align_chkpt_tps]
+    # align_chkpt_p99 = [int(row['p99']) for row in align_chkpt_tps]
     print(f'impeller p50: {impeller_p50}')
     print(f'impeller p99: {impeller_p99}')
     print(f'2pc p50: {twopc_p50}')
     print(f'2pc p99: {twopc_p99}')
-    print(f'align_chkpt p50: {align_chkpt_p50}')
-    print(f'align_chkpt p99: {align_chkpt_p99}')
+    # print(f'align_chkpt p50: {align_chkpt_p50}')
+    # print(f'align_chkpt p99: {align_chkpt_p99}')
 
     l1, = ax1.plot(ins, impeller_p50, label='Impeller p50', marker='o', color=colors[0])
     l2, = ax1.plot(ins, impeller_p99, label='Impeller p99', ls='--', marker='o', color=colors[0])
@@ -55,8 +60,8 @@ def main():
     ax1.tick_params(labelsize=16)
     ax1.set_xlabel('number of streams', fontsize=16)
     ax1.set_ylabel('Event time latency(ms)', fontsize=16)
-    fig.legend(ncol=2, handles=handles, fontsize=16, loc='upper center', bbox_to_anchor=(0.5, 1.4))
-    plt.savefig('q8_4-16ins.pdf', bbox_inches='tight')
+    fig.legend(ncol=2, handles=handles, fontsize=16, loc='upper center', bbox_to_anchor=(0.5, 1.3))
+    plt.savefig(fname, bbox_inches='tight')
 
 
 if __name__ == "__main__":
