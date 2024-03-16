@@ -1,4 +1,5 @@
 import json
+import os
 import matplotlib.pyplot as plt
 
 tps_map = {
@@ -8,11 +9,24 @@ tps_map = {
     "32": "3500",
 }
 
-colors = ['blue', 'orange', 'green', 'purple', 'olive']
+colors=[
+'#3366cc',
+'#dc3912',
+'#ff9900',
+'#109618',
+'#990099',
+'#0099c6',
+'#dd4477',
+'#66aa00',
+'#b82e2e',
+]
 markers = ['o', 's', 'v', '+']
+metric_dir = "q8_metrics_0extra"
+metric_file = "./q8_multistream_stats_0extra.json"
 
 def main():
-    with open("./q8_multistream_stats.json", "r") as f:
+    os.makedirs(metric_dir, exist_ok=True)
+    with open(metric_file, "r") as f:
         stats = json.load(f)
     ins = ["4", "8", "16", "32"]
     metrics = ['flush_all', 'flush_at_least_one']
@@ -37,7 +51,7 @@ def main():
             plt.ylabel("time(ms)")
             plt.title(f"{m}")
             plt.legend(handles=handles, ncol=2, loc='upper center', bbox_to_anchor=(0.5, 1.4))
-            plt.savefig(f"q8_metrics/q8_{m}_{st}.pdf")
+            plt.savefig(f"{metric_dir}/q8_{m}_{st}.pdf")
             print()
 
     epoch_metrics = ['progress_mark', 'mark_part', 'append_mark', 'prepare_mark']
@@ -55,7 +69,7 @@ def main():
         plt.ylabel("time(ms)")
         plt.title(f"{m}")
         plt.legend(ncol=2, loc='upper center', bbox_to_anchor=(0.5, 1.4))
-        plt.savefig(f"q8_metrics/q8_{m}.pdf")
+        plt.savefig(f"{metric_dir}/q8_{m}.pdf")
         print()
 
     twopc_metrics = ['commitTxnAPITime', 'txnCommitTime', 'sendOffsetTime', 'waitPrevTxn']
@@ -73,7 +87,7 @@ def main():
         plt.ylabel("time(ms)")
         plt.title(f"{m}")
         plt.legend(ncol=2, loc='upper center', bbox_to_anchor=(0.5, 1.4))
-        plt.savefig(f"q8_metrics/q8_{m}.pdf")
+        plt.savefig(f"{metric_dir}/q8_{m}.pdf")
         print()
 
     m='marker_size'
@@ -90,7 +104,7 @@ def main():
     plt.ylabel("size(KB)")
     plt.title(f"{m}")
     plt.legend(ncol=2, loc='upper center', bbox_to_anchor=(0.5, 1.4))
-    plt.savefig(f"q8_metrics/q8_{m}.pdf")
+    plt.savefig(f"{metric_dir}/q8_{m}.pdf")
     print()
 
     metrics = ['q8_personsByID_out_flushBuf', 'q8_aucsBySellerID_out_flushBuf', 
