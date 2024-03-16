@@ -1,7 +1,14 @@
 import matplotlib.pyplot as plt
 import subprocess
 import csv
-headers = ['del', 'tps', 'trials', 'pts', 'avg', 'std', 'min', 'p25', 'p50', 'p75', 'p90', 'p99', 'max']
+import sys
+import os
+
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(parent)
+
+from fig_const import markers, colors, headers
 
 def load(exp_dir):
     rows = subprocess.run(["latency", "query", exp_dir], stdout=subprocess.PIPE)
@@ -18,19 +25,6 @@ def get_tps(ins, m):
         v = load(f"{m}/{i}ins/q8-180s-0swarm-100ms-src100ms/")
         tps.append(v[0])
     return tps
-
-colors=[
-'#3366cc',
-'#dc3912',
-'#ff9900',
-'#109618',
-'#990099',
-'#0099c6',
-'#dd4477',
-'#66aa00',
-'#b82e2e',
-]
-markers = ['o', 's', 'v', '+']
 
 
 def main():
@@ -62,8 +56,8 @@ def plot(dir, fname):
 
     l1, = ax1.plot(ins, impeller_p50, label='Impeller p50', marker=markers[0], color=colors[0])
     l2, = ax1.plot(ins, impeller_p99, label='Impeller p99', ls='--', marker=markers[0], color=colors[0])
-    l3, = ax1.plot(ins, twopc_p50, label='2pc on Impeller p50', marker=markers[1], color=colors[1])
-    l4, = ax1.plot(ins, twopc_p99, label='2pc on Impeller p99', ls='--', marker=markers[1], color=colors[1])
+    l3, = ax1.plot(ins, twopc_p50, label='2pc on Impeller p50', marker=markers[3], color=colors[3])
+    l4, = ax1.plot(ins, twopc_p99, label='2pc on Impeller p99', ls='--', marker=markers[3], color=colors[3])
     # l5, = ax1.plot(ins, align_chkpt_p50, label='Align chkpt on Impeller p50', marker='p', color=colors[4])
     # l6, = ax1.plot(ins, align_chkpt_p99, label='Align chkpt on Impeller p99', ls='--', marker='p', color=colors[4])
     # handles = [l1, l2, l3, l4, l5, l6]

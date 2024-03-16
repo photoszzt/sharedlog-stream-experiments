@@ -2,11 +2,17 @@ import os
 import numpy as np
 import json
 import matplotlib.pyplot as plt
+import sys
+
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(os.path.dirname(current))
+sys.path.append(parent)
+
+from fig_const import markers, colors
 
 input_throughput = [48000, 64000, 80000, 112000, 128000]
 per_work_in_tp = [12000, 16000, 20000, 28000, 32000]
 times = [10, 50, 100]
-colors = ['orange', 'blue', ]
 
 kafkas = [
     "../q8_stats/kafka/180s_0swarm_10ms_src10ms/q8_stats.json",
@@ -38,13 +44,13 @@ def main():
         if i == 0:
             ax1 = axs[0, i]
         ll1, = axs[0, i].plot(input_throughput, klat['p50'], label=f'Kafka Streams p50',
-                color=colors[0], marker='v')
+                color=colors[1], marker=markers[1])
         ll2, = axs[1, i].plot(input_throughput, klat['p99'], label=f'Kafka Streams p99',
-                color=colors[0], marker='v', ls='--')
+                color=colors[1], marker=markers[1], ls='--')
         ll3, = axs[0, i].plot(input_throughput, [row[1]/1000.0 for row in idata], 
-                label=f'Impeller p50', color=colors[1], marker='o')
+                label=f'Impeller p50', color=colors[0], marker=markers[0])
         ll4, = axs[1, i].plot(input_throughput, [row[2]/1000.0 for row in idata], 
-                label=f'Impeller p99', color=colors[1], marker='o', ls='--')
+                label=f'Impeller p99', color=colors[0], marker=markers[0], ls='--')
         if i == 1:
             axs[0, i].set_title(f'p50\n{t}ms', fontsize=14)
             axs[1, i].set_title(f'p99', fontsize=14)

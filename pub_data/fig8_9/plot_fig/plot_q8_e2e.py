@@ -2,13 +2,17 @@ import os
 import csv
 import subprocess
 import matplotlib.pyplot as plt
+import sys
 
-headers = ['del', 'tps', 'trials', 'pts', 'avg', 'std', 'min', 'p25', 'p50', 'p75', 'p90', 'p99', 'max']
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(os.path.dirname(current))
+sys.path.append(parent)
+
+from fig_const import markers, colors, headers
 
 input_throughput = [48000, 64000, 80000, 112000, 128000]
 per_worker_in_tp = [12000, 16000, 20000, 28000, 32000]
 times = [10, 50, 100]
-colors = ['orange', 'blue', 'purple']
 
 kafkas = [
     "../q8_e2e/kafka/180s_0swarm_10ms_src10ms/",
@@ -51,18 +55,18 @@ def main():
         if i == 0:
             ax1 = ax
         ll1, = ax.plot(input_throughput, [int(row['p50']) for row in kafka], label='Kafka Streams p50',
-                color=colors[0], marker='v')
+                color=colors[1], marker=markers[1])
         ll2, = ax.plot(input_throughput, [int(row['p99']) for row in kafka], label='Kafka Streams p99',
-                color=colors[0], marker='v', ls='--')
+                color=colors[1], marker=markers[1], ls='--')
         ll3, = ax.plot(input_throughput, [int(row['p50']) for row in impeller], 
-                label=f'Impeller p50', color=colors[1], marker='o')
+                label=f'Impeller p50', color=colors[0], marker=markers[0])
         ll4, = ax.plot(input_throughput, [int(row['p99']) for row in impeller], label='Impeller p99',
-                color=colors[1], marker='o', ls='--')
+                color=colors[0], marker=markers[0], ls='--')
         ll5, = ax.plot(input_throughput, [int(row['p50']) for row in twopc], 
-                label=f'2pc on Impeller p50', color=colors[2], marker='o')
+                label=f'2pc on Impeller p50', color=colors[3], marker=markers[3])
         ll6, = ax.plot(input_throughput, [int(row['p99']) for row in twopc], 
                 label='2pc on Impeller p99',
-                color=colors[2], marker='o', ls='--')
+                color=colors[3], marker=markers[3], ls='--')
         if i == 0:
             l1, l2, l3, l4 = ll1, ll2, ll3, ll4
         ax.set_ylim(0, 1000)

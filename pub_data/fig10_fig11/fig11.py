@@ -2,6 +2,13 @@ import csv
 import matplotlib.pyplot as plt
 import subprocess
 import sys
+import os
+
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(parent)
+
+from fig_const import markers, colors
 
 headers = ['del', 'tps', 'trials', 'pts', 'avg', 'std', 'min', 'p25', 'p50', 'p75', 'p90', 'p99', 'max']
 
@@ -50,7 +57,6 @@ throughputs = [
     [4000, 8000, 12000, 16000, 20000, 24000, 28000, 32000, 36000],
 ]
 
-colors = ['blue', 'orange', 'green']
 
 def load(system, experiment):
     rows = subprocess.run(["latency", "query", system[experiment]], stdout=subprocess.PIPE)
@@ -60,6 +66,7 @@ def load(system, experiment):
     return rows
 
 if __name__ == "__main__":
+    os.makedirs('comparisons_unsafe', exist_ok=True)
     for experiment in range(0, len(kafkas)):
         kafka = load(kafkas, experiment)
         sys = load(syss, experiment)
@@ -86,12 +93,12 @@ if __name__ == "__main__":
 
         fig = plt.figure(figsize=(6, 3.2))
         ax1 = plt.subplot(111)
-        l1, = ax1.plot(sys_in_tp, [int(row['p50']) for row in sys], label='impeller p50',  marker='o',color=colors[0])
-        l2, = ax1.plot(kafka_in_tp, [int(row['p50']) for row in kafka], label='kafka p50',  marker='v',color=colors[1])
-        l5, = ax1.plot(none_in_tp, [int(row['p50']) for row in none], label='impeller unsafe p50',  marker='s',color=colors[2])
-        l3, = ax1.plot(sys_in_tp, [int(row['p99']) for row in sys], label='impeller p99', ls='--', marker='o', color=colors[0])
-        l4, = ax1.plot(kafka_in_tp, [int(row['p99']) for row in kafka], label='kafka p99', ls='--', marker='v', color=colors[1])
-        l6, = ax1.plot(none_in_tp, [int(row['p99']) for row in none], label='impeller unsafe p99', ls='--', marker='s',color=colors[2])
+        l1, = ax1.plot(sys_in_tp, [int(row['p50']) for row in sys], label='Impeller p50',  marker=markers[0],color=colors[0])
+        l3, = ax1.plot(sys_in_tp, [int(row['p99']) for row in sys], label='Impeller p99', ls='--', marker=markers[0], color=colors[0])
+        l2, = ax1.plot(kafka_in_tp, [int(row['p50']) for row in kafka], label='Kafka p50',  marker=markers[1],color=colors[1])
+        l4, = ax1.plot(kafka_in_tp, [int(row['p99']) for row in kafka], label='Kafka p99', ls='--', marker=markers[1], color=colors[1])
+        l5, = ax1.plot(none_in_tp, [int(row['p50']) for row in none], label='Impeller unsafe p50',  marker=markers[2],color=colors[2])
+        l6, = ax1.plot(none_in_tp, [int(row['p99']) for row in none], label='Impeller unsafe p99', ls='--', marker=markers[2],color=colors[2])
 
         ax1.set_xlabel('input throughput(events/s)')
         ax1.set_ylabel('event time latency(ms)')

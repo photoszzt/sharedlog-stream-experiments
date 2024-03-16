@@ -1,13 +1,18 @@
 import json
 import os
+import sys
 import matplotlib.pyplot as plt
+
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(os.path.join(parent, 'pub_data'))
+
+from fig_const import markers, colors, headers
 
 markIntr = [3, 5, 7, 10]
 markFreq = [333, 200, 142, 100]
 epoch_dir = "../q8_varflush_stats/epoch/" 
 twopc_dir = "../q8_varflush_stats/2pc/"
-
-colors = ['blue', 'purple']
 
 def main():
     epoch_p50 = []
@@ -34,10 +39,10 @@ def main():
 
     fig = plt.figure(figsize=(6.5, 3))
     axs = fig.subplots(1, 2)
-    l1, = axs[0].plot(markFreq, epoch_p50, label="Impeller p50", color=colors[0], marker='o')
-    l3, = axs[0].plot(markFreq, twopc_p50, label="2pc on Impeller p50", color=colors[1], marker='s')
-    l2, = axs[1].plot(markFreq, epoch_p99, label="Impeller p99", color=colors[0], marker='o', ls='--')
-    l4, = axs[1].plot(markFreq, twopc_p99, label="2pc on Impeller p99", color=colors[1], marker='s', ls='--')
+    l1, = axs[0].plot(markFreq, epoch_p50, label="Impeller p50", color=colors[0], marker=markers[0])
+    l2, = axs[1].plot(markFreq, epoch_p99, label="Impeller p99", color=colors[0], marker=markers[0], ls='--')
+    l3, = axs[0].plot(markFreq, twopc_p50, label="2pc on Impeller p50", color=colors[3], marker=markers[3])
+    l4, = axs[1].plot(markFreq, twopc_p99, label="2pc on Impeller p99", color=colors[3], marker=markers[3], ls='--')
     axs[0].legend(loc=(0.3, 1.05), ncol=2, handles=[l1, l2, l3, l4])
     fig.supxlabel('progress marking frequency(marks/s)', fontsize=14)
     fig.supylabel('event time latency (ms)', fontsize=14)
