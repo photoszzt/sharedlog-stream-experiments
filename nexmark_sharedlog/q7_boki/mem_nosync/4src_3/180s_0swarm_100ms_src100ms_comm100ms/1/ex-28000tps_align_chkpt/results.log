@@ -1,0 +1,195 @@
+wait for last: true, sink max_buf_size: 131072
+warmup: 0
+config: map[NodeConstraint:"1,2,3,4" NumInstance:4 OutputTopicName:["nexmark_src"] funcName:"source"]
+config: map[InputTopicNames:["nexmark_src"] NodeConstraint:"5,6,7,8" NumInstance:4 NumSrcProducer:[1] OutputTopicName:["bid_by_price"] funcName:"q7BidByPrice"]
+config: map[InputTopicNames:["nexmark_src"] NodeConstraint:"5,6,7,8" NumInstance:4 NumSrcProducer:[1] OutputTopicName:["bid_by_win"] funcName:"q7BidByWin"]
+config: map[InputTopicNames:["bid_by_win"] NodeConstraint:"5,6,7,8" NumInstance:4 NumSrcProducer:[4] OutputTopicName:["max_bids"] funcName:"q7MaxBid"]
+config: map[Final:true InputTopicNames:["bid_by_price","max_bids"] NodeConstraint:"5,6,7,8" NumInstance:4 NumSrcProducer:[4,4] OutputTopicName:["q7_out"] funcName:"q7JoinMaxBid"]
+srcInvokeConfig: &{FinalTpNames:[q7_out] TopicName:nexmark_src AppId:q7 NodeConstraint:1,2,3,4 AdditionalBytes:0 ScaleEpoch:0 NumOutPartition:4 InstanceID:0 NumSrcInstance:4}
+cliNodes: [0xc0000c0160 0xc0000c01a0 0xc0000c01e0 0xc0000c0260]
+inParamsMap: map[q7BidByPrice:[0xc0000a2b40 0xc0000a2be0 0xc0000a2c80 0xc0000a2d20] q7BidByWin:[0xc0000a2dc0 0xc0000a2e60 0xc0000a2f00 0xc0000a2fa0] q7JoinMaxBid:[0xc0000a32c0 0xc0000a3360 0xc0000a3400 0xc0000a34a0] q7MaxBid:[0xc0000a3040 0xc0000a30e0 0xc0000a3180 0xc0000a3220]]
+configScaleInput: &{Config:map[bid_by_price:4 bid_by_win:4 changelog:4 max_bids:4 nexmark_src:4 q7BidByPrice:4 q7BidByWin:4 q7JoinMaxBid:4 q7MaxBid:4 q7_out:4 source:4] AppId:q7 FuncNames:[source q7BidByPrice q7BidByWin q7MaxBid q7JoinMaxBid] BufMaxSize:131072 ScaleEpoch:0 SerdeFormat:1 Bootstrap:false}
+encoded json is {"sg":{"bid_by_price":4,"bid_by_win":4,"changelog":4,"max_bids":4,"nexmark_src":4,"q7BidByPrice":4,"q7BidByWin":4,"q7JoinMaxBid":4,"q7MaxBid":4,"q7_out":4,"source":4},"aid":"q7","fns":["source","q7BidByPrice","q7BidByWin","q7MaxBid","q7JoinMaxBid"],"bufMaxSize":131072,"epoch":1,"serdeFormat":1,"bs":true}, node constraint is 1
+encoded json is {"outTpNames":["q7_out"]}, node constraint is 1
+redis_setup url is http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/redisSetup
+encoded json is {"srcTpName":"nexmark_src","outTpNames":["q7_out"],"numOutParts":"BA==","chkptEveryMs":100,"bufMaxSize":131072,"srcNumPart":4,"gua":4,"serde_format":1}, node constraint is 1
+chkptmngr url is http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/chkptmngr
+func source url is http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/source
+func source url is http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/source
+src instance: 4
+encoded json is {"topic_name":"nexmark_src","rate_shape":"square","aid":"q7","events_num":20160000,"rate_period":10000000000,"finOutTpNs":["q7_out"],"first_event_rate":112000,"next_event_rate":112000,"bid_avg_size":100,"person_avg_size":200,"auction_avg_size":500,"duration":180,"person_proportion":1,"auction_proportion":3,"bid_proportion":46,"bid_hot_ratio_auctions":2,"bid_hot_ratio_bidders":4,"auction_hot_ratio_sellers":4,"flushms":100,"bufMaxSize":131072,"commEveryMs":100,"rate_limited":false,"waitEnd":true,"serde_format":1,"numOutPar":4,"parNum":1,"nSrcIns":4,"gua":4}, node constraint is 1,2,3,4
+encoded json is {"topic_name":"nexmark_src","rate_shape":"square","aid":"q7","events_num":20160000,"rate_period":10000000000,"finOutTpNs":["q7_out"],"first_event_rate":112000,"next_event_rate":112000,"bid_avg_size":100,"person_avg_size":200,"auction_avg_size":500,"duration":180,"person_proportion":1,"auction_proportion":3,"bid_proportion":46,"bid_hot_ratio_auctions":2,"bid_hot_ratio_bidders":4,"auction_hot_ratio_sellers":4,"flushms":100,"bufMaxSize":131072,"commEveryMs":100,"rate_limited":false,"waitEnd":true,"serde_format":1,"numOutPar":4,"nSrcIns":4,"gua":4}, node constraint is 1,2,3,4
+func source url is http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/source
+func source url is http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/source
+encoded json is {"topic_name":"nexmark_src","rate_shape":"square","aid":"q7","events_num":20160000,"rate_period":10000000000,"finOutTpNs":["q7_out"],"first_event_rate":112000,"next_event_rate":112000,"bid_avg_size":100,"person_avg_size":200,"auction_avg_size":500,"duration":180,"person_proportion":1,"auction_proportion":3,"bid_proportion":46,"bid_hot_ratio_auctions":2,"bid_hot_ratio_bidders":4,"auction_hot_ratio_sellers":4,"flushms":100,"bufMaxSize":131072,"commEveryMs":100,"rate_limited":false,"waitEnd":true,"serde_format":1,"numOutPar":4,"parNum":2,"nSrcIns":4,"gua":4}, node constraint is 1,2,3,4
+encoded json is {"topic_name":"nexmark_src","rate_shape":"square","aid":"q7","events_num":20160000,"rate_period":10000000000,"finOutTpNs":["q7_out"],"first_event_rate":112000,"next_event_rate":112000,"bid_avg_size":100,"person_avg_size":200,"auction_avg_size":500,"duration":180,"person_proportion":1,"auction_proportion":3,"bid_proportion":46,"bid_hot_ratio_auctions":2,"bid_hot_ratio_bidders":4,"auction_hot_ratio_sellers":4,"flushms":100,"bufMaxSize":131072,"commEveryMs":100,"rate_limited":false,"waitEnd":true,"serde_format":1,"numOutPar":4,"parNum":3,"nSrcIns":4,"gua":4}, node constraint is 1,2,3,4
+Waiting for all client to return
+func name is q7BidByPrice
+func url is http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/q7BidByPrice
+func name is q7BidByPrice
+func url is http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/q7BidByPrice
+func name is q7BidByPrice
+func url is http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/q7BidByPrice
+func name is q7BidByWin
+func url is http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/q7BidByWin
+func name is q7BidByPrice
+func url is http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/q7BidByPrice
+func name is q7MaxBid
+func url is http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/q7MaxBid
+func name is q7BidByWin
+func url is http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/q7BidByWin
+func name is q7BidByWin
+func url is http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/q7BidByWin
+func name is q7MaxBid
+func url is http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/q7MaxBid
+func name is q7JoinMaxBid
+func url is http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/q7JoinMaxBid
+encoded json is {"aid":"q7","numOutPartition":"BA==","numSubstreamProducer":"AQ==","outputTopicName":["bid_by_price"],"inputTopicName":["nexmark_src"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"bufMaxSize":131072,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"ParNum":2,"gua":4,"serdeFormat":1}, node constraint is 5,6,7,8
+encoded json is {"aid":"q7","numOutPartition":"BA==","numSubstreamProducer":"BA==","outputTopicName":["max_bids"],"inputTopicName":["bid_by_win"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"bufMaxSize":131072,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"gua":4,"serdeFormat":1}, node constraint is 5,6,7,8
+func name is q7MaxBid
+func url is http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/q7MaxBid
+encoded json is {"aid":"q7","numOutPartition":"BA==","numSubstreamProducer":"AQ==","outputTopicName":["bid_by_price"],"inputTopicName":["nexmark_src"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"bufMaxSize":131072,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"ParNum":3,"gua":4,"serdeFormat":1}, node constraint is 5,6,7,8
+encoded json is {"aid":"q7","numOutPartition":"BA==","numSubstreamProducer":"AQ==","outputTopicName":["bid_by_price"],"inputTopicName":["nexmark_src"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"bufMaxSize":131072,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"ParNum":1,"gua":4,"serdeFormat":1}, node constraint is 5,6,7,8
+func name is q7MaxBid
+func url is http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/q7MaxBid
+func name is q7JoinMaxBid
+encoded json is {"aid":"q7","numOutPartition":"BA==","numSubstreamProducer":"BA==","outputTopicName":["max_bids"],"inputTopicName":["bid_by_win"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"bufMaxSize":131072,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"ParNum":1,"gua":4,"serdeFormat":1}, node constraint is 5,6,7,8
+encoded json is {"aid":"q7","numOutPartition":"BA==","numSubstreamProducer":"BAQ=","outputTopicName":["q7_out"],"inputTopicName":["bid_by_price","max_bids"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"bufMaxSize":131072,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"ParNum":1,"gua":4,"serdeFormat":1}, node constraint is 5,6,7,8
+func url is http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/q7JoinMaxBid
+encoded json is {"aid":"q7","numOutPartition":"BA==","numSubstreamProducer":"AQ==","outputTopicName":["bid_by_win"],"inputTopicName":["nexmark_src"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"bufMaxSize":131072,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"gua":4,"serdeFormat":1}, node constraint is 5,6,7,8
+func name is q7JoinMaxBid
+func url is http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/q7JoinMaxBid
+encoded json is {"aid":"q7","numOutPartition":"BA==","numSubstreamProducer":"BAQ=","outputTopicName":["q7_out"],"inputTopicName":["bid_by_price","max_bids"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"bufMaxSize":131072,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"ParNum":3,"gua":4,"serdeFormat":1}, node constraint is 5,6,7,8
+encoded json is {"aid":"q7","numOutPartition":"BA==","numSubstreamProducer":"AQ==","outputTopicName":["bid_by_price"],"inputTopicName":["nexmark_src"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"bufMaxSize":131072,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"gua":4,"serdeFormat":1}, node constraint is 5,6,7,8
+encoded json is {"aid":"q7","numOutPartition":"BA==","numSubstreamProducer":"BAQ=","outputTopicName":["q7_out"],"inputTopicName":["bid_by_price","max_bids"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"bufMaxSize":131072,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"ParNum":2,"gua":4,"serdeFormat":1}, node constraint is 5,6,7,8
+func name is q7JoinMaxBid
+func url is http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/q7JoinMaxBid
+encoded json is {"aid":"q7","numOutPartition":"BA==","numSubstreamProducer":"BA==","outputTopicName":["max_bids"],"inputTopicName":["bid_by_win"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"bufMaxSize":131072,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"ParNum":2,"gua":4,"serdeFormat":1}, node constraint is 5,6,7,8
+encoded json is {"aid":"q7","numOutPartition":"BA==","numSubstreamProducer":"BA==","outputTopicName":["max_bids"],"inputTopicName":["bid_by_win"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"bufMaxSize":131072,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"ParNum":3,"gua":4,"serdeFormat":1}, node constraint is 5,6,7,8
+encoded json is {"aid":"q7","numOutPartition":"BA==","numSubstreamProducer":"AQ==","outputTopicName":["bid_by_win"],"inputTopicName":["nexmark_src"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"bufMaxSize":131072,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"ParNum":2,"gua":4,"serdeFormat":1}, node constraint is 5,6,7,8
+encoded json is {"aid":"q7","numOutPartition":"BA==","numSubstreamProducer":"BAQ=","outputTopicName":["q7_out"],"inputTopicName":["bid_by_price","max_bids"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"bufMaxSize":131072,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"gua":4,"serdeFormat":1}, node constraint is 5,6,7,8
+encoded json is {"aid":"q7","numOutPartition":"BA==","numSubstreamProducer":"AQ==","outputTopicName":["bid_by_win"],"inputTopicName":["nexmark_src"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"bufMaxSize":131072,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"ParNum":3,"gua":4,"serdeFormat":1}, node constraint is 5,6,7,8
+encoded json is {"aid":"q7","numOutPartition":"BA==","numSubstreamProducer":"AQ==","outputTopicName":["bid_by_win"],"inputTopicName":["nexmark_src"],"commEveryMs":100,"flushMs":100,"snapEveryS":10,"duration":180,"bufMaxSize":131072,"epoch":1,"waitEnd":true,"numChangelogPartition":4,"numInPartition":4,"ParNum":1,"gua":4,"serdeFormat":1}, node constraint is 5,6,7,8
+func name is q7BidByWin
+func url is http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/q7BidByWin
+source-2 invoke done
+source-1 invoke done
+source-0 invoke done
+source-3 invoke done
+q7BidByWin-1 call done
+q7BidByWin-3 call done
+q7BidByWin-0 call done
+q7BidByPrice-2 call done
+q7BidByPrice-3 call done
+q7BidByPrice-0 call done
+{"level":"error","time":"2024-03-07T04:12:27-06:00","message":"q7JoinMaxBid request failed: Post \"http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/q7JoinMaxBid\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)"}
+q7JoinMaxBid-0 call done
+{"level":"error","time":"2024-03-07T04:12:27-06:00","message":"q7JoinMaxBid request failed: Post \"http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/q7JoinMaxBid\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)"}
+q7JoinMaxBid-2 call done
+{"level":"error","time":"2024-03-07T04:12:27-06:00","message":"q7MaxBid request failed: Post \"http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/q7MaxBid\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)"}
+q7MaxBid-2 call done
+{"level":"error","time":"2024-03-07T04:12:27-06:00","message":"q7JoinMaxBid request failed: Post \"http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/q7JoinMaxBid\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)"}
+q7JoinMaxBid-3 call done
+{"level":"error","time":"2024-03-07T04:12:27-06:00","message":"q7JoinMaxBid request failed: Post \"http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/q7JoinMaxBid\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)"}
+q7JoinMaxBid-1 call done
+{"level":"error","time":"2024-03-07T04:12:27-06:00","message":"q7MaxBid request failed: Post \"http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/q7MaxBid\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)"}
+q7MaxBid-3 call done
+{"level":"error","time":"2024-03-07T04:12:27-06:00","message":"q7BidByWin request failed: Post \"http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/q7BidByWin\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)"}
+q7BidByWin-2 call done
+{"level":"error","time":"2024-03-07T04:12:27-06:00","message":"q7MaxBid request failed: Post \"http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/q7MaxBid\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)"}
+q7MaxBid-0 call done
+{"level":"error","time":"2024-03-07T04:12:27-06:00","message":"q7MaxBid request failed: Post \"http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/q7MaxBid\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)"}
+q7MaxBid-1 call done
+{"level":"error","time":"2024-03-07T04:12:27-06:00","message":"q7BidByPrice request failed: Post \"http://ip-172-31-8-210.us-east-2.compute.internal:8080/function/q7BidByPrice\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)"}
+q7BidByPrice-1 call done
+sink processed: 5039975, throughput: (event/s) 27998.594330887576
+sink_ctrl processed: 2, throughput: (event/s) 0.0111106084180527
+source-0 duration: 180.008143996
+
+sink processed: 5039974, throughput: (event/s) 27998.58075777479
+sink_ctrl processed: 2, throughput: (event/s) 0.011110605236366216
+source-1 duration: 180.008195544
+
+sink processed: 5040002, throughput: (event/s) 27998.812656933846
+sink_ctrl processed: 2, throughput: (event/s) 0.011110635534245362
+source-2 duration: 180.007704675
+
+sink processed: 5040002, throughput: (event/s) 27998.67122194483
+sink_ctrl processed: 2, throughput: (event/s) 0.011110579409271994
+source-3 duration: 180.008613982
+
+sink processed 20159953 events, duration: 180.008613982, tp: 111994.379347
+sink_ctrl processed 8 events, duration: 180.008613982, tp: 0.044442
+
+sink processed: 4636775, throughput: (event/s) 25756.458880931492
+nexmark_src_src processed: 5039998, throughput: (event/s) 27996.290794135355
+nexmark_src_src_ctrl processed: 25, throughput: (event/s) 0.13887054515763375
+nexmark_src_src_data processed: 5039973, throughput: (event/s) 27996.151923590198
+nexmark_src_src_epoch processed: 0, throughput: (event/s) 0
+nexmark_src_src_logEntry processed: 10521, throughput: (event/s) 58.44228022413859
+q7BidByPrice-0 duration: 180.023776616
+
+q7BidByPrice-1 failed, msg 
+sink processed: 4636800, throughput: (event/s) 25757.32777240263
+nexmark_src_src processed: 5040025, throughput: (event/s) 27997.234279266642
+nexmark_src_src_ctrl processed: 25, throughput: (event/s) 0.1388744811745311
+nexmark_src_src_data processed: 5040000, throughput: (event/s) 27997.09540478547
+nexmark_src_src_epoch processed: 0, throughput: (event/s) 0
+nexmark_src_src_logEntry processed: 10527, throughput: (event/s) 58.477266532971555
+q7BidByPrice-2 duration: 180.018674335
+
+nexmark_src_src_data processed: 5040000, throughput: (event/s) 27996.30285708269
+nexmark_src_src_epoch processed: 0, throughput: (event/s) 0
+nexmark_src_src_logEntry processed: 10515, throughput: (event/s) 58.4089532821874
+sink processed: 4636800, throughput: (event/s) 25756.598628516076
+nexmark_src_src processed: 5040025, throughput: (event/s) 27996.441727632577
+nexmark_src_src_ctrl processed: 25, throughput: (event/s) 0.13887054988632286
+q7BidByPrice-3 duration: 180.023770486
+
+sink processed 13910375 events, duration: 180.023776616
+nexmark_src_src processed 15120048 events, duration: 180.023776616
+nexmark_src_src_ctrl processed 75 events, duration: 180.023776616
+nexmark_src_src_data processed 15119973 events, duration: 180.023776616
+nexmark_src_src_epoch processed 0 events, duration: 180.023776616
+nexmark_src_src_logEntry processed 31563 events, duration: 180.023776616
+
+nexmark_src_src_logEntry processed: 10521, throughput: (event/s) 58.44484677044936
+sink processed: 4636775, throughput: (event/s) 25757.589999434495
+nexmark_src_src processed: 5039998, throughput: (event/s) 27997.520276910105
+nexmark_src_src_ctrl processed: 25, throughput: (event/s) 0.13887664378492862
+nexmark_src_src_data processed: 5039973, throughput: (event/s) 27997.38140026632
+nexmark_src_src_epoch processed: 0, throughput: (event/s) 0
+q7BidByWin-0 duration: 180.015871054
+
+sink processed: 4636774, throughput: (event/s) 25757.602100220614
+nexmark_src_src processed: 5039997, throughput: (event/s) 27997.53391308388
+nexmark_src_src_ctrl processed: 25, throughput: (event/s) 0.1388767389796258
+nexmark_src_src_data processed: 5039972, throughput: (event/s) 27997.3950363449
+nexmark_src_src_epoch processed: 0, throughput: (event/s) 0
+nexmark_src_src_logEntry processed: 10539, throughput: (event/s) 58.544878084251046
+q7BidByWin-1 duration: 180.01574766
+
+q7BidByWin-2 failed, msg 
+nexmark_src_src_data processed: 5040000, throughput: (event/s) 27997.538761876312
+nexmark_src_src_epoch processed: 0, throughput: (event/s) 0
+nexmark_src_src_logEntry processed: 10515, throughput: (event/s) 58.41153176212885
+sink processed: 4636800, throughput: (event/s) 25757.73566092621
+nexmark_src_src processed: 5040025, throughput: (event/s) 27997.67763855668
+nexmark_src_src_ctrl processed: 25, throughput: (event/s) 0.13887668036644996
+q7BidByWin-3 duration: 180.015823636
+
+nexmark_src_src_ctrl processed 75 events, duration: 180.015871054
+nexmark_src_src_data processed 15119945 events, duration: 180.015871054
+nexmark_src_src_epoch processed 0 events, duration: 180.015871054
+nexmark_src_src_logEntry processed 31575 events, duration: 180.015871054
+sink processed 13910349 events, duration: 180.015871054
+nexmark_src_src processed 15120020 events, duration: 180.015871054
+
+q7MaxBid-0 failed, msg 
+q7MaxBid-1 failed, msg 
+q7MaxBid-2 failed, msg 
+q7MaxBid-3 failed, msg 
+q7JoinMaxBid-0 failed, msg 
+q7JoinMaxBid-1 failed, msg 
+q7JoinMaxBid-2 failed, msg 
+q7JoinMaxBid-3 failed, msg 
