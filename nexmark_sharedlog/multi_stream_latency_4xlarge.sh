@@ -9,7 +9,7 @@ instances=(8 16 32)
 for j in ${instances[@]}; do
   DIR=$OUT_DIR/${j}ins/q8-180s-0swarm-100ms-src100ms
   mkdir -p $DIR
-  for ((i=0; i < 3; i++)); do
+  for ((i=0; i < 6; i++)); do
     INDIR=$SCRIPT_DIR/q8_boki/mem_4node_${j}ins_4xlarge/${j}src_4node_${j}ins_${extra}extra_kvrocks/180s_0swarm_100ms_src100ms/$i
     if [[ -d $INDIR ]]; then
       latency scan --prefix q8JoinStream --suffix .json.gz --output $DIR $INDIR
@@ -18,7 +18,7 @@ for j in ${instances[@]}; do
 done
 DIR=$OUT_DIR/4ins/q8-180s-0swarm-100ms-src100ms
 mkdir -p $DIR
-for ((i=0; i < 3; i++)); do
+for ((i=0; i < 6; i++)); do
   INDIR=$SCRIPT_DIR/q8_boki/mem_4xlarge/4src_4node_4ins_${extra}extra_kvrocks/180s_0swarm_100ms_src100ms/$i
   if [[ -d $INDIR ]]; then
     latency scan --prefix q8JoinStream --suffix .json.gz --output $DIR $INDIR
