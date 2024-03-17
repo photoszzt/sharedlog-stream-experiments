@@ -1,5 +1,6 @@
 import csv
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import subprocess
 import sys
 import os
@@ -77,7 +78,7 @@ def load(system, experiment):
     return rows
 
 if __name__ == "__main__":
-    fig, axs = plt.subplots(2, 4, figsize=(36, 12), layout='constrained')
+    fig, axs = plt.subplots(2, 4, figsize=(30, 12), layout='constrained')
     handles = None
     letters=[f'({i})' for i in ascii_lowercase]
     for ax1, experiment in zip(axs.flat, range(0, len(kafkas))):
@@ -142,6 +143,7 @@ if __name__ == "__main__":
             # ax1.legend(loc=(3, 1.05), ncol=2, handles=[l1, l5, l2, l3, l6, l4], handlelength=3, fontsize=11)
         ax1.set_title(f'{letters[experiment]} Query{experiment+1}', fontsize=18)
         ax1.tick_params(labelsize=18)
+        ax1.xaxis.set_major_formatter(ticker.EngFormatter())
 
         if experiment < 2:
             ax1.set_ylim([0, 60])
@@ -150,6 +152,6 @@ if __name__ == "__main__":
 
         # plt.title('Q' + str(experiment + 1))
     fig.legend(ncol=5, handles=handles, fontsize=18, loc='upper center', bbox_to_anchor=(0.5, 1.10))
-    fig.supxlabel('Input throughput(events/s)', fontsize=18)
-    fig.supylabel('Event time latency(ms)', fontsize=18)
+    fig.supxlabel('Input throughput(events/s)', fontsize=20)
+    fig.supylabel('Event time latency(ms)', fontsize=20)
     plt.savefig('q1-8.pdf', bbox_inches='tight')
