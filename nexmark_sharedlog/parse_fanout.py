@@ -86,7 +86,7 @@ def main():
             p50Mean = mean(latency[k]["p50"])
             p50std = 0
             if len(latency[k]["p50"]) >= 2:
-                p50std = stdev(latency[tps]["p50"])
+                p50std = stdev(latency[k]["p50"])
             p99Mean = mean(latency[k]["p99"])
             p99Std = 0
             if len(latency[k]["p50"]) >= 2:
