@@ -134,6 +134,8 @@ def parse_single_topdir(directory, mode):
     appendEpochMark = {}
     markEpochPrepare = {}
     waitPrevTxn = {}
+    appendTxnMeta2pc = {}
+    waitPrevTxn2pc = {}
     epochMarkerSize = {}
     all_stats_in_dir = {}
     q8_personsByID_out_flushBuf = {}
@@ -172,6 +174,10 @@ def parse_single_topdir(directory, mode):
             waitPrevTxn[tps_per_work] = {}
         if tps_per_work not in epochMarkerSize:
             epochMarkerSize[tps_per_work] = {}
+        if tps_per_work not in waitPrevTxn2pc:
+            waitPrevTxn2pc[tps_per_work] = {}
+        if tps_per_work not in appendTxnMeta2pc:
+            appendTxnMeta2pc[tps_per_work] = {}
         for i in range(0, 32):
             if tps_per_work not in q8_personsByID_out_flushBuf[i]:
                 q8_personsByID_out_flushBuf[i][tps_per_work] = {}
@@ -209,6 +215,9 @@ def parse_single_topdir(directory, mode):
                         elif mode == "epoch" and "epochMarkerSize" in line:
                             nums = get_nums(line)
                             update_dict(epochMarkerSize, tps_per_work, stage, nums)
+                        elif mode == "epoch" and "epoch_mark_times" in line:
+                            l = int(line.strip().split(": ")[1])
+                            update_dict(epochMarkTimes, tps_per_work, stage, l)
                         elif "flushStage" in line and "[" in line:
                             nums = get_nums(line)
                             update_dict(flush_all, tps_per_work, stage, nums)
@@ -239,12 +248,15 @@ def parse_single_topdir(directory, mode):
                         elif mode == "2pc" and "sendOffsetTime" in line and "[" in line:
                             nums = get_nums(line)
                             update_dict(sendOffsetTime, tps_per_work, stage, nums)
-                        elif mode == "2pc" and "waitPrevTxn" in line and "[" in line:
+                        elif mode == "2pc" and "waitPrevTxn2pc " in line and "[" in line:
+                            nums = get_nums(line)
+                            update_dict(waitPrevTxn2pc, tps_per_work, stage, nums)
+                        elif mode == "2pc" and "waitPrevTxn " in line and "[" in line:
                             nums = get_nums(line)
                             update_dict(waitPrevTxn, tps_per_work, stage, nums)
-                        elif mode == "epoch" and "epoch_mark_times" in line:
-                            l = int(line.strip().split(": ")[1])
-                            update_dict(epochMarkTimes, tps_per_work, stage, l)
+                        elif mode == "2pc" and "appendTxnMeta2pc " in line and "[" in line:
+                            nums = get_nums(line)
+                            update_dict(appendTxnMeta2pc, tps_per_work, stage, nums)
     if mode == "epoch":
         tp, fak = get_sorted_keys(progress_mark)
         all_mark_stats = {}
@@ -406,6 +418,25 @@ def parse_single_topdir(directory, mode):
         all_wait_prev_txn = {}
         summ, per_stage = printStats(tp, fak, waitPrevTxn, all_wait_prev_txn)
         all_stats_in_dir['waitPrevTxn'] = {
+                'per_stage': per_stage,
+                'summary': summ,
+        }
+
+        print("wait prev txn part1(us)")
+        tp, fak = get_sorted_keys(waitPrevTxn2pc)
+        all_wait_prev_txn_2pc = {}
+        summ, per_stage = printStats(tp, fak, waitPrevTxn2pc, all_wait_prev_txn_2pc)
+        print(per_stage)
+        all_stats_in_dir['waitPrevTxn2pc'] = {
+                'per_stage': per_stage,
+                'summary': summ,
+        }
+
+        print("wait prev txn part2(us)")
+        tp, fak = get_sorted_keys(appendTxnMeta2pc)
+        all_appendTxnMeta2pc = {}
+        summ, per_stage = printStats(tp, fak, appendTxnMeta2pc, all_appendTxnMeta2pc)
+        all_stats_in_dir['appendTxnMeta2pc'] = {
                 'per_stage': per_stage,
                 'summary': summ,
         }
