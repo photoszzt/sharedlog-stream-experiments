@@ -52,6 +52,7 @@ def printStats(tp, statk, stats, all_stats):
     sorted(summary_stats, key=lambda kv: kv[0])
     return summary_stats, per_stage_stats
 
+
 def get_nums(line):
     l = line.strip().split(": ")[1]
     if '=' in l:
@@ -103,26 +104,31 @@ def get_sorted_keys(dic):
     return tp, fak
 
 
-def get_dirs_dict(directory, mode):
+def get_dirs_dict(directory, mode, app):
     dirs_dict = {}
     for root, dirs, _ in os.walk(directory):
         for d in dirs:
             if mode in d or "Kb" in d:
                 try:
+                    splits = d.split("_")
                     if mode in d:
-                        tps_per_work = int(d.split("_")[0][:-3])
+                        tps_per_work = int(splits[0][:-3])
                     else:
                         tps_per_work = d
-                    if tps_per_work not in dirs_dict:
-                        dirs_dict[tps_per_work] = []
-                    dirs_dict[tps_per_work].append(os.path.join(root, d, "logs"))
+                    k = tps_per_work
+                    if app == "fanout":
+                        f = int(splits[-1])
+                        k = (tps_per_work, f)
+                    if k not in dirs_dict:
+                        dirs_dict[k] = []
+                    dirs_dict[k].append(os.path.join(root, d, "logs"))
                 except Exception:
                     pass
     return dirs_dict
 
 
-def parse_single_topdir(directory, mode):
-    dirs_dict = get_dirs_dict(directory, mode)
+def parse_single_topdir(directory, mode, app):
+    dirs_dict = get_dirs_dict(directory, mode, app)
     progress_mark = {}
     flush_all = {}
     flush_at_least_one = {}
@@ -447,8 +453,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--dir', required=True)
     parser.add_argument('--mode', required=True, help='2pc, epoch, align_chkpt')
+    parser.add_argument('--app', required=True, help='app name')
     args = parser.parse_args()
-    parse_single_topdir(args.dir, args.mode)
+    parse_single_topdir(args.dir, args.mode, args.app)
 
 
 if __name__ == '__main__':
