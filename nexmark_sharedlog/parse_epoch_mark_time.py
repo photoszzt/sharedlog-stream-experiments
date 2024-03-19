@@ -66,7 +66,10 @@ def get_name_nums(line):
     name = sps[0].split(" ")[0]
     nsp = name.rsplit("_", 1)
     name = nsp[0]
-    idx = int(nsp[1])
+    try:
+        idx = int(nsp[1])
+    except ValueError:
+        idx = int(nsp[1].split("(")[0])
     l = sps[1]
     if '=' in l:
         l = l.split('=')[1]
@@ -100,7 +103,7 @@ def get_sorted_keys(dic):
     return tp, fak
 
 
-def parse_single_topdir(directory, mode):
+def get_dirs_dict(directory, mode):
     dirs_dict = {}
     for root, dirs, _ in os.walk(directory):
         for d in dirs:
@@ -115,7 +118,11 @@ def parse_single_topdir(directory, mode):
                     dirs_dict[tps_per_work].append(os.path.join(root, d, "logs"))
                 except Exception:
                     pass
-    print(dirs_dict)
+    return dirs_dict
+
+
+def parse_single_topdir(directory, mode):
+    dirs_dict = get_dirs_dict(directory, mode)
     progress_mark = {}
     flush_all = {}
     flush_at_least_one = {}
@@ -223,7 +230,6 @@ def parse_single_topdir(directory, mode):
                         elif "q8PersonsByIDWinTab-changelog_flushBuf" in line and "[" in line:
                             nums, name, idx = get_name_nums(line)
                             update_dict(q8PersonsByIDWinTab_changelog_flushBuf[idx], tps_per_work, stage, nums)
-
                         elif mode == "2pc" and "commitTxnAPITime" in line and "[" in line:
                             nums = get_nums(line)
                             update_dict(commitTxnAPITime, tps_per_work, stage, nums)

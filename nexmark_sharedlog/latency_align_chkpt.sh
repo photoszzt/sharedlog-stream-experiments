@@ -6,12 +6,9 @@ mkdir -p $OUT_DIR
 
 mkdir -p $OUT_DIR/q1-180s-0swarm-100ms-src10ms/
 mkdir -p $OUT_DIR/q2-180s-0swarm-100ms-src10ms/
-mkdir -p $OUT_DIR/q3-180s-0swarm-100ms-src100ms/
-mkdir -p $OUT_DIR/q4-180s-0swarm-100ms-src100ms/
-mkdir -p $OUT_DIR/q5-180s-0swarm-100ms-src100ms/
-mkdir -p $OUT_DIR/q6-180s-0swarm-100ms-src100ms/
-mkdir -p $OUT_DIR/q7-180s-0swarm-100ms-src100ms/
-mkdir -p $OUT_DIR/q8-180s-0swarm-100ms-src100ms/
+for ((i=3; i <= 8; i++)); do
+  mkdir -p $OUT_DIR/q${i}-180s-0swarm-100ms-src100ms/
+done
 
 for ((i=0; i < 6; i++)); do
   echo "q1"
