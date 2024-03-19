@@ -18,10 +18,9 @@ COMM_EVERY_MS=100
 SRC_FLUSH_MS=10
 SNAPSHOT_S=0
 # modes=(epoch none 2pc align_chkpt)
-# modes=(epoch 2pc)
-modes=(epoch)
-# workload_dirs=(4node/4_ins/fanout_8.json 4node/4_ins/fanout_16.json 4node/4_ins/fanout_32.json 4node/4_ins/fanout_64.json 4node/4_ins/fanout_128.json)
-workload_dirs=(4node/4_ins/fanout_8.json)
+modes=(epoch 2pc)
+workload_dirs=(4node/4_ins/fanout_8.json 4node/4_ins/fanout_16.json 4node/4_ins/fanout_32.json 4node/4_ins/fanout_64.json 4node/4_ins/fanout_128.json)
+# workload_dirs=(4node/4_ins/fanout_8.json)
 
 
 cd ${DIR}
@@ -34,7 +33,7 @@ for ((idx = 0; idx < ${#TPS_PER_WORKER[@]}; ++idx)); do
         echo ${APP}, ${DIR}, ${EVENTS} events, ${TPS} tps, ${WORKLOAD}
         subdir=${DURATION}s_${WARM_DURATION}swarm_${FLUSH_MS}ms_src${SRC_FLUSH_MS}ms
         for mode in ${modes[@]}; do
-            for ((iter=0; iter < 1; ++iter)); do
+            for ((iter=1; iter < 4; ++iter)); do
                 ./run_once.sh --app ${APP} \
                     --exp_dir ./${NUM_WORKER}src_1/${subdir}/${iter}/${TPS_PER_WORKER[$idx]}tps_${mode}_${wname}/ \
                     --gua $mode --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER} \
@@ -46,6 +45,6 @@ for ((idx = 0; idx < ${#TPS_PER_WORKER[@]}; ++idx)); do
 done
 cd -
 
-# cd $DIR
-# $WORKSPACE_DIR/research-helper-scripts/microservice_helper stop-machines
-# cd ..
+cd $DIR
+$WORKSPACE_DIR/research-helper-scripts/microservice_helper stop-machines
+cd ..

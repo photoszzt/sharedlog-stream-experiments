@@ -4,7 +4,7 @@ import json
 import numpy as np
 from parse_epoch_mark_time import parse_single_topdir
 
-extra=200
+extra=0
 
 dirs = {
     4: f"./q8_boki/mem/4src_4node_4ins_{extra}extra_kvrocks",  
