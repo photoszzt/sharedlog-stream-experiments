@@ -38,7 +38,7 @@ for ((idx = 0; idx < ${#TPS_PER_WORKER[@]}; ++idx)); do
                         --exp_dir ./${NUM_WORKER[w]}src_4/${subdir}/${iter}/${TPS_PER_WORKER[idx]}tps_${mode}/ \
                         --gua $mode --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
                         --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS \
-		        --src_flushms $SRC_FLUSH_MS[$s] \
+		        --src_flushms ${SRC_FLUSH_MS[$s]} \
                         --snapshot_s ${SNAPSHOT_S} --comm_everyMs ${COMM_EVERY_MS}
                 done
             done
