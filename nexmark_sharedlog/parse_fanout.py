@@ -3,6 +3,7 @@ import os
 import gzip
 import json
 import numpy as np
+import pickle
 from statistics import mean, stdev
 
 
@@ -97,9 +98,10 @@ def main():
                   f"ms, std: {p99Std}, cv: {p99cv}")
         else:
             print(f"{k} doesn't have data")
-    all_stats_path = os.path.join(args.out_stats, f"fanout_{args.target}.json")
-    with open(all_stats_path, "w") as f:
-        json.dump(all_stats, f)
+    all_stats_path = os.path.join(args.out_stats, f"fanout_{args.target}.pickle")
+    print(all_stats_path)
+    with open(all_stats_path, "wb") as f:
+        pickle.dump(all_stats, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 if __name__ == '__main__':
