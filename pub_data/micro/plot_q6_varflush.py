@@ -1,16 +1,17 @@
 import json
 import os
 import sys
+import numpy as np
 import matplotlib.pyplot as plt
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
-sys.path.append(os.path.join(parent, 'pub_data'))
+sys.path.append(parent)
 
 from fig_const import markers, colors, headers
 
-markFreq = [10 20 40]
-markIntr = [100 50 25]
+markFreq = [10, 20, 40]
+markIntr = [100, 50, 25]
 epoch_dir = "./q6_varflush/epoch"
 twopc_dir = "./q6_varflush/2pc"
 
@@ -32,11 +33,15 @@ def main():
             data = json.load(f)
         twopc_p50.append(data["750"]["p50"])
         twopc_p99.append(data["750"]["p99"])
+    p50_ratio = np.array(twopc_p50) / np.array(epoch_p50)
+    p99_ratio = np.array(twopc_p99) / np.array(epoch_p99)
     print(f"mark intr: {markIntr}")
     print(f"epoch p50: {epoch_p50}")
     print(f"epoch p99: {epoch_p99}")
     print(f"twopc p50: {twopc_p50}")
     print(f"twopc p99: {twopc_p99}")
+    print(f"twopc/epoch p50: {p50_ratio}")
+    print(f"twopc/epoch p99: {p99_ratio}")
     fig = plt.figure(figsize=(6.5, 3))
     axs = fig.subplots(1, 2)
     l1, = axs[0].plot(markFreq, epoch_p50, label="Impeller p50", color=colors[0], marker=markers[0])
