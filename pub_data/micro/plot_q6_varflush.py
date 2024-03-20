@@ -51,6 +51,8 @@ def main():
     axs[0].legend(loc=(0.3, 1.05), ncol=2, handles=[l1, l2, l3, l4])
     fig.supxlabel('Progress marking frequency(marks/s)', fontsize=14)
     fig.supylabel('Event time latency (ms)', fontsize=14)
+    axs[0].set_ylim(0, 220)
+    axs[1].set_ylim(0, 1400)
     plt.subplots_adjust(bottom=0.15)
     plt.savefig('q6_varMarkTime.pdf', bbox_inches='tight')
 
