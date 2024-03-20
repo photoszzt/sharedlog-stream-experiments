@@ -35,6 +35,7 @@ def main():
     plt.tick_params(labelsize=16)
     plt.xlabel('Fanouts', fontsize=16)
     plt.ylabel('Event time latency(ms)', fontsize=16)
+    plt.ylim(0, 400)
     fig.legend(ncol=2, handles=handles, fontsize=16, loc='upper center', bbox_to_anchor=(0.5, 1.3))
     plt.savefig("fanout.pdf", bbox_inches='tight')
 
