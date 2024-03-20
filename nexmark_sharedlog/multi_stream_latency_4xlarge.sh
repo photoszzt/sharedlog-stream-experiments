@@ -5,7 +5,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 extra=0
 OUT_DIR=$SCRIPT_DIR/../pub_data/micro/multi_instances_${extra}extra_kvrocks_4xlarge/
 mkdir -p $OUT_DIR
-instances=(8 16 32)
+instances=(8 16 28 32 40)
 for j in ${instances[@]}; do
   DIR=$OUT_DIR/${j}ins/q8-180s-0swarm-100ms-src100ms
   mkdir -p $DIR
@@ -25,7 +25,7 @@ for ((i=0; i < 6; i++)); do
   fi
 done
 
-instances=(4 8 16 32)
+instances=(4 8 16 28 32 40)
 for j in ${instances[@]}; do
   mkdir -p $OUT_DIR/2pc/${j}ins/q8-180s-0swarm-100ms-src100ms/
   mv $OUT_DIR/${j}ins/q8-180s-0swarm-100ms-src100ms/2pc* $OUT_DIR/2pc/${j}ins/q8-180s-0swarm-100ms-src100ms/ || true
