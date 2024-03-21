@@ -230,21 +230,21 @@ def parse_single_topdir(directory, mode, app):
                         elif "flushAtLeastOne" in line and "[" in line:
                             nums = get_nums(line)
                             update_dict(flush_at_least_one, tps_per_work, stage, nums)
-                        elif "q8_personsByID_out_flushBuf" in line and "[" in line:
-                            nums, name, idx = get_name_nums(line)
-                            update_dict(q8_personsByID_out_flushBuf[idx], tps_per_work, stage, nums)
-                        elif "q8_aucsBySellerID_out_flushBuf" in line and "[" in line:
-                            nums, name, idx = get_name_nums(line)
-                            update_dict(q8_aucsBySellerID_out_flushBuf[idx], tps_per_work, stage, nums)
-                        elif "q8_out_flushBuf" in line and "[" in line:
-                            nums, name, idx = get_name_nums(line)
-                            update_dict(q8_out_flushBuf[idx], tps_per_work, stage, nums)
-                        elif "q8AuctionsBySellerIDWinTab-changelog_flushBuf" in line and "[" in line:
-                            nums, name, idx = get_name_nums(line)
-                            update_dict(q8AuctionsBySellerIDWinTab_changelog_flushBuf[idx], tps_per_work, stage, nums)
-                        elif "q8PersonsByIDWinTab-changelog_flushBuf" in line and "[" in line:
-                            nums, name, idx = get_name_nums(line)
-                            update_dict(q8PersonsByIDWinTab_changelog_flushBuf[idx], tps_per_work, stage, nums)
+                        # elif "q8_personsByID_out_flushBuf" in line and "[" in line:
+                        #     nums, name, idx = get_name_nums(line)
+                        #     update_dict(q8_personsByID_out_flushBuf[idx], tps_per_work, stage, nums)
+                        # elif "q8_aucsBySellerID_out_flushBuf" in line and "[" in line:
+                        #     nums, name, idx = get_name_nums(line)
+                        #     update_dict(q8_aucsBySellerID_out_flushBuf[idx], tps_per_work, stage, nums)
+                        # elif "q8_out_flushBuf" in line and "[" in line:
+                        #     nums, name, idx = get_name_nums(line)
+                        #     update_dict(q8_out_flushBuf[idx], tps_per_work, stage, nums)
+                        # elif "q8AuctionsBySellerIDWinTab-changelog_flushBuf" in line and "[" in line:
+                        #     nums, name, idx = get_name_nums(line)
+                        #     update_dict(q8AuctionsBySellerIDWinTab_changelog_flushBuf[idx], tps_per_work, stage, nums)
+                        # elif "q8PersonsByIDWinTab-changelog_flushBuf" in line and "[" in line:
+                        #     nums, name, idx = get_name_nums(line)
+                        #     update_dict(q8PersonsByIDWinTab_changelog_flushBuf[idx], tps_per_work, stage, nums)
                         elif mode == "2pc" and "commitTxnAPITime" in line and "[" in line:
                             nums = get_nums(line)
                             update_dict(commitTxnAPITime, tps_per_work, stage, nums)
