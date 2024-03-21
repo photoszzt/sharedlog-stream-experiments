@@ -64,6 +64,7 @@ def plot(dir, fname):
     handles = [l1, l2, l3, l4]
 
     ax1.tick_params(labelsize=16)
+    ax1.set_xticks(ins)
     ax1.set_xlabel('Number of streams', fontsize=16)
     ax1.set_ylabel('Event time latency(ms)', fontsize=16)
     fig.legend(ncol=2, handles=handles, fontsize=16, loc='upper center', bbox_to_anchor=(0.5, 1.3))
