@@ -20,8 +20,8 @@ def main():
         stats_2pc = pickle.load(f)
     with open("./fanout/fanout_epoch_stats.pickle", "rb") as f:
         stats_epoch = pickle.load(f)
-    epoch_keys = sorted(fanout_epoch.keys())
-    twopc_keys = sorted(fanout_2pc.keys())
+    epoch_keys = sorted([k for k in fanout_epoch.keys() if k[1] != 128])
+    twopc_keys = sorted([k for k in fanout_2pc.keys() if k[1] != 128])
     fanouts_epoch = [fanout for (tps, fanout) in epoch_keys]
     fanouts_2pc = [fanout for (tps, fanout) in twopc_keys]
     impeller_p50 = [fanout_epoch[k]['p50'] for k in epoch_keys]
@@ -65,7 +65,7 @@ def main():
     plt.xlabel('Number of sink substreams', fontsize=16)
     plt.ylabel('Event time latency(ms)', fontsize=16)
     # axs[1].set_ylabel('Mark/Commit latency(ms)', fontsize=16)
-    plt.ylim(0, 400)
+    plt.ylim(0, 300)
     fig.legend(ncol=2, handles=handles, fontsize=16, loc='upper center', bbox_to_anchor=(0.5, 1.3))
     plt.savefig("fanout.pdf", bbox_inches='tight')
 
