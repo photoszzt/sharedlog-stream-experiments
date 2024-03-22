@@ -48,7 +48,7 @@ def main():
         stats[i]['epoch'] = epoch_stat
         stats[i]['2pc'] = twopc_stat
     print(stats)
-    with open(f"../pub_data/micro/q8_multistream_stats_{extra}extra.json", "w") as f:
+    with open(f"../pub_data/micro/q8_multistream_stats_{extra}extra_4xlarge.json", "w") as f:
         json.dump(stats, f, cls=NpEncoder)
 
 
