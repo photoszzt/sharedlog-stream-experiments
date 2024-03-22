@@ -144,6 +144,8 @@ def parse_single_topdir(directory, mode, app):
     waitPrevTxn2pc = {}
     epochMarkerSize = {}
     all_stats_in_dir = {}
+    waitPrevTxnInCmt = {}
+    waitPrevTxnInPush = {}
     # q8_personsByID_out_flushBuf = {}
     # q8_aucsBySellerID_out_flushBuf = {}
     # q8_out_flushBuf = {}
@@ -184,6 +186,10 @@ def parse_single_topdir(directory, mode, app):
             waitPrevTxn2pc[tps_per_work] = {}
         if tps_per_work not in appendTxnMeta2pc:
             appendTxnMeta2pc[tps_per_work] = {}
+        if tps_per_work not in waitPrevTxnInCmt:
+            waitPrevTxnInCmt[tps_per_work] = {}
+        if tps_per_work not in waitPrevTxnInPush:
+            waitPrevTxnInPush[tps_per_work] = {}
         #for i in range(0, 32):
         #    if tps_per_work not in q8_personsByID_out_flushBuf[i]:
         #        q8_personsByID_out_flushBuf[i][tps_per_work] = {}
@@ -254,6 +260,12 @@ def parse_single_topdir(directory, mode, app):
                         elif mode == "2pc" and "sendOffsetTime" in line and "[" in line:
                             nums = get_nums(line)
                             update_dict(sendOffsetTime, tps_per_work, stage, nums)
+                        elif mode == "2pc" and "waitPrevTxnInCmt" in line:
+                            nums = get_nums(line)
+                            update_dict(waitPrevTxnInCmt, tps_per_work, stage, nums)
+                        elif mode == "2pc" and "waitPrevTxnInPush" in line:
+                            nums = get_nums(line)
+                            update_dict(waitPrevTxnInPush, tps_per_work, stage, nums)
                         elif mode == "2pc" and "waitPrevTxn2pc " in line and "[" in line:
                             nums = get_nums(line)
                             update_dict(waitPrevTxn2pc, tps_per_work, stage, nums)
@@ -424,6 +436,24 @@ def parse_single_topdir(directory, mode, app):
         all_wait_prev_txn = {}
         summ, per_stage = printStats(tp, fak, waitPrevTxn, all_wait_prev_txn)
         all_stats_in_dir['waitPrevTxn'] = {
+                'per_stage': per_stage,
+                'summary': summ,
+        }
+
+        print("wait prev txn in cmt(us)")
+        tp, fak = get_sorted_keys(waitPrevTxnInCmt)
+        all_wait_prev_txn_cmt = {}
+        summ, per_stage = printStats(tp, fak, waitPrevTxnInCmt, all_wait_prev_txn_cmt)
+        all_stats_in_dir['waitPrevTxnInCmt'] = {
+                'per_stage': per_stage,
+                'summary': summ,
+        }
+
+        print("wait prev txn in push(us)")
+        tp, fak = get_sorted_keys(waitPrevTxnInPush)
+        all_wait_prev_txn_push = {}
+        summ, per_stage = printStats(tp, fak, waitPrevTxnInPush, all_wait_prev_txn_push)
+        all_stats_in_dir['waitPrevTxnInPush'] = {
                 'per_stage': per_stage,
                 'summary': summ,
         }
