@@ -5,19 +5,23 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 WORKSPACE_DIR=$(realpath $SCRIPT_DIR/../../)
 
 DIR=q8_boki/mem_4xlarge
-DIRS=(q8_boki/mem_4xlarge q8_boki/mem_4node_8ins_4xlarge q8_boki/mem_4node_16ins_4xlarge q8_boki/mem_4node_32ins_4xlarge)
+# DIRS=(q8_boki/mem_4xlarge q8_boki/mem_4node_8ins_4xlarge q8_boki/mem_4node_16ins_4xlarge q8_boki/mem_4node_32ins_4xlarge)
+DIRS=(q8_boki/mem_4xlarge q8_boki/mem_4node_8ins_4xlarge  q8_boki/mem_4node_16ins_4xlarge q8_boki/mem_4node_28ins_4xlarge q8_boki/mem_4node_32ins_4xlarge q8_boki/mem_4node_40ins_4xlarge)
 
 cd $DIR
 $WORKSPACE_DIR/research-helper-scripts/microservice_helper start-machines --use-spot-instances
 ./update_docker.sh
 cp machines.json ../mem_4node_8ins_4xlarge
 cp machines.json ../mem_4node_16ins_4xlarge
+cp machines.json ../mem_4node_28ins_4xlarge
 cp machines.json ../mem_4node_32ins_4xlarge
+cp machines.json ../mem_4node_40ins_4xlarge
 cd ../..
 
-# TPS_PER_WORKER=(4000 8000 12000 16000 20000 24000 28000 32000 36000)
-TPS_PER_WORKER=(28000 14000 7000 3500)
-NUM_WORKER=(4 8 16 32)
+# TPS_PER_WORKER=(28000 14000 7000 3500)
+# NUM_WORKER=(4 8 16 32)
+TPS_PER_WORKER=(28000 14000 7000 4000 3500 2800)
+NUM_WORKER=(4 8 16 28 32 40)
 DURATION=180
 WARM_DURATION=0
 APP=q8
@@ -26,7 +30,7 @@ SRC_FLUSH_MS=${FLUSH_MS}
 SNAPSHOT_S=10
 COMM_EVERY_MS=100
 EXTRA_BYTES=(0)
-modes=(2pc epoch align_chkpt)
+modes=(2pc epoch)
 
 for ((i=0; i < ${#EXTRA_BYTES[@]}; ++i)); do
     for ((w = 0; w < ${#NUM_WORKER[@]}; ++w)); do
@@ -35,7 +39,7 @@ for ((i=0; i < ${#EXTRA_BYTES[@]}; ++i)); do
         EVENTS=$(expr $TPS \* $DURATION)
         echo ${APP}, ${DIRS[w]}, ${EVENTS} events, ${TPS} tps, ${EXTRA_BYTES[$i]} bytes
         subdir=${DURATION}s_${WARM_DURATION}swarm_${FLUSH_MS}ms_src${SRC_FLUSH_MS}ms
-        exp_dir=${NUM_WORKER[w]}src_4node_${NUM_WORKER[w]}ins_${EXTRA_BYTES[$i]}extra_kvrocks
+        exp_dir=${NUM_WORKER[w]}src_4node_${NUM_WORKER[w]}ins_${EXTRA_BYTES[$i]}extra_kvrocks2
         for mode in ${modes[@]}; do
             for ((iter=0; iter < 1; ++iter)); do
                 ./run_once.sh --app ${APP} \
@@ -55,5 +59,7 @@ cd $DIR
 $WORKSPACE_DIR/research-helper-scripts/microservice_helper stop-machines
 rm ../mem_4node_8ins_4xlarge/machines.json || true
 rm ../mem_4node_16ins_4xlarge/machines.json || true
+rm ../mem_4node_28ins_4xlarge/machines.json || true
 rm ../mem_4node_32ins_4xlarge/machines.json || true
+rm ../mem_4node_40ins_4xlarge/machines.json || true
 cd ../..
