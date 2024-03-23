@@ -79,6 +79,17 @@ def main():
     print(f"impeller commit p99: {impeller_p99}")
     plot_fig(k_mark, impeller_p50, impeller_p99, k_cmt, twopc_p50, twopc_p99, 'fanout_flush_at_least_one.pdf')
 
+    k, twopc_p50, twopc_p99 = get_kv_arr(stats_2pc['waitPrevTxnInCmt']['summary'])
+    print("waitPrevTxnInCmt(ms)")
+    print(f"{k}")
+    print(f"2pc commit p50: {twopc_p50}")
+    print(f"2pc commit p99: {twopc_p99}")
+    k, twopc_p50, twopc_p99 = get_kv_arr(stats_2pc['waitPrevTxnInPush']['summary'])
+    print("waitPrevTxnInPush(ms)")
+    print(f"{k}")
+    print(f"2pc commit p50: {twopc_p50}")
+    print(f"2pc commit p99: {twopc_p99}")
+
 
 if __name__ == '__main__':
     main()
