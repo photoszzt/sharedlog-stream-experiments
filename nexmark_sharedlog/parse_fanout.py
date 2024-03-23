@@ -62,13 +62,17 @@ def main():
     parser.add_argument('--dir', type=str, help='dir to parse', required=True)
     parser.add_argument('--out_stats', type=str, required=True)
     parser.add_argument('--target', type=str, required=True)
+    parser.add_argument('--fanout', type=int, default=0)
     args = parser.parse_args()
     dirs_dict = get_dirs_dict(args.target, args.dir)
     os.makedirs(args.out_stats, exist_ok=True)
     tpss = sorted(dirs_dict.keys())
+
     latency = {}
     all_stats = {}
     for (tps, fanout) in tpss:
+        if args.fanout != 0 and args.fanout != fanout:
+            continue
         dirpaths = dirs_dict[(tps, fanout)]
         all_data = []
         k = (tps, fanout)
