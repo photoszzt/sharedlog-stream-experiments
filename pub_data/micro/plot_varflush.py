@@ -71,10 +71,12 @@ def main():
         if idx == 0:
             handles = [l1, l2, l3, l4]
         axs[0][idx].set_title(f"q{q}")
+        axs[0][idx].set_xticks(mFreq)
+        axs[1][idx].set_xticks(mFreq)
     axs[0][0].set_ylim(0, 200)
-    axs[1][0].set_ylim(0, 1400)
+    axs[1][0].set_ylim(0, 650)
     axs[0][1].set_ylim(0, 220)
-    axs[1][1].set_ylim(0, 1400)
+    axs[1][1].set_ylim(0, 1200)
     # axs[0][2].set_ylim(0, 120)
     # axs[1][2].set_ylim(0, 200)
     fig.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=2, handles=handles)
