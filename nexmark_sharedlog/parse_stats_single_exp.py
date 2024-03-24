@@ -57,12 +57,16 @@ def parse_stats_single_exp(directory, mode, app, out_dir):
             txnCommitTime = {}
             waitPrevTxnInCmt = {}
             waitPrevTxnInPush = {}
+            waitPrevTxn2pc = {}
+            txnSndPhase = {}
             init_dict(progress_mark, k)
             init_dict(flush_all, k)
             init_dict(flush_at_least_one, k)
             init_dict(txnCommitTime, k)
             init_dict(waitPrevTxnInCmt, k)
             init_dict(waitPrevTxnInPush, k)
+            init_dict(waitPrevTxn2pc, k)
+            init_dict(txnSndPhase, k)
                 
             for fname in Path(dirpath).glob("**/*.stderr"):
                 basename = os.path.basename(fname)
@@ -90,6 +94,12 @@ def parse_stats_single_exp(directory, mode, app, out_dir):
                         elif mode == "2pc" and "waitPrevTxnInPush" in line:
                             nums = get_nums(line)
                             update_dict(waitPrevTxnInPush, k, stage, nums)
+                        elif mode == "2pc" and "waitPrevTxn2pc " in line and "[" in line:
+                            nums = get_nums(line)
+                            update_dict(waitPrevTxn2pc, k, stage, nums)
+                        elif mode == "2pc" and "txnSndPhase" in line:
+                            nums = get_nums(line)
+                            update_dict(txnSndPhase, k, stage, nums)
             workload = os.path.dirname(dirpath)
             workload_name = os.path.basename(workload)
             exp = os.path.basename(os.path.dirname(workload))
@@ -114,6 +124,10 @@ def parse_stats_single_exp(directory, mode, app, out_dir):
                 print("waitPrevTxnInPush(us)")
                 st = get_stats(waitPrevTxnInPush)
                 all_stats["waitPrevTxnInPush"] = st
+
+                print("txnSndPhase(us)")
+                st = get_stats(txnSndPhase)
+                all_stats["txnSndPhase"] = st
 
             print(f"{mode} flushStage(us)")
             st = get_stats(flush_all)
