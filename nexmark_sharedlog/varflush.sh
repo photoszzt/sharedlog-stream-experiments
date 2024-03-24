@@ -6,22 +6,24 @@ modes=(epoch 2pc)
 
 for ((i=0; i < ${#flushes[@]}; ++i)); do
   f=${flushes[i]}
-  for ((j=0; j < ${#modes[@]}; ++j)); do
-    m=${modes[j]}
-    if [[ -d $SCRIPT_DIR/q6_boki/4src_4/180s_0swarm_${f}ms_src${f}ms/ ]]; then
-      python3 parse_e2e_latency.py \
-      	--dir $SCRIPT_DIR/q6_boki/4src_4/180s_0swarm_${f}ms_src${f}ms/ \
-      	--out_stats $SCRIPT_DIR/../pub_data/micro/q6_varflush/${m}/${f}ms/ --app q6 --target ${m}
-    fi
-    if [[ -d $SCRIPT_DIR/q4_boki/4src_4/180s_0swarm_${f}ms_src${f}ms/ ]]; then
-      python3 parse_e2e_latency.py \
-      	--dir $SCRIPT_DIR/q4_boki/4src_4/180s_0swarm_${f}ms_src${f}ms/ \
-      	--out_stats $SCRIPT_DIR/../pub_data/micro/q4_varflush/${m}/${f}ms/ --app q4 --target ${m}
-    fi
-    if [[ -d $SCRIPT_DIR/q7_boki/mem_nosync/4src_4/180s_0swarm_${f}ms_src${f}ms_comm${f}ms/ ]]; then
-      python3 parse_e2e_latency.py \
-      	--dir $SCRIPT_DIR/q7_boki/mem_nosync/4src_4/180s_0swarm_${f}ms_src${f}ms_comm${f}ms/ \
-      	--out_stats $SCRIPT_DIR/../pub_data/micro/q7_varflush/${m}/${f}ms/ --app q7 --target ${m}
-    fi
-  done
+  if [[ -d $SCRIPT_DIR/q6_boki/4src_4/180s_0swarm_${f}ms_src${f}ms/ ]]; then
+    python3 parse_e2e_latency.py \
+    	--dir $SCRIPT_DIR/q6_boki/4src_4/180s_0swarm_${f}ms_src${f}ms/ \
+    	--out_stats $SCRIPT_DIR/../pub_data/micro/q6_varflush/epoch/${f}ms/ --app q6 --target epoch
+  fi
+  if [[ -d $SCRIPT_DIR/q6_boki/4src_5/180s_0swarm_${f}ms_src${f}ms/ ]]; then
+    python3 parse_e2e_latency.py \
+    	--dir $SCRIPT_DIR/q6_boki/4src_5/180s_0swarm_${f}ms_src${f}ms/ \
+    	--out_stats $SCRIPT_DIR/../pub_data/micro/q6_varflush/2pc/${f}ms/ --app q6 --target 2pc
+  fi
+  if [[ -d $SCRIPT_DIR/q4_boki/4src_4/180s_0swarm_${f}ms_src${f}ms/ ]]; then
+    python3 parse_e2e_latency.py \
+    	--dir $SCRIPT_DIR/q4_boki/4src_4/180s_0swarm_${f}ms_src${f}ms/ \
+    	--out_stats $SCRIPT_DIR/../pub_data/micro/q4_varflush/epoch/${f}ms/ --app q4 --target epoch
+  fi
+  if [[ -d $SCRIPT_DIR/q4_boki/4src_5/180s_0swarm_${f}ms_src${f}ms/ ]]; then
+    python3 parse_e2e_latency.py \
+    	--dir $SCRIPT_DIR/q4_boki/4src_5/180s_0swarm_${f}ms_src${f}ms/ \
+    	--out_stats $SCRIPT_DIR/../pub_data/micro/q4_varflush/2pc/${f}ms/ --app q4 --target 2pc
+  fi
 done
