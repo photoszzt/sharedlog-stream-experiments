@@ -25,10 +25,14 @@ def get_dirs_dict(target, input_dir):
     return dirs_dict
 
 
-def get_data_in_dir(dpath, all_data, latency, k):
+def get_data_in_dir(dpath, all_data, latency, k, out_stats):
     e2e_latency = []
     prefix = "fanout"
     stats_dir = os.path.join(dpath, "stats")
+    exp = os.path.basename(os.path.dirname(dpath))
+    workload_name = os.path.basename(dpath)
+    out_dir = os.path.join(out_stats, exp)
+    os.makedirs(out_dir, exist_ok=True)
     for root, dirs, files in os.walk(stats_dir):
         for fname in files:
             if "gz" in fname and prefix in fname:
@@ -47,6 +51,10 @@ def get_data_in_dir(dpath, all_data, latency, k):
         e2e_lat = np.concatenate(e2e_latency)
         p50 = np.quantile(e2e_lat, 0.5)
         p99 = np.quantile(e2e_lat, 0.99)
+        st = {}
+        st[k] = {"p50": p50, "p99": p99}
+        with open(os.path.join(out_dir, f"{workload_name}.pickle"), "wb") as f:
+            pickle.dump(st, f)
         if k not in latency:
             latency[k] = {}
             latency[k]["p50"] = []
@@ -77,7 +85,7 @@ def main():
         all_data = []
         k = (tps, fanout)
         for dpath in dirpaths:
-            get_data_in_dir(dpath, all_data, latency, k)
+            get_data_in_dir(dpath, all_data, latency, k, args.out_stats)
         print()
         if all_data:
             all_data_cat = np.concatenate(all_data)
