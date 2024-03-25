@@ -59,6 +59,7 @@ def parse_stats_single_exp(directory, mode, app, out_dir):
             waitPrevTxnInPush = {}
             waitPrevTxn2pc = {}
             txnSndPhase = {}
+            markPartTime = {}
             init_dict(progress_mark, k)
             init_dict(flush_all, k)
             init_dict(flush_at_least_one, k)
@@ -67,6 +68,7 @@ def parse_stats_single_exp(directory, mode, app, out_dir):
             init_dict(waitPrevTxnInPush, k)
             init_dict(waitPrevTxn2pc, k)
             init_dict(txnSndPhase, k)
+            init_dict(markPartTime, k)
                 
             for fname in Path(dirpath).glob("**/*.stderr"):
                 basename = os.path.basename(fname)
@@ -79,6 +81,9 @@ def parse_stats_single_exp(directory, mode, app, out_dir):
                         if mode == "epoch" and "epochMarkTime" in line:
                             nums = get_nums(line)
                             update_dict(progress_mark, k, stage, nums)
+                        elif mode == "epoch" and "markPart" in line:
+                            nums = get_nums(line)
+                            update_dict(markPartTime, k, stage, nums)
                         elif "flushStage" in line and "[" in line:
                             nums = get_nums(line)
                             update_dict(flush_all, k, stage, nums)
@@ -128,6 +133,10 @@ def parse_stats_single_exp(directory, mode, app, out_dir):
                 print("txnSndPhase(us)")
                 st = get_stats(txnSndPhase)
                 all_stats["txnSndPhase"] = st
+
+                print("waitPrevTxn2pc(us)")
+                st = get_stats(waitPrevTxn2pc)
+                all_stats["waitPrevTxn2pc"] = st
 
             print(f"{mode} flushStage(us)")
             st = get_stats(flush_all)
