@@ -27,3 +27,25 @@ for ((i=0; i < ${#flushes[@]}; ++i)); do
     	--out_stats $SCRIPT_DIR/../pub_data/micro/q4_varflush/2pc/${f}ms/ --app q4 --target 2pc
   fi
 done
+
+for ((i=0; i < ${#flushes[@]}; ++i)); do
+  f=${flushes[i]}
+  if [[ -d $SCRIPT_DIR/q4_boki/4src_5/180s_0swarm_${f}ms_src${f}ms/ ]]; then
+    python3 parse_stats_single_exp.py --dir $SCRIPT_DIR/q4_boki/4src_5/180s_0swarm_${f}ms_src${f}ms/ --mode 2pc \
+	    --app q4 --out_stats ../pub_data/micro/q4_varflush/2pc/${f}ms/
+  fi
+  if [[ -d $SCRIPT_DIR/q4_boki/4src_4/180s_0swarm_${f}ms_src${f}ms/ ]]; then
+    python3 parse_stats_single_exp.py --dir $SCRIPT_DIR/q4_boki/4src_4/180s_0swarm_${f}ms_src${f}ms/ --mode epoch \
+	    --app q4 --out_stats ../pub_data/micro/q4_varflush/epoch/${f}ms/
+  fi
+  if [[ -d $SCRIPT_DIR/q6_boki/4src_4/180s_0swarm_${f}ms_src${f}ms/ ]]; then
+    python3 parse_stats_single_exp.py \
+    	--dir $SCRIPT_DIR/q6_boki/4src_4/180s_0swarm_${f}ms_src${f}ms/ \
+    	--out_stats $SCRIPT_DIR/../pub_data/micro/q6_varflush/epoch/${f}ms/ --app q6 --mode epoch
+  fi
+  if [[ -d $SCRIPT_DIR/q6_boki/4src_5/180s_0swarm_${f}ms_src${f}ms/ ]]; then
+    python3 parse_stats_single_exp.py \
+    	--dir $SCRIPT_DIR/q6_boki/4src_5/180s_0swarm_${f}ms_src${f}ms/ \
+    	--out_stats $SCRIPT_DIR/../pub_data/micro/q6_varflush/2pc/${f}ms/ --app q6 --mode 2pc
+  fi
+done
