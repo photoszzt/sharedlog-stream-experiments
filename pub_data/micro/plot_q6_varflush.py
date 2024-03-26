@@ -49,7 +49,7 @@ def main():
     l3, = axs[0].plot(markFreq, twopc_p50, label="2pc on Impeller p50", color=colors[3], marker=markers[3])
     l4, = axs[1].plot(markFreq, twopc_p99, label="2pc on Impeller p99", color=colors[3], marker=markers[3], ls='--')
     axs[0].legend(loc=(0.3, 1.05), ncol=2, handles=[l1, l2, l3, l4])
-    fig.supxlabel('Progress marking frequency(marks/s)', fontsize=14)
+    fig.supxlabel('Progress marking/Commit frequency(marks/s)', fontsize=14)
     fig.supylabel('Event time latency (ms)', fontsize=14)
     axs[0].set_ylim(0, 220)
     axs[1].set_ylim(0, 1400)

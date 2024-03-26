@@ -30,11 +30,11 @@ def get_tps(ins, m):
 def main():
     # plot('./multi_instances_0extra_kvrocks', 'q8_4-32_0extra.pdf')
     # plot('./multi_instances_200extra_kvrocks', 'q8_4-32_200extra.pdf')
-    plot('./multi_instances_0extra_kvrocks_4xlarge', 'q8_4-32_0extra_4xlarge.pdf')
+    plot('./multi_instances_0extra_kvrocks_4xlarge2', 'q8_4-32_0extra_4xlarge.pdf')
 
 
 def plot(dir, fname):
-    ins=[4, 8, 16, 28, 32, 40]
+    ins=[4, 8, 16, 28, 32]
     fig = plt.figure(figsize=(7, 3.2), layout='constrained')
     ax1 = plt.subplot(111)
     impeller_tps = get_tps(ins, f'{dir}/impeller/')
@@ -49,15 +49,15 @@ def plot(dir, fname):
     # align_chkpt_p99 = [int(row['p99']) for row in align_chkpt_tps]
     print(f'impeller p50: {impeller_p50}')
     print(f'impeller p99: {impeller_p99}')
-    print(f'2pc p50: {twopc_p50}')
-    print(f'2pc p99: {twopc_p99}')
+    print(f'2PC p50: {twopc_p50}')
+    print(f'2PC p99: {twopc_p99}')
     # print(f'align_chkpt p50: {align_chkpt_p50}')
     # print(f'align_chkpt p99: {align_chkpt_p99}')
 
     l1, = ax1.plot(ins, impeller_p50, label='Impeller p50', marker=markers[0], color=colors[0])
     l2, = ax1.plot(ins, impeller_p99, label='Impeller p99', ls='--', marker=markers[0], color=colors[0])
-    l3, = ax1.plot(ins, twopc_p50, label='2pc on Impeller p50', marker=markers[3], color=colors[3])
-    l4, = ax1.plot(ins, twopc_p99, label='2pc on Impeller p99', ls='--', marker=markers[3], color=colors[3])
+    l3, = ax1.plot(ins, twopc_p50, label='2PC on Impeller p50', marker=markers[3], color=colors[3])
+    l4, = ax1.plot(ins, twopc_p99, label='2PC on Impeller p99', ls='--', marker=markers[3], color=colors[3])
     # l5, = ax1.plot(ins, align_chkpt_p50, label='Align chkpt on Impeller p50', marker='p', color=colors[4])
     # l6, = ax1.plot(ins, align_chkpt_p99, label='Align chkpt on Impeller p99', ls='--', marker='p', color=colors[4])
     # handles = [l1, l2, l3, l4, l5, l6]
