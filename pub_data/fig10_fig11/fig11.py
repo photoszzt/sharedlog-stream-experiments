@@ -1,5 +1,6 @@
 import csv
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import subprocess
 import sys
 import os
@@ -103,6 +104,7 @@ if __name__ == "__main__":
         ax1.set_xlabel('input throughput(events/s)')
         ax1.set_ylabel('event time latency(ms)')
         ax1.legend(loc=(0, 1.1), ncol=2, handles=[l1, l5, l2, l3, l6, l4], handlelength=3)
+        ax1.xaxis.set_major_formatter(ticker.EngFormatter())
         # ax1.legend(loc=(0, 1.1), ncol=2, handles=[l1, l2, l3, l4], handlelength=3)
 
         if experiment < 2:

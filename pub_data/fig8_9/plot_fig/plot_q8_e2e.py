@@ -2,6 +2,7 @@ import os
 import csv
 import subprocess
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import sys
 
 current = os.path.dirname(os.path.realpath(__file__))
@@ -72,6 +73,7 @@ def main():
         ax.set_ylim(0, 1000)
         ax.set_title(f'{t}ms', fontsize=16)
     ax1.legend(loc=(0.9, 1.1), ncol=2, handles = [l1, l2, l3, l4])
+    ax1.xaxis.set_major_formatter(ticker.EngFormatter())
     fig.supxlabel('input throughput (events/s)', fontsize=16)
     fig.supylabel('event time latency (ms)', fontsize=16)
     plt.savefig('q8_compare_e2e.pdf', bbox_inches='tight')

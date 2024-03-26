@@ -2,6 +2,7 @@ import os
 import numpy as np
 import json
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import sys
 
 current = os.path.dirname(os.path.realpath(__file__))
@@ -56,6 +57,8 @@ def main():
             axs[1, i].set_title(f'p99', fontsize=14)
         else:
             axs[0, i].set_title(f'{t}ms', fontsize=14)
+        axs[0, i].xaxis.set_major_formatter(ticker.EngFormatter())
+        axs[1, i].xaxis.set_major_formatter(ticker.EngFormatter())
         if i == 0:
             l1, l2, l3, l4 = ll1, ll2, ll3, ll4
     ax1.legend(loc=(0.5, 1.28), ncol=2, handles = [l1, l2, l3, l4], fontsize=14)

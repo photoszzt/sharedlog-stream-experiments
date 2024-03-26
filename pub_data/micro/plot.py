@@ -30,7 +30,7 @@ def get_tps(ins, m):
 def main():
     # plot('./multi_instances_0extra_kvrocks', 'q8_4-32_0extra.pdf')
     # plot('./multi_instances_200extra_kvrocks', 'q8_4-32_200extra.pdf')
-    plot('./multi_instances_0extra_kvrocks_4xlarge2', 'q8_4-32_0extra_4xlarge.pdf')
+    plot('./multi_instances_0extra_kvrocks_4xlarge3', 'q8_4-32_0extra_4xlarge.pdf')
 
 
 def plot(dir, fname):

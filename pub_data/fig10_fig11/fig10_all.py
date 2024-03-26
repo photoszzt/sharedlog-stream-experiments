@@ -78,7 +78,7 @@ def load(system, experiment):
     return rows
 
 if __name__ == "__main__":
-    fig, axs = plt.subplots(2, 4, figsize=(30, 12), layout='constrained')
+    fig, axs = plt.subplots(2, 4, figsize=(24, 10), layout='constrained')
     handles = None
     letters=[f'({i})' for i in ascii_lowercase]
     for ax1, experiment in zip(axs.flat, range(0, len(kafkas))):
@@ -117,7 +117,7 @@ if __name__ == "__main__":
         print(f"ackpt tp: {ackpt_in_tp}")
         print(f"alignchkpt p50: {ackpt_p50}")
         print(f"alignchkpt p99: {ackpt_p99}")
-        marksize=10
+        marksize=14
 
         l1, = ax1.plot(sys_in_tp, sys_p50, label='Impeller p50',  marker=markers[0],color=colors[0], markersize=marksize)
         l3, = ax1.plot(sys_in_tp, sys_p99, label='Impeller p99', ls='--', marker=markers[0], color=colors[0], markersize=marksize)
