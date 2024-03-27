@@ -247,6 +247,7 @@ for HOST in $ALL_STORAGE_HOSTS; do
     mkdir -p $EXP_DIR/storage_sar/$HOST
     scp $HOST:/home/ubuntu/sar_st $EXP_DIR/storage_sar/$HOST
     $SSH_CMD -- rm /home/ubuntu/sar_st
+    $SSH_CMD -- 'df -h' >>$EXP_DIR/storage_sar/${HOST}_disksize
 done
 
 mkdir $EXP_DIR/sequencer_netstats
