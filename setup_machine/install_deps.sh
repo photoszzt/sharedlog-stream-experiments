@@ -53,3 +53,7 @@ echo \
 
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin docker-compose
 sudo usermod -aG docker $USER
+
+curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v26.1/protoc-26.1-linux-x86_64.zip
+unzip protoc-26.1-linux-x86_64.zip -d $HOME/.local
+rm protoc-26.1-linux-x86_64.zip
