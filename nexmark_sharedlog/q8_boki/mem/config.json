@@ -9,10 +9,10 @@
         "faas-engine-6": { "type": "c5d.2xlarge", "role": "worker", "labels": [ "engine_node=true" ] },
         "faas-engine-7": { "type": "c5d.2xlarge", "role": "worker", "labels": [ "engine_node=true" ] },
         "faas-engine-8": { "type": "c5d.2xlarge", "role": "worker", "labels": [ "engine_node=true" ] },
-        "faas-storage-1": { "type": "c5d.2xlarge", "role": "worker", "mount_instance_storage": "nvme1n1", "labels": ["storage_node=true", "sequencer_node=true", "snapcache_node=true"] },
-        "faas-storage-2": { "type": "c5d.2xlarge", "role": "worker", "mount_instance_storage": "nvme1n1", "labels": ["storage_node=true", "sequencer_node=true", "snapcache_node=true"] },
-        "faas-storage-3": { "type": "c5d.2xlarge", "role": "worker", "mount_instance_storage": "nvme1n1", "labels": ["storage_node=true", "sequencer_node=true", "snapcache_node=true"] },
-        "faas-storage-4": { "type": "c5d.2xlarge", "role": "worker", "mount_instance_storage": "nvme1n1", "labels": ["storage_node=true", "snapcache_node=true"] },
+        "faas-storage-1": { "type": "c5d.2xlarge", "role": "worker", "mount_instance_storage": "nvme1n1", "labels": ["txn_manager_node=true", "storage_node=true", "sequencer_node=true", "snapcache_node=true"] },
+        "faas-storage-2": { "type": "c5d.2xlarge", "role": "worker", "mount_instance_storage": "nvme1n1", "labels": ["txn_manager_node=true", "storage_node=true", "sequencer_node=true", "snapcache_node=true"] },
+        "faas-storage-3": { "type": "c5d.2xlarge", "role": "worker", "mount_instance_storage": "nvme1n1", "labels": ["txn_manager_node=true", "storage_node=true", "sequencer_node=true", "snapcache_node=true"] },
+        "faas-storage-4": { "type": "c5d.2xlarge", "role": "worker", "mount_instance_storage": "nvme1n1", "labels": ["txn_manager_node=true", "storage_node=true", "snapcache_node=true"] },
         "faas-client": { "type": "c5d.xlarge", "role": "client" }
     },
     "services": {
@@ -23,12 +23,14 @@
         "faas-storage": { "placement_label": "storage_node", "replicas": 4 },
         "faas-sequencer": { "placement_label": "sequencer_node", "replicas": 3 },
         "faas-engine": { "placement_label": "engine_node", "replicas": 8 },
+        "faas-engine-rtx": { "placement_label": "tx_manager_node", "replicas": 4 },
         "nexmark-source": { "placement_label": "engine_node", "replicas": 8 },
         "q8GroupBy": { "placement_label": "engine_node", "replicas": 8 },
         "q8JoinStream": { "placement_label": "engine_node", "replicas": 8 },
         "scale": { "placement_label": "engine_node", "replicas": 8 },
         "chkptmngr": { "placement_label": "engine_node", "replicas": 8 },
         "redisSetup": { "placement_label": "engine_node", "replicas": 8 },
+        "remoteTxnMngr": { "placement_label": "tx_manager_node", "replicas": 4 },
         "snapcache": { "placement_label": "snapcache_node", "replicas": 4 }
     }
 }
