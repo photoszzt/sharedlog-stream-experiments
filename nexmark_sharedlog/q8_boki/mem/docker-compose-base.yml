@@ -57,21 +57,27 @@ services:
     image: ubuntu:focal
     hostname: faas-engine-rtx-{{.Task.Slot}}
     entrypoint:
-      - /faas/bin/${FAAS_BUILD_TYPE:-release}/engine
-      - --zookeeper_host=zookeeper:2181
-      - --listen_iface=eth0
-      - --root_path_for_ipc=/tmp/faas/ipc
-      - --func_config_file=/exp/nexmark_sharedlog/specs/remote_txn_mngr.json
-      - --num_io_workers=4
-      - --socket_listen_backlog=1024
-      - --instant_rps_p_norm=0.8
+      - /bin/bash
+      - -c 
+      - |
+        FAAS_NODE_ID=$$(printenv FAAS_NODE_ID)
+        FAAS_NODE_ID=$$(( $$FAAS_NODE_ID + 8 ))
+        /faas/bin/${FAAS_BUILD_TYPE:-release}/engine \
+        --zookeeper_host=zookeeper:2181 \
+        --listen_iface=eth0 \
+        --root_path_for_ipc=/tmp/faas/ipc \
+        --func_config_file=/exp/nexmark_sharedlog/specs/remote_txn_mngr.json \
+        --num_io_workers=4 \
+        --socket_listen_backlog=1024 \
+        --instant_rps_p_norm=0.8 \
+        --io_uring_entries=2048 \
+        --io_uring_fd_slots=4096 \
+        --enable_shared_log \
+        --slog_engine_enable_cache \
+        --slog_engine_cache_cap_mb=1024 \
+        --slog_engine_propagate_auxdata
+
       # - --disable_concurrency_limiter
-      - --io_uring_entries=2048
-      - --io_uring_fd_slots=4096
-      - --enable_shared_log
-      - --slog_engine_enable_cache
-      - --slog_engine_cache_cap_mb=1024
-      - --slog_engine_propagate_auxdata
       # - --slog_enable_statecheck
       # - --slog_statecheck_interval_sec=10
       # - --log_path=/tmp/log/engine.log
