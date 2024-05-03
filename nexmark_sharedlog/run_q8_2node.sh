@@ -41,7 +41,7 @@ for ((iter=0; iter < 1; ++iter)); do
                 --gua epoch --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
                 --tps ${TPS} --warm_duration ${WARM_DURATION} \
                 --flushms ${FLUSH_MS} --src_flushms $SRC_FLUSH_MS \
-                --snapshot_s ${SNAPSHOT_S} --config_subpath 2node/8_ins/q8.json
+                --snapshot_s ${SNAPSHOT_S} --config_subpath 2node/4_ins/q8.json
 
             # ./run_once.sh --app ${APP} \
             #     --exp_dir ./${NUM_WORKER[w]}src_none_gm1/$subdir/$iter/${TPS_PER_WORKER[idx]}tps_epoch/ \
