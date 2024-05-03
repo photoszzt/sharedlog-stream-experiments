@@ -28,16 +28,18 @@ def get_stats(stats):
             data_arr = np.concatenate(data)
             p50 = np.quantile(data_arr, 0.5)
             p99 = np.quantile(data_arr, 0.99)
-            staged_stats[k][stage] = {"p50": p50, "p99": p99}
-            print(f"{k},{stage},{p50},{p99}")
+            max_v = np.max(data_arr)
+            staged_stats[k][stage] = {"p50": p50, "p99": p99, "max": max_v}
+            print(f"{k},{stage},{p50},{p99},{max_v}")
             all_data[k].append(data_arr)
     for k in tp:
         if k in all_data:
             d = np.concatenate(all_data[k])
             p50 = np.quantile(d, 0.5)
             p99 = np.quantile(d, 0.99)
-            staged_stats[k]["all"] = {"p50": p50, "p99": p99}
-            print(f"{k},{p50},{p99}")
+            max_v = np.max(d)
+            staged_stats[k]["all"] = {"p50": p50, "p99": p99, "max": max_v}
+            print(f"{k},{p50},{p99},{max_v}")
     return staged_stats
 
 
@@ -117,6 +119,10 @@ def parse_stats_single_exp(directory, mode, app, out_dir):
                 print("progress mark(us)")
                 st = get_stats(progress_mark)
                 all_stats["progress_mark"] = st
+
+                print("mark part time(us)")
+                st = get_stats(markPartTime)
+                all_stats["markPart"] = st
             if mode == "2pc":
                 print("txnCommitTime(us)")
                 st = get_stats(txnCommitTime)
