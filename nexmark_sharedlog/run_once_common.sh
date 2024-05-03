@@ -57,7 +57,9 @@ for HOST in $ALL_STORAGE_HOSTS; do
     SSH_CMD="ssh -q $HOST -oStrictHostKeyChecking=no"
     $SSH_CMD -- "sudo rm -rf /mnt/inmem/log || true; sudo mkdir -p /mnt/inmem/log; \
 	    sudo rm -rf /mnt/storage/logdata; sudo mkdir -p /mnt/storage/logdata; \
-	    sudo rm -rf /mnt/storage/journal; sudo mkdir -p /mnt/storage/journal;"
+	    sudo rm -rf /mnt/storage/journal; sudo mkdir -p /mnt/storage/journal; \
+	    sudo rm -rf /mnt/inmem/faas; sudo mkdir -p /mnt/inmem/faas; \
+	    sudo mkdir -p /mnt/inmem/faas/output /mnt/inmem/faas/ipc"
     $SSH_CMD -- 'sudo rm -rf /mnt/storage/redis; sudo mkdir -p /mnt/storage/redis; sudo chown $(id -u):$(id -g) /mnt/storage/redis' || true
     $SSH_CMD -- 'for ((i=1; i <=8; i++)); do sudo mkdir -p /mnt/storage/redis/$i; done'
 done
@@ -66,7 +68,7 @@ ssh -q $MANAGER_HOST -- docker network rm faas-test_default
 ssh -q $MANAGER_HOST -- SRC_DIR=$SRC_DIR FAAS_DIR=$FAAS_DIR EXP_DIR=$EXP_DIR USE_CACHE=${USE_CACHE} FAAS_BUILD_TYPE=$FAAS_BUILD_TYPE \
     docker stack deploy -c ~/docker-compose-base.yml -c ~/docker-compose.yml faas-test
 ssh -q $MANAGER_HOST -- ./docker-stack-wait.sh faas-test
-sleep 80
+sleep 40
 
 # for HOST in $ALL_ENGINE_HOSTS; do
 #     ENGINE_CONTAINER_ID=$($HELPER_SCRIPT get-container-id --service faas-engine --machine-host $HOST)
