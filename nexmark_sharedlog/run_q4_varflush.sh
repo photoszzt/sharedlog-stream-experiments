@@ -16,13 +16,13 @@ NUM_WORKER=(4)
 DURATION=180
 WARM_DURATION=0
 APP=q4
-SRC_FLUSH_MS=(10 25 50 100)
+SRC_FLUSH_MS=(25 50 100)
 # FLUSH_MS=100
 # SRC_FLUSH_MS=100
 SNAPSHOT_S=10
 # COMM_EVERY_MS=100
 # modes=(epoch none 2pc align_chkpt)
-modes=(2pc)
+modes=(2pc epoch)
 
 cd ${DIR}
 for ((idx = 0; idx < ${#TPS_PER_WORKER[@]}; ++idx)); do
@@ -37,10 +37,10 @@ for ((idx = 0; idx < ${#TPS_PER_WORKER[@]}; ++idx)); do
             for mode in ${modes[@]}; do
                 for ((iter=0; iter < 2; ++iter)); do
                     ./run_once.sh --app ${APP} \
-                        --exp_dir ./${NUM_WORKER[w]}src_5/${subdir}/${iter}/${TPS_PER_WORKER[idx]}tps_${mode}/ \
+                        --exp_dir ./${NUM_WORKER[w]}src_varflush_16384buf/${subdir}/${iter}/${TPS_PER_WORKER[idx]}tps_${mode}/ \
                         --gua $mode --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
                         --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms ${SRC_FLUSH_MS[$s]} \
-                        --snapshot_s ${SNAPSHOT_S} --comm_everyMs ${COMM_EVERY_MS}
+                        --snapshot_s ${SNAPSHOT_S} --comm_everyMs ${COMM_EVERY_MS} --buf_max_size 16384
                 done
             done
         done
