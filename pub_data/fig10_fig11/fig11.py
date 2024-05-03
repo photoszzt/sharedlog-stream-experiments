@@ -4,6 +4,7 @@ import matplotlib.ticker as ticker
 import subprocess
 import sys
 import os
+import numpy as np
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -35,6 +36,17 @@ syss = [
     "./q38_rerun/impeller/q8-180s-0swarm-100ms-src100ms",
 ]
 
+twopcs = [
+    "./q38_rerun/2pc/q1-180s-0swarm-100ms-src10ms",
+    "./q38_rerun/2pc/q2-180s-0swarm-100ms-src10ms",
+    "./q38_rerun/2pc/q3-180s-0swarm-100ms-src100ms",
+    "./q38_rerun/2pc/q4-180s-0swarm-100ms-src100ms",
+    "./q38_rerun/2pc/q5-180s-0swarm-100ms-src100ms",
+    "./q38_rerun/2pc/q6-180s-0swarm-100ms-src100ms",
+    "./q38_rerun/2pc/q7-180s-0swarm-100ms-src100ms",
+    "./q38_rerun/2pc/q8-180s-0swarm-100ms-src100ms",
+]
+
 nones = [
     "./none_data/sys-boki/q1-boki-180s-0swarm-100ms-src10ms",
     "./none_data/sys-boki/q2-boki-180s-0swarm-100ms-src10ms",
@@ -58,11 +70,11 @@ throughputs = [
     [4000, 8000, 12000, 16000, 20000, 24000, 28000, 32000, 36000],
 ]
 
-
 def load(system, experiment):
-    rows = subprocess.run(["latency", "query", system[experiment]], stdout=subprocess.PIPE)
+    rows = subprocess.run(["./latency", "query", system[experiment]], stdout=subprocess.PIPE)
     rows = rows.stdout.decode('utf-8').strip().split('\n')
-    rows = [row for row in csv.DictReader(rows, fieldnames=headers) if row['del'] == 'eo' and int(row['tps']) in throughputs[experiment]]
+    rows = [row for row in csv.DictReader(rows, fieldnames=headers) 
+            if (row['del'] == 'eo' or row['del'] == '2pc' or row['del'] == 'align_chkpt') and int(row['tps']) in throughputs[experiment]]
     rows.sort(key=lambda row: int(row['tps']))
     return rows
 
@@ -71,6 +83,7 @@ if __name__ == "__main__":
     for experiment in range(0, len(kafkas)):
         kafka = load(kafkas, experiment)
         sys = load(syss, experiment)
+        twopc = load(twopcs, experiment)
         none = load(nones, experiment)
 
         sys_in_per_worker_tp = [int(row['tps']) for row in sys]
@@ -80,6 +93,9 @@ if __name__ == "__main__":
         kafka_in_tp = [i*4 for i in kafka_in_per_worker_tp]
         sys_in_tp = [i*4 for i in sys_in_per_worker_tp]
         none_in_tp = [i*4 for i in none_in_per_worker_tp]
+
+        twopc_p50 = np.array([int(row['p50']) for row in twopc])
+        twopc_p99 = np.array([int(row['p99']) for row in twopc])
 
         print('Q' + str(experiment + 1))
         print(f"sys tp: {sys_in_tp}") 
@@ -96,14 +112,16 @@ if __name__ == "__main__":
         ax1 = plt.subplot(111)
         l1, = ax1.plot(sys_in_tp, [int(row['p50']) for row in sys], label='Impeller p50',  marker=markers[0],color=colors[0])
         l3, = ax1.plot(sys_in_tp, [int(row['p99']) for row in sys], label='Impeller p99', ls='--', marker=markers[0], color=colors[0])
-        l2, = ax1.plot(kafka_in_tp, [int(row['p50']) for row in kafka], label='Kafka p50',  marker=markers[1],color=colors[1])
-        l4, = ax1.plot(kafka_in_tp, [int(row['p99']) for row in kafka], label='Kafka p99', ls='--', marker=markers[1], color=colors[1])
+        l2, = ax1.plot(kafka_in_tp, [int(row['p50']) for row in kafka], label='Kafka Streams p50',  marker=markers[1],color=colors[1])
+        l4, = ax1.plot(kafka_in_tp, [int(row['p99']) for row in kafka], label='Kafka Streams p99', ls='--', marker=markers[1], color=colors[1])
         l5, = ax1.plot(none_in_tp, [int(row['p50']) for row in none], label='Impeller unsafe p50',  marker=markers[2],color=colors[2])
         l6, = ax1.plot(none_in_tp, [int(row['p99']) for row in none], label='Impeller unsafe p99', ls='--', marker=markers[2],color=colors[2])
+        l7, = ax1.plot(sys_in_tp, [int(row['p50']) for row in twopc], label='2PC on Impeller p50',  marker='s', color=colors[3])
+        l8, = ax1.plot(sys_in_tp, [int(row['p99']) for row in twopc], label='2PC on Impeller p99',  ls='--', marker='s',color=colors[3])
 
         ax1.set_xlabel('input throughput(events/s)')
         ax1.set_ylabel('event time latency(ms)')
-        ax1.legend(loc=(0, 1.1), ncol=2, handles=[l1, l5, l2, l3, l6, l4], handlelength=3)
+        ax1.legend(loc=(0, 1.1), ncol=2, handles=[l1, l3, l2, l4, l5, l6, l7, l8], handlelength=3)
         ax1.xaxis.set_major_formatter(ticker.EngFormatter())
         # ax1.legend(loc=(0, 1.1), ncol=2, handles=[l1, l2, l3, l4], handlelength=3)
 
@@ -113,4 +131,4 @@ if __name__ == "__main__":
             plt.ylim([0, 1000])
 
         # plt.title('Q' + str(experiment + 1))
-        plt.savefig('comparisons_unsafe/q' + str(experiment + 1) + '.pdf', bbox_inches='tight')
+        plt.savefig('comparisons_unsafe/q' + str(experiment + 1) + '.png', bbox_inches='tight')
