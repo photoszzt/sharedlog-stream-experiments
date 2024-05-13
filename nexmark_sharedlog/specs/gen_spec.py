@@ -91,7 +91,7 @@ def output_specs(instances: int):
         sp = specs[i]
         gateway = gateways[i]
         output_spec(f"./{instances}_ins/q{i+1}.json", sp)
-        output_spec(f"./{instances}_ins/q{i+1}_gateway.json", sp)
+        output_spec(f"./{instances}_ins/q{i+1}_gateway.json", gateway)
 
 
 def main():
@@ -100,9 +100,9 @@ def main():
         sp = specs[i]
         gateway = gateways[i]
         output_spec(f"q{i+1}.json", sp)
-        output_spec(f"q{i+1}_gateway.json", sp)
+        output_spec(f"q{i+1}_gateway.json", gateway)
         output_spec(f"./4_ins/q{i+1}.json", sp)
-        output_spec(f"./4_ins/q{i+1}_gateway.json", sp)
+        output_spec(f"./4_ins/q{i+1}_gateway.json", gateway)
     output_specs(8)
     output_specs(1)
     output_specs(2)
