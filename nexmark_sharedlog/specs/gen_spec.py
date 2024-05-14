@@ -36,10 +36,10 @@ def configs(instance: int):
         { "funcName": "chkptmngr", "funcId": 80, "minWorkers": 1, "maxWorkers": 1 },
         { "funcName": "redisSetup", "funcId": 100, "minWorkers": 1, "maxWorkers": 1 },
         { "funcName": "source", "funcId": 20, "minWorkers": instance, "maxWorkers": instance },
-        { "funcName": "qinstance6GroupBy", "funcId": 30, "minWorkers": instance, "maxWorkers": instance },
-        { "funcName": "qinstanceJoinStream", "funcId": 40, "minWorkers": instance, "maxWorkers": instance },
-        { "funcName": "qinstanceMaxBid", "funcId": 50, "minWorkers": instance, "maxWorkers": instance },
-        { "funcName": "qinstanceAvg", "funcId": 60, "minWorkers": instance, "maxWorkers": instance }
+        { "funcName": "q46GroupBy", "funcId": 30, "minWorkers": instance, "maxWorkers": instance },
+        { "funcName": "q4JoinStream", "funcId": 40, "minWorkers": instance, "maxWorkers": instance },
+        { "funcName": "q4MaxBid", "funcId": 50, "minWorkers": instance, "maxWorkers": instance },
+        { "funcName": "q4Avg", "funcId": 60, "minWorkers": instance, "maxWorkers": instance }
     ]
     q5 = [
         { "funcName": "scale", "funcId": 60, "minWorkers": 1, "maxWorkers": 1 },
