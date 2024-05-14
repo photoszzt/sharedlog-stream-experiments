@@ -1,5 +1,4 @@
 #!/bin/bash
-set -x
 SOURCE=${BASH_SOURCE[0]}
 while [ -L "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
   DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
@@ -22,7 +21,7 @@ MANAGER_HOST=$($HELPER_SCRIPT get-docker-manager-host --base-dir=$BASE_DIR)
 ALL_HOSTS=$($HELPER_SCRIPT get-all-server-hosts --base-dir=$BASE_DIR)
 
 ssh -q $MANAGER_HOST -- docker stack rm faas-test
-sleep 30
+sleep 20
 for HOST in $ALL_HOSTS; do
     SSH_CMD="ssh -q $HOST -oStrictHostKeyChecking=no"
     scp -q $SCRIPT_DIR/kill-containers.sh $HOST:

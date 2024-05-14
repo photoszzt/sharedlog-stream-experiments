@@ -1,6 +1,4 @@
 #!/bin/bash
-set -x
-
 if [ "$1" = "" ]; then
     echo "should provide exp_dir"
     exit 1
@@ -283,5 +281,5 @@ ssh -q $CLIENT_HOST -- "$WORKSPACE_DIR/sharedlog-stream-experiments/nexmark_shar
 scp -r $CLIENT_HOST:/home/ubuntu/${APP_NAME}/${EXP_DIR}/stats ${EXP_DIR}
 # scp -r $CLIENT_HOST:/home/ubuntu/${APP_NAME}/${EXP_DIR}/dump ${EXP_DIR}
 
-$HELPER_SCRIPT collect-func-output --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
-# $HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
+# $HELPER_SCRIPT collect-func-output --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
+$HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
