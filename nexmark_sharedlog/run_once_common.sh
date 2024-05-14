@@ -30,6 +30,7 @@ for HOST in $ALL_HOSTS; do
 done
 
 scp -q $BASE_DIR/docker-compose-base.yml $MANAGER_HOST:~
+scp -q $EXP_DIR/nexmark_sharedlog/common.yml $MANAGER_HOST:~
 $HELPER_SCRIPT generate-docker-compose --base-dir=$BASE_DIR
 scp -q $BASE_DIR/docker-compose.yml $MANAGER_HOST:~
 scp -q $SCRIPT_DIR/docker-stack-wait.sh $MANAGER_HOST:~
@@ -66,7 +67,7 @@ done
 
 ssh -q $MANAGER_HOST -- docker network rm faas-test_default
 ssh -q $MANAGER_HOST -- SRC_DIR=$SRC_DIR FAAS_DIR=$FAAS_DIR EXP_DIR=$EXP_DIR USE_CACHE=${USE_CACHE} FAAS_BUILD_TYPE=$FAAS_BUILD_TYPE \
-    docker stack deploy -c ~/docker-compose-base.yml -c ~/docker-compose.yml faas-test
+    docker stack deploy -c ~/common.yml -c ~/docker-compose-base.yml -c ~/docker-compose.yml faas-test
 ssh -q $MANAGER_HOST -- ./docker-stack-wait.sh faas-test
 sleep 40
 
