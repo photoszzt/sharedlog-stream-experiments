@@ -52,6 +52,49 @@ services:
       - ${FAAS_DIR:?}:/faas
     restart: always
 
+  faas-engine-rtx:
+    image: ubuntu:focal
+    hostname: faas-engine-rtx-{{.Task.Slot}}
+    entrypoint:
+      - /bin/bash
+      - -c 
+      - |
+        FAAS_NODE_ID=$$(printenv FAAS_NODE_ID)
+        FAAS_NODE_ID=$$(( $$FAAS_NODE_ID + 8 ))
+        /faas/bin/${FAAS_BUILD_TYPE:-release}/engine \
+        --zookeeper_host=zookeeper:2181 \
+        --listen_iface=eth0 \
+        --root_path_for_ipc=/tmp/faas/ipc \
+        --func_config_file=/exp/nexmark_sharedlog/specs/remote_txn_mngr.json \
+        --num_io_workers=4 \
+        --socket_listen_backlog=1024 \
+        --instant_rps_p_norm=0.8 \
+        --io_uring_entries=2048 \
+        --io_uring_fd_slots=4096 \
+        --enable_shared_log \
+        --slog_engine_enable_cache \
+        --slog_engine_cache_cap_mb=1024 \
+        --slog_engine_propagate_auxdata
+
+      # - --disable_concurrency_limiter
+      # - --slog_enable_statecheck
+      # - --slog_statecheck_interval_sec=10
+      # - --log_path=/tmp/log/engine.log
+      # - --alsologtostderr
+      # - --v=1
+    depends_on:
+      - zookeeper-setup
+    volumes:
+      - ${FAAS_DIR:?}:/faas
+      - ${EXP_DIR:?}:/exp
+      - /mnt/inmem/faas:/tmp/faas
+      - /mnt/inmem/log:/tmp/log
+      - /sys/fs/cgroup:/tmp/root_cgroupfs
+    environment:
+      - FAAS_NODE_ID={{.Task.Slot}}
+      - FAAS_CGROUP_FS_ROOT=/tmp/root_cgroupfs
+    restart: always
+
   faas-engine:
     image: ubuntu:focal
     hostname: faas-engine-{{.Task.Slot}}
@@ -114,7 +157,7 @@ services:
       - --zookeeper_host=zookeeper:2181
       - --listen_iface=eth0
       - --http_port=8080
-      - --func_config_file=/exp/nexmark_sharedlog/specs/q7.json
+      - --func_config_file=/exp/nexmark_sharedlog/specs/q7_gateway.json
       - --num_io_workers=8
       - --socket_listen_backlog=1024
       - --io_uring_entries=2048
@@ -229,6 +272,32 @@ services:
        - GOGC=200
     depends_on:
        - faas-engine
+    restart: always
+
+  remoteTxnMngr:
+    image: ubuntu:focal
+    hostname: remoteTxnMngr-{{.Task.Slot}}
+    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/remote_txn_mngr", "110"]
+    ports:
+      - '5050:5050'
+    volumes:
+      - ${SRC_DIR:?}:/src
+      - ${FAAS_DIR:?}:/faas
+      - /mnt/inmem/faas:/tmp/faas
+    environment:
+       - FAAS_BUILD_TYPE=${FAAS_BUILD_TYPE:-release}
+       - FAAS_GO_MAX_PROC_FACTOR=1
+       - GOGC=200
+         # - MEASURE_PROC=1
+       - MEASURE_SRC=1
+       - MEASURE_SINK=1
+       - BUFPUSH=1
+       - ASYNC_SECOND_PHASE=1
+       - RTX_PORT=5050
+       - REDIS_ADDR=snapcache-1:6666,snapcache-2:6666,snapcache-3:6666,snapcache-4:6666
+    depends_on:
+       - faas-engine-rtx
+       - snapcache
     restart: always
 
   chkptmngr:
