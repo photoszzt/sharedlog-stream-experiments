@@ -65,63 +65,9 @@ services:
       - /mnt/inmem:/tmp
     restart: always
 
-  chkptmngr:
-    image: ubuntu:focal
-    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "80"]
-    volumes:
-      - ${SRC_DIR:?}:/src
-      - ${FAAS_DIR:?}:/faas
-      - /mnt/inmem/faas:/tmp/faas
-    environment:
-       - FAAS_BUILD_TYPE=${FAAS_BUILD_TYPE:-release}
-       - FAAS_GO_MAX_PROC_FACTOR=1
-       - GOGC=200
-       - BUFPUSH=1
-       - REDIS_ADDR=snapcache-1:6666,snapcache-2:6666,snapcache-3:6666,snapcache-4:6666
-    depends_on:
-       - faas-engine
-       - snapcache
-    restart: always
-
-  scale:
-    image: ubuntu:focal
-    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "70"]
-    volumes:
-      - ${SRC_DIR:?}:/src
-      - ${FAAS_DIR:?}:/faas
-      - /mnt/inmem/faas:/tmp/faas
-    environment:
-       - FAAS_BUILD_TYPE=${FAAS_BUILD_TYPE:-release}
-       - FAAS_GO_MAX_PROC_FACTOR=1
-       - GOGC=200
-    depends_on:
-       - faas-engine
-    restart: always
-
-  redisSetup:
-    image: ubuntu:focal
-    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "100"]
-    volumes:
-      - ${SRC_DIR:?}:/src
-      - ${FAAS_DIR:?}:/faas
-      - /mnt/inmem/faas:/tmp/faas
-    environment:
-       - FAAS_BUILD_TYPE=${FAAS_BUILD_TYPE:-release}
-       - FAAS_GO_MAX_PROC_FACTOR=1
-       - GOGC=200
-         # - MEASURE_PROC=1
-       - MEASURE_SRC=1
-       - MEASURE_SINK=1
-       - BUFPUSH=1
-       - REDIS_ADDR=snapcache-1:6666,snapcache-2:6666,snapcache-3:6666,snapcache-4:6666
-    depends_on:
-       - faas-engine
-       - snapcache
-    restart: always
-
   nexmark-source:
     image: ubuntu:focal
-    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "20"]
+    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "60"]
     volumes:
       - ${SRC_DIR:?}:/src
       - ${FAAS_DIR:?}:/faas
@@ -144,7 +90,7 @@ services:
 
   q46GroupBy:
     image: ubuntu:focal
-    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "30"]
+    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "70"]
     volumes:
       - ${SRC_DIR:?}:/src
       - ${FAAS_DIR:?}:/faas
@@ -168,7 +114,7 @@ services:
 
   q4JoinStream:
     image: ubuntu:focal
-    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "40"]
+    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "80"]
     volumes:
       - ${SRC_DIR:?}:/src
       - ${FAAS_DIR:?}:/faas
@@ -195,7 +141,7 @@ services:
 
   q4MaxBid:
     image: ubuntu:focal
-    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "50"]
+    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "90"]
     volumes:
       - ${SRC_DIR:?}:/src
       - ${FAAS_DIR:?}:/faas
@@ -222,7 +168,7 @@ services:
 
   q4Avg:
     image: ubuntu:focal
-    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "60"]
+    entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "100"]
     volumes:
       - ${SRC_DIR:?}:/src
       - ${FAAS_DIR:?}:/faas
