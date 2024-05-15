@@ -7,81 +7,83 @@ def output_spec(fname: str, spec: list):
 
 
 def configs(instance: int):
-    q1 = [
-        { "funcName": "scale", "funcId": 40, "minWorkers": 1, "maxWorkers": 1 },
-        { "funcName": "chkptmngr", "funcId": 60, "minWorkers": 1, "maxWorkers": 1 },
-        { "funcName": "redisSetup", "funcId": 70, "minWorkers": 1, "maxWorkers": 1 },
-        { "funcName": "source", "funcId": 20, "minWorkers": instance, "maxWorkers": instance },
-        { "funcName": "query1", "funcId": 30, "minWorkers": instance, "maxWorkers": instance },
-        { "funcName": "dump", "funcId": 50, "minWorkers": 1, "maxWorkers": 1 }
+    common_deps = [
+        { "funcName": "scale", "funcId": 20, "minWorkers": 1, "maxWorkers": 1 },
+        { "funcName": "chkptmngr", "funcId": 30, "minWorkers": 1, "maxWorkers": 1 },
+        { "funcName": "redisSetup", "funcId": 40, "minWorkers": 1, "maxWorkers": 1 },
+        { "funcName": "dump", "funcId": 50, "minWorkers": 1, "maxWorkers": 1 },
     ]
-    q2 = [
-        { "funcName": "scale", "funcId": 40, "minWorkers": 1, "maxWorkers": 1 },
-        { "funcName": "chkptmngr", "funcId": 50, "minWorkers": 1, "maxWorkers": 1 },
-        { "funcName": "redisSetup", "funcId": 70, "minWorkers": 1, "maxWorkers": 1 },
-        { "funcName": "dump", "funcId": 60, "minWorkers": 1, "maxWorkers": 1 },
-        { "funcName": "source", "funcId": 20, "minWorkers": instance, "maxWorkers": instance },
-        { "funcName": "query2", "funcId": 30, "minWorkers": instance, "maxWorkers": instance }
-    ]
-    q3 = [
-        { "funcName": "scale", "funcId": 60, "minWorkers": 1, "maxWorkers": 1 },
-        { "funcName": "chkptmngr", "funcId": 70, "minWorkers": 1, "maxWorkers": 1 },
-        { "funcName": "redisSetup", "funcId": 80, "minWorkers": 1, "maxWorkers": 1 },
-        { "funcName": "source", "funcId": 20, "minWorkers": instance, "maxWorkers": instance },
-        { "funcName": "q3GroupBy", "funcId": 30, "minWorkers": instance, "maxWorkers": instance },
-        { "funcName": "q3JoinTable", "funcId": 40, "minWorkers": instance, "maxWorkers": instance }
-    ]
-    q4 = [ 
-        { "funcName": "scale", "funcId": 70, "minWorkers": 1,"maxWorkers": 1 },
-        { "funcName": "chkptmngr", "funcId": 80, "minWorkers": 1, "maxWorkers": 1 },
-        { "funcName": "redisSetup", "funcId": 100, "minWorkers": 1, "maxWorkers": 1 },
-        { "funcName": "source", "funcId": 20, "minWorkers": instance, "maxWorkers": instance },
-        { "funcName": "q46GroupBy", "funcId": 30, "minWorkers": instance, "maxWorkers": instance },
-        { "funcName": "q4JoinStream", "funcId": 40, "minWorkers": instance, "maxWorkers": instance },
-        { "funcName": "q4MaxBid", "funcId": 50, "minWorkers": instance, "maxWorkers": instance },
-        { "funcName": "q4Avg", "funcId": 60, "minWorkers": instance, "maxWorkers": instance }
-    ]
-    q5 = [
-        { "funcName": "scale", "funcId": 60, "minWorkers": 1, "maxWorkers": 1 },
-        { "funcName": "chkptmngr", "funcId": 70, "minWorkers": 1, "maxWorkers": 1 },
-        { "funcName": "redisSetup", "funcId": 90, "minWorkers": 1, "maxWorkers": 1 },
-        { "funcName": "source", "funcId": 20, "minWorkers": 4, "maxWorkers": 4 },
-        { "funcName": "q5bidkeyedbyauction", "funcId": 30, "minWorkers": 4, "maxWorkers": 4 },
-        { "funcName": "q5aucbids", "funcId": 40, "minWorkers": 4, "maxWorkers": 4 },
-        { "funcName": "q5maxbid", "funcId": 50, "minWorkers": 4, "maxWorkers": 4 }
-    ]
-    q6 = [
-        { "funcName": "scale", "funcId": 70, "minWorkers": 1, "maxWorkers": 1 },
-        { "funcName": "chkptmngr", "funcId": 80, "minWorkers": 1, "maxWorkers": 1 },
-        { "funcName": "redisSetup", "funcId": 100, "minWorkers": 1, "maxWorkers": 1 },
-        { "funcName": "source", "funcId": 20, "minWorkers": instance, "maxWorkers": instance },
-        { "funcName": "q46GroupBy", "funcId": 30, "minWorkers": instance, "maxWorkers": instance },
-        { "funcName": "q6JoinStream", "funcId": 40, "minWorkers": instance, "maxWorkers": instance },
-        { "funcName": "q6MaxBid", "funcId": 50, "minWorkers": instance, "maxWorkers": instance },
-        { "funcName": "q6Avg", "funcId": 60, "minWorkers": instance, "maxWorkers": instance }
-    ]
-    q7 = [
-        { "funcName": "scale", "funcId": 70, "minWorkers": 1, "maxWorkers": 1 },
-        { "funcName": "source", "funcId": 20, "minWorkers": instance, "maxWorkers": instance },
-        { "funcName": "q7BidByPrice", "funcId": 30, "minWorkers": instance, "maxWorkers": instance },
-        { "funcName": "q7BidByWin", "funcId": 40, "minWorkers": instance, "maxWorkers": instance },
-        { "funcName": "q7MaxBid", "funcId": 50, "minWorkers": instance, "maxWorkers": instance },
-        { "funcName": "q7JoinMaxBid", "funcId": 60, "minWorkers": instance, "maxWorkers": instance },
-        { "funcName": "chkptmngr", "funcId": 90, "minWorkers": 1, "maxWorkers": 1 },
-        { "funcName": "redisSetup", "funcId": 100, "minWorkers": 1, "maxWorkers": 1 }
-    ]
-    q8 = [
-        { "funcName": "scale", "funcId": 60, "minWorkers": 1, "maxWorkers": 1 },
-        { "funcName": "source", "funcId": 20, "minWorkers": instance, "maxWorkers": instance },
-        { "funcName": "q8GroupBy", "funcId": 30, "minWorkers": instance, "maxWorkers": instance },
-        { "funcName": "q8JoinStream", "funcId": 50, "minWorkers": instance, "maxWorkers": instance },
-        { "funcName": "chkptmngr", "funcId": 70, "minWorkers": 1, "maxWorkers": 1 },
-        { "funcName": "redisSetup", "funcId": 90, "minWorkers": 1, "maxWorkers": 1 },
-        { "funcName": "dump", "funcId": 40, "minWorkers": 1, "maxWorkers": 1 }
-    ]
+    names = [
+    ['source', 'query1'],
+    ['source', 'query2'],
+    ['source', 'q3GroupBy', 'q3JoinTable'],
+    ['source', 'q46GroupBy', 'q4JoinStream', 'q4MaxBid', 'q4Avg'],
+    ['source', 'q5bidkeyedbyauction', 'q5aucbids', 'q5maxbid'],
+    ['source', 'q46GroupBy', 'q6JoinStream', 'q6MaxBid', 'q6Avg'],
+    ['source', 'q7BidByPrice', 'q7BidByWin', 'q7MaxBid', 'q7JoinMaxBid'],
+    ['source', 'q8GroupBy', 'q8JoinStream']]
+
+    specs = []
+    gateways = []
     gateway = [{ "funcName": "remoteTxnMngr", "funcId": 110, "minWorkers": 1, "maxWorkers": 1 }]
-    specs = [q1, q2, q3, q4, q5, q6, q7, q8]
-    gateways = [q + gateway for q in specs]
+    for q in names:
+        spec = []
+        funcId = 60
+        for n in q:
+            spec.append({"funcName": n, "funcId": funcId, "minWorkers": instance, "maxWorkers": instance})
+            funcId += 10
+        specs.append(common_deps + spec)
+        gateways.append(common_deps + spec + gateway)
+        # q1 = [
+        #     { "funcName": "source", "funcId": 60, "minWorkers": instance, "maxWorkers": instance },
+        #     { "funcName": "query1", "funcId": 70, "minWorkers": instance, "maxWorkers": instance },
+        # ]
+        # q2 = [
+        #     { "funcName": "source", "funcId": 60, "minWorkers": instance, "maxWorkers": instance },
+        #     { "funcName": "query2", "funcId": 70, "minWorkers": instance, "maxWorkers": instance }
+        # ]
+        # q3 = [
+        #     { "funcName": "source", "funcId": 60, "minWorkers": instance, "maxWorkers": instance },
+        #     { "funcName": "q3GroupBy", "funcId": 70, "minWorkers": instance, "maxWorkers": instance },
+        #     { "funcName": "q3JoinTable", "funcId": 80, "minWorkers": instance, "maxWorkers": instance }
+        # ]
+        # q4 = [ 
+        #     { "funcName": "source", "funcId": 60, "minWorkers": instance, "maxWorkers": instance },
+        #     { "funcName": "q46GroupBy", "funcId": 70, "minWorkers": instance, "maxWorkers": instance },
+        #     { "funcName": "q4JoinStream", "funcId": 80, "minWorkers": instance, "maxWorkers": instance },
+        #     { "funcName": "q4MaxBid", "funcId": 90, "minWorkers": instance, "maxWorkers": instance },
+        #     { "funcName": "q4Avg", "funcId": 100, "minWorkers": instance, "maxWorkers": instance }
+        # ]
+        # q5 = [
+        #     { "funcName": "source", "funcId": 20, "minWorkers": 4, "maxWorkers": 4 },
+        #     { "funcName": "q5bidkeyedbyauction", "funcId": 30, "minWorkers": 4, "maxWorkers": 4 },
+        #     { "funcName": "q5aucbids", "funcId": 40, "minWorkers": 4, "maxWorkers": 4 },
+        #     { "funcName": "q5maxbid", "funcId": 50, "minWorkers": 4, "maxWorkers": 4 }
+        # ]
+        # q6 = [
+        #     { "funcName": "source", "funcId": 20, "minWorkers": instance, "maxWorkers": instance },
+        #     { "funcName": "q46GroupBy", "funcId": 30, "minWorkers": instance, "maxWorkers": instance },
+        #     { "funcName": "q6JoinStream", "funcId": 40, "minWorkers": instance, "maxWorkers": instance },
+        #     { "funcName": "q6MaxBid", "funcId": 50, "minWorkers": instance, "maxWorkers": instance },
+        #     { "funcName": "q6Avg", "funcId": 60, "minWorkers": instance, "maxWorkers": instance }
+        # ]
+        # q7 = [
+        #     { "funcName": "source", "funcId": 20, "minWorkers": instance, "maxWorkers": instance },
+        #     { "funcName": "q7BidByPrice", "funcId": 30, "minWorkers": instance, "maxWorkers": instance },
+        #     { "funcName": "q7BidByWin", "funcId": 40, "minWorkers": instance, "maxWorkers": instance },
+        #     { "funcName": "q7MaxBid", "funcId": 50, "minWorkers": instance, "maxWorkers": instance },
+        #     { "funcName": "q7JoinMaxBid", "funcId": 60, "minWorkers": instance, "maxWorkers": instance },
+        # ]
+        # q8 = [
+        #     { "funcName": "source", "funcId": 20, "minWorkers": instance, "maxWorkers": instance },
+        #     { "funcName": "q8GroupBy", "funcId": 30, "minWorkers": instance, "maxWorkers": instance },
+        #     { "funcName": "q8JoinStream", "funcId": 50, "minWorkers": instance, "maxWorkers": instance },
+        # ]
+        # specs = [q1, q2, q3, q4, q5, q6, q7, q8]
+        # for q in specs:
+        #     names = [l['funcName'] for l in q]
+        #     print(names)
+        # gateways = [q + gateway for q in specs]
     return specs, gateways
 
 
