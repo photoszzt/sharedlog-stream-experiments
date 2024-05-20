@@ -8,18 +8,19 @@ $WORKSPACE_DIR/research-helper-scripts/microservice_helper start-machines --use-
 ./update_docker.sh
 cd ..
 
-TPS_PER_WORKER=(64000)
+TPS_PER_WORKER=(6000)
 NUM_WORKER=4
 DURATION=180
 WARM_DURATION=0
 APP=fanout
-FLUSH_MS=100
-COMM_EVERY_MS=100
-SRC_FLUSH_MS=10
+FLUSH_MS=50
+COMM_EVERY_MS=50
+SRC_FLUSH_MS=50
 SNAPSHOT_S=0
 # modes=(epoch none 2pc align_chkpt)
-modes=(epoch 2pc)
-workload_dirs=(4node/4_ins/fanout_8.json 4node/4_ins/fanout_16.json 4node/4_ins/fanout_32.json 4node/4_ins/fanout_64.json)
+modes=(remote_2pc epoch)
+EXTRA_BYTES=0
+workload_dirs=(4node/4_ins/fanout_4.json 4node/4_ins/fanout_8.json 4node/4_ins/fanout_16.json)
 # workload_dirs=(4node/4_ins/fanout_128.json)
 
 
@@ -33,12 +34,13 @@ for ((idx = 0; idx < ${#TPS_PER_WORKER[@]}; ++idx)); do
         echo ${APP}, ${DIR}, ${EVENTS} events, ${TPS} tps, ${WORKLOAD}
         subdir=${DURATION}s_${WARM_DURATION}swarm_${FLUSH_MS}ms_src${SRC_FLUSH_MS}ms
         for mode in ${modes[@]}; do
-            for ((iter=4; iter < 7; ++iter)); do
+            for ((iter=0; iter < 2; ++iter)); do
                 ./run_once.sh --app ${APP} \
-                    --exp_dir ./${NUM_WORKER}src_1/${subdir}/${iter}/${TPS_PER_WORKER[$idx]}tps_${mode}_${wname}/ \
+                    --exp_dir ./${NUM_WORKER}src_1024byte_16384buf/${subdir}/${iter}/${TPS_PER_WORKER[$idx]}tps_${mode}_${wname}/ \
                     --gua $mode --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER} \
                     --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS --src_flushms $SRC_FLUSH_MS \
-                    --snapshot_s ${SNAPSHOT_S} --comm_everyMs ${COMM_EVERY_MS} --config_subpath ${WORKLOAD}
+                    --snapshot_s ${SNAPSHOT_S} --comm_everyMs ${COMM_EVERY_MS} --config_subpath ${WORKLOAD} \
+		    --buf_max_size 16384
             done
         done
     done

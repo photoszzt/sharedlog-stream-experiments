@@ -5,17 +5,17 @@ WORKSPACE_DIR=$(realpath $SCRIPT_DIR/../../)
 DIR=q7_boki/mem_nosync
 
 cd $DIR
-$WORKSPACE_DIR/research-helper-scripts/microservice_helper start-machines --use-spot-instances
+$WORKSPACE_DIR/research-helper-scripts/microservice_helper start-machines
 ./update_docker.sh
 cd ../..
 
 # TPS_PER_WORKER=(4000 8000 12000 16000 20000 24000 28000 32000 36000 40000)
-TPS_PER_WORKER=(8000 12000)
+TPS_PER_WORKER=(8000)
 NUM_WORKER=(4)
 DURATION=180
 WARM_DURATION=0
 APP=q7
-SRC_FLUSH_MS=(100 50 25)
+SRC_FLUSH_MS=(5 10 25)
 SNAPSHOT_S=10
 # FLUSH_MS=100
 # SRC_FLUSH_MS=100
@@ -37,7 +37,7 @@ for ((idx = 0; idx < ${#TPS_PER_WORKER[@]}; ++idx)); do
                 for ((iter=0; iter < 2; ++iter)); do
 		    # echo ${NUM_WORKER[w]}src_4/${subdir}/${iter}/${TPS_PER_WORKER[idx]}tps_${mode}
                     ./run_once.sh --app ${APP} \
-                        --exp_dir ./${NUM_WORKER[w]}src_4/${subdir}/${iter}/${TPS_PER_WORKER[idx]}tps_${mode}/ \
+                        --exp_dir ./${NUM_WORKER[w]}src_5/${subdir}/${iter}/${TPS_PER_WORKER[idx]}tps_${mode}/ \
                         --gua $mode --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
                         --tps ${TPS} --warm_duration ${WARM_DURATION} --flushms $FLUSH_MS \
 		        --src_flushms ${SRC_FLUSH_MS[$s]} \
