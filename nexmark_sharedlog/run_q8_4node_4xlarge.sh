@@ -4,7 +4,7 @@ set -x
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 WORKSPACE_DIR=$(realpath $SCRIPT_DIR/../../)
 
-DIR=q8_boki/mem_4node_8ins
+DIR=q8_boki/mem_4node_8ins_4xlarge
 
 cd $DIR
 $WORKSPACE_DIR/research-helper-scripts/microservice_helper start-machines --use-spot-instances
