@@ -167,8 +167,10 @@ fn main() -> anyhow::Result<()> {
                     "2pc"
                 } else if name.ends_with("align_chkpt") {
                     "align_chkpt"
+                } else if name.ends_with("remote_2pc") {
+                    "remote_2pc"
                 } else {
-                    panic!("Expected `align_chkpt`, `2pc`, `alo` or `epoch`, but got: {}", name);
+                    panic!("Expected `align_chkpt`, `remote_2pc`, `2pc`, `alo` or `epoch`, but got: {}", name);
                 };
 
                 let (throughput, _) = name.split_once("tps_").expect("Expected `tps_` delimiter");
