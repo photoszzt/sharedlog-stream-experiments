@@ -57,6 +57,17 @@ alignchkpts = [
     "./q38_rerun/align_chkpt_kvrocks2/q8-180s-0swarm-100ms-src100ms",
 ]
 
+remote_2pc = [
+    "./q38_rerun/remote_2pc/q1-180s-0swarm-100ms-src10ms",
+    "./q38_rerun/remote_2pc/q2-180s-0swarm-100ms-src10ms",
+    "./q38_rerun/remote_2pc/q3-180s-0swarm-100ms-src100ms",
+    "./q38_rerun/remote_2pc/q4-180s-0swarm-100ms-src100ms",
+    "./q38_rerun/remote_2pc/q5-180s-0swarm-100ms-src100ms",
+    "./q38_rerun/remote_2pc/q6-180s-0swarm-100ms-src100ms",
+    "./q38_rerun/remote_2pc/q7-180s-0swarm-100ms-src100ms",
+    "./q38_rerun/remote_2pc/q8-180s-0swarm-100ms-src100ms",
+]
+
 throughputs = [
     [4000, 16000, 32000, 48000, 64000, 80000, 88000],
     [4000, 16000, 32000, 48000, 64000, 80000, 88000],
@@ -73,7 +84,7 @@ def load(system, experiment):
     rows = subprocess.run(["./latency", "query", system[experiment]], stdout=subprocess.PIPE)
     rows = rows.stdout.decode('utf-8').strip().split('\n')
     rows = [row for row in csv.DictReader(rows, fieldnames=headers) 
-            if (row['del'] == 'eo' or row['del'] == '2pc' or row['del'] == 'align_chkpt') and int(row['tps']) in throughputs[experiment]]
+            if (row['del'] == 'eo' or row['del'] == '2pc' or row['del'] == 'align_chkpt' or row['del'] == 'remote_2pc') and int(row['tps']) in throughputs[experiment]]
     rows.sort(key=lambda row: int(row['tps']))
     return rows
 
@@ -86,14 +97,17 @@ if __name__ == "__main__":
         sys = load(syss, experiment)
         twopc = load(twopcs, experiment)
         ackpt = load(alignchkpts, experiment)
+        r2pc = load(remote_2pc, experiment)
 
         sys_in_per_worker_tp = [int(row['tps']) for row in sys]
         kafka_in_per_worker_tp = [int(row['tps']) for row in kafka]
         ackpt_in_per_worker_tp = [int(row['tps']) for row in ackpt]
+        remote2pc_in_per_worker_tp = [int(row['tps']) for row in r2pc]
 
         kafka_in_tp = [i*4 for i in kafka_in_per_worker_tp]
         sys_in_tp = [i*4 for i in sys_in_per_worker_tp]
         ackpt_in_tp = [i*4 for i in ackpt_in_per_worker_tp]
+        r2pc_in_tp = [i*4 for i in remote2pc_in_per_worker_tp]
 
         sys_p50 = [int(row['p50']) for row in sys]
         sys_p99 = [int(row['p99']) for row in sys]
@@ -101,6 +115,9 @@ if __name__ == "__main__":
         twopc_p99 = np.array([int(row['p99']) for row in twopc])
         ackpt_p50 = [int(row['p50']) for row in ackpt]
         ackpt_p99 = [int(row['p99']) for row in ackpt]
+
+        r2pc_p50 = [int(row['p50']) for row in r2pc]
+        r2pc_p99 = [int(row['p99']) for row in r2pc]
 
         print('Q' + str(experiment + 1))
         print(f"sys tp: {sys_in_tp}") 
@@ -117,29 +134,33 @@ if __name__ == "__main__":
         print(f"ackpt tp: {ackpt_in_tp}")
         print(f"alignchkpt p50: {ackpt_p50}")
         print(f"alignchkpt p99: {ackpt_p99}")
+        print(f"remote_2pc p50: {r2pc_p50}")
+        print(f"remote_2pc p99: {r2pc_p99}")
         marksize=14
 
         l1, = ax1.plot(sys_in_tp, sys_p50, label='Impeller p50',  marker=markers[0],color=colors[0], markersize=marksize)
         l3, = ax1.plot(sys_in_tp, sys_p99, label='Impeller p99', ls='--', marker=markers[0], color=colors[0], markersize=marksize)
         l2, = ax1.plot(kafka_in_tp, [int(row['p50']) for row in kafka], label='Kafka Streams p50',  marker=markers[1],color=colors[1], markersize=marksize)
         l4, = ax1.plot(kafka_in_tp, [int(row['p99']) for row in kafka], label='Kafka Streams p99', ls='--', marker=markers[1], color=colors[1], markersize=marksize)
-        l5, = ax1.plot(sys_in_tp, twopc_p50, label='2pc on Impeller p50',  marker=markers[3], color=colors[3], markersize=marksize)
-        l6, = ax1.plot(sys_in_tp, twopc_p99, label='2pc on Impeller p99',  ls='--', marker=markers[3],color=colors[3], markersize=marksize)
+        # l5, = ax1.plot(sys_in_tp, twopc_p50, label='2pc on Impeller p50',  marker=markers[3], color=colors[3], markersize=marksize)
+        # l6, = ax1.plot(sys_in_tp, twopc_p99, label='2pc on Impeller p99',  ls='--', marker=markers[3],color=colors[3], markersize=marksize)
+        l7, = ax1.plot(r2pc_in_tp, r2pc_p50, label='2pc on Impeller p50',  marker=markers[3], color=colors[3], markersize=marksize)
+        l8, = ax1.plot(r2pc_in_tp, r2pc_p99, label='2pc on Impeller p99',  ls='--', marker=markers[3],color=colors[3], markersize=marksize)
         if experiment == 6:
             l9, = ax1.plot(ackpt_in_tp, ackpt_p50, label='Align chkpt nosync WAL on Impeller p50',  marker=markers[5], color=colors[5], markersize=marksize)
             l10, = ax1.plot(ackpt_in_tp, ackpt_p99, label='Align chkpt nosync WAL on Impeller p99',  ls='--', marker=markers[5],color=colors[5], markersize=marksize)
-            lines = [l1, l2, l3, l4, l5, l6, l9, l10]
+            lines = [l1, l2, l3, l4, l7, l8, l9, l10]
         else:
-            l7, = ax1.plot(ackpt_in_tp, ackpt_p50, label='Align chkpt on Impeller p50',  marker=markers[4], color=colors[4], markersize=marksize)
-            l8, = ax1.plot(ackpt_in_tp, ackpt_p99, label='Align chkpt on Impeller p99',  ls='--', marker=markers[4],color=colors[4], markersize=marksize)
-            lines = [l1, l2, l3, l4, l5, l6, l7, l8]
+            l11, = ax1.plot(ackpt_in_tp, ackpt_p50, label='Align chkpt on Impeller p50',  marker=markers[4], color=colors[4], markersize=marksize)
+            l12, = ax1.plot(ackpt_in_tp, ackpt_p99, label='Align chkpt on Impeller p99',  ls='--', marker=markers[4],color=colors[4], markersize=marksize)
+            lines = [l1, l2, l3, l4, l7, l8, l11, l12]
         for l in lines:
             l.set_linewidth(3)
 
         # ax1.set_xlabel('input throughput(events/s)', fontsize=16)
         # ax1.set_ylabel('event time latency(ms)', fontsize=16)
         if experiment == 7:
-            handles = [l1, l3, l2, l4, l5, l6, l7, l8, l9, l10]
+            handles = [l1, l3, l2, l4, l7, l8, l9, l10, l11, l12]
             # ax1.legend(loc=(3, 1.05), ncol=2, handles=[l1, l5, l2, l3, l6, l4], handlelength=3, fontsize=11)
         ax1.set_title(f'{letters[experiment]} Query{experiment+1}', fontsize=18)
         ax1.tick_params(labelsize=18)
