@@ -89,10 +89,11 @@ def load(system, experiment):
     return rows
 
 if __name__ == "__main__":
-    fig, axs = plt.subplots(2, 4, figsize=(24, 10), layout='constrained')
+    fig, axs = plt.subplots(4, 4, figsize=(24, 12), layout='constrained')
     handles = None
     letters=[f'({i})' for i in ascii_lowercase]
-    for ax1, experiment in zip(axs.flat, range(0, len(kafkas))):
+    print(axs)
+    for experiment in range(0, len(kafkas)):
         kafka = load(kafkas, experiment)
         sys = load(syss, experiment)
         twopc = load(twopcs, experiment)
@@ -138,16 +139,20 @@ if __name__ == "__main__":
         print(f"remote_2pc p99: {r2pc_p99}")
         marksize=14
 
+        r = (experiment // 4) * 2
+        c = experiment % 4
+        ax1 = axs[r][c]
+        ax2 = axs[r+1][c]
         l1, = ax1.plot(sys_in_tp, sys_p50, label='Impeller p50',  marker=markers[0],color=colors[0], markersize=marksize)
-        l3, = ax1.plot(sys_in_tp, sys_p99, label='Impeller p99', ls='--', marker=markers[0], color=colors[0], markersize=marksize)
+        l3, = ax2.plot(sys_in_tp, sys_p99, label='Impeller p99', ls='--', marker=markers[0], color=colors[0], markersize=marksize)
         l2, = ax1.plot(kafka_in_tp, [int(row['p50']) for row in kafka], label='Kafka Streams p50',  marker=markers[1],color=colors[1], markersize=marksize)
-        l4, = ax1.plot(kafka_in_tp, [int(row['p99']) for row in kafka], label='Kafka Streams p99', ls='--', marker=markers[1], color=colors[1], markersize=marksize)
+        l4, = ax2.plot(kafka_in_tp, [int(row['p99']) for row in kafka], label='Kafka Streams p99', ls='--', marker=markers[1], color=colors[1], markersize=marksize)
         # l5, = ax1.plot(sys_in_tp, twopc_p50, label='2pc on Impeller p50',  marker=markers[3], color=colors[3], markersize=marksize)
         # l6, = ax1.plot(sys_in_tp, twopc_p99, label='2pc on Impeller p99',  ls='--', marker=markers[3],color=colors[3], markersize=marksize)
         l7, = ax1.plot(r2pc_in_tp, r2pc_p50, label='2pc on Impeller p50',  marker=markers[3], color=colors[3], markersize=marksize)
-        l8, = ax1.plot(r2pc_in_tp, r2pc_p99, label='2pc on Impeller p99',  ls='--', marker=markers[3],color=colors[3], markersize=marksize)
+        l8, = ax2.plot(r2pc_in_tp, r2pc_p99, label='2pc on Impeller p99',  ls='--', marker=markers[3],color=colors[3], markersize=marksize)
         l11, = ax1.plot(ackpt_in_tp, ackpt_p50, label='Align chkpt on Impeller p50',  marker=markers[4], color=colors[4], markersize=marksize)
-        l12, = ax1.plot(ackpt_in_tp, ackpt_p99, label='Align chkpt on Impeller p99',  ls='--', marker=markers[4],color=colors[4], markersize=marksize)
+        l12, = ax2.plot(ackpt_in_tp, ackpt_p99, label='Align chkpt on Impeller p99',  ls='--', marker=markers[4],color=colors[4], markersize=marksize)
         lines = [l1, l2, l3, l4, l7, l8, l11, l12]
         for l in lines:
             l.set_linewidth(3)
@@ -160,11 +165,15 @@ if __name__ == "__main__":
         ax1.set_title(f'{letters[experiment]} Query{experiment+1}', fontsize=18)
         ax1.tick_params(labelsize=18)
         ax1.xaxis.set_major_formatter(ticker.EngFormatter())
+        ax2.tick_params(labelsize=18)
+        ax2.xaxis.set_major_formatter(ticker.EngFormatter())
 
         if experiment < 2:
             ax1.set_ylim([0, 60])
+            ax2.set_ylim([0, 60])
         else:
             ax1.set_ylim([0, 1000])
+            ax2.set_ylim([0, 1000])
 
         # plt.title('Q' + str(experiment + 1))
     fig.legend(ncol=5, handles=handles, fontsize=18, loc='upper center', bbox_to_anchor=(0.5, 1.10))
