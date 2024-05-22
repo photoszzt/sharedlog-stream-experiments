@@ -146,21 +146,16 @@ if __name__ == "__main__":
         # l6, = ax1.plot(sys_in_tp, twopc_p99, label='2pc on Impeller p99',  ls='--', marker=markers[3],color=colors[3], markersize=marksize)
         l7, = ax1.plot(r2pc_in_tp, r2pc_p50, label='2pc on Impeller p50',  marker=markers[3], color=colors[3], markersize=marksize)
         l8, = ax1.plot(r2pc_in_tp, r2pc_p99, label='2pc on Impeller p99',  ls='--', marker=markers[3],color=colors[3], markersize=marksize)
-        if experiment == 6:
-            l9, = ax1.plot(ackpt_in_tp, ackpt_p50, label='Align chkpt nosync WAL on Impeller p50',  marker=markers[5], color=colors[5], markersize=marksize)
-            l10, = ax1.plot(ackpt_in_tp, ackpt_p99, label='Align chkpt nosync WAL on Impeller p99',  ls='--', marker=markers[5],color=colors[5], markersize=marksize)
-            lines = [l1, l2, l3, l4, l7, l8, l9, l10]
-        else:
-            l11, = ax1.plot(ackpt_in_tp, ackpt_p50, label='Align chkpt on Impeller p50',  marker=markers[4], color=colors[4], markersize=marksize)
-            l12, = ax1.plot(ackpt_in_tp, ackpt_p99, label='Align chkpt on Impeller p99',  ls='--', marker=markers[4],color=colors[4], markersize=marksize)
-            lines = [l1, l2, l3, l4, l7, l8, l11, l12]
+        l11, = ax1.plot(ackpt_in_tp, ackpt_p50, label='Align chkpt on Impeller p50',  marker=markers[4], color=colors[4], markersize=marksize)
+        l12, = ax1.plot(ackpt_in_tp, ackpt_p99, label='Align chkpt on Impeller p99',  ls='--', marker=markers[4],color=colors[4], markersize=marksize)
+        lines = [l1, l2, l3, l4, l7, l8, l11, l12]
         for l in lines:
             l.set_linewidth(3)
 
         # ax1.set_xlabel('input throughput(events/s)', fontsize=16)
         # ax1.set_ylabel('event time latency(ms)', fontsize=16)
         if experiment == 7:
-            handles = [l1, l3, l2, l4, l7, l8, l9, l10, l11, l12]
+            handles = [l1, l3, l2, l4, l7, l8, l11, l12]
             # ax1.legend(loc=(3, 1.05), ncol=2, handles=[l1, l5, l2, l3, l6, l4], handlelength=3, fontsize=11)
         ax1.set_title(f'{letters[experiment]} Query{experiment+1}', fontsize=18)
         ax1.tick_params(labelsize=18)
