@@ -240,6 +240,9 @@ services:
   chkptmngr:
     image: ubuntu:focal
     entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "30"]
+    hostname: chkptmngr-{{.Task.Slot}}
+    ports:
+      - '6060:6060'
     volumes:
       - ${SRC_DIR:?}:/src
       - ${FAAS_DIR:?}:/faas
@@ -247,6 +250,7 @@ services:
     environment:
        - FAAS_BUILD_TYPE=${FAAS_BUILD_TYPE:-release}
        - FAAS_GO_MAX_PROC_FACTOR=1
+       - FAAS_STATIC_GO_MAX_PROCS=8
        - GOGC=200
        - REDIS_ADDR=snapcache-1:6666,snapcache-2:6666,snapcache-3:6666,snapcache-4:6666
     depends_on:
