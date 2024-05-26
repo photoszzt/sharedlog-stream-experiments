@@ -163,6 +163,7 @@ SRC_DIR=$WORKSPACE_DIR/sharedlog-stream
 MANAGER_HOST=$($HELPER_SCRIPT get-docker-manager-host --base-dir=$BASE_DIR)
 CLIENT_HOST=$($HELPER_SCRIPT get-client-host --base-dir=$BASE_DIR)
 ENTRY_HOST=$($HELPER_SCRIPT get-service-host --base-dir=$BASE_DIR --service=faas-gateway)
+ENGINE_ONE_HOST=$($HELPER_SCRIPT get-host --base-dir=$BASE_DIR --machine-name faas-engine-1) 
 
 ./run_once_common.sh
 
@@ -206,7 +207,7 @@ if [[ "$CONFIG_SUBPATH" = "" ]]; then
 fi
 
 ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name ${APP_NAME} \
-    -faas_gateway $ENTRY_HOST:8080 -duration ${DURATION} -serde msgp \
+    -faas_gateway $ENTRY_HOST:8080 -engine1 ${ENGINE_ONE_HOST}:6060 -duration ${DURATION} -serde msgp \
     -guarantee $GUA -comm_everyMS ${COMM_EVERY_MS} -flushms ${FLUSH_MS} \
     -src_flushms ${SRC_FLUSH_MS} -events_num ${EVENTS_NUM} \
     -wconfig $WCONFIG -buf_max_size ${BUF_MAX_SIZE} \
@@ -281,5 +282,5 @@ ssh -q $CLIENT_HOST -- "$WORKSPACE_DIR/sharedlog-stream-experiments/nexmark_shar
 scp -r $CLIENT_HOST:/home/ubuntu/${APP_NAME}/${EXP_DIR}/stats ${EXP_DIR}
 # scp -r $CLIENT_HOST:/home/ubuntu/${APP_NAME}/${EXP_DIR}/dump ${EXP_DIR}
 
-# $HELPER_SCRIPT collect-func-output --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
-$HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
+$HELPER_SCRIPT collect-func-output --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
+# $HELPER_SCRIPT collect-container-logs --base-dir=$BASE_DIR --log-path=$EXP_DIR/logs
