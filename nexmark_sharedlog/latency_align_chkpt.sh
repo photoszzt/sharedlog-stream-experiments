@@ -12,10 +12,10 @@ done
 
 for ((i=0; i < 6; i++)); do
   echo "q1"
-  INDIR=$SCRIPT_DIR/q1_boki/4src_3/180s_0swarm_100ms_src10ms/$i
+  INDIR=$SCRIPT_DIR/q1_boki/4src_1/180s_0swarm_100ms_src10ms/$i
   [[ -d $INDIR ]] && latency scan --prefix query1 --suffix .json.gz --output $OUT_DIR/q1-180s-0swarm-100ms-src10ms/ $INDIR
   echo "q2"
-  INDIR=$SCRIPT_DIR/q2_boki/4src_3/180s_0swarm_100ms_src10ms/$i
+  INDIR=$SCRIPT_DIR/q2_boki/4src_2/180s_0swarm_100ms_src10ms/$i
   [[ -d $INDIR ]] && latency scan --prefix query2 --suffix .json.gz --output $OUT_DIR/q2-180s-0swarm-100ms-src10ms/ $INDIR
   echo "q3"
   INDIR=$SCRIPT_DIR/q3_boki/mem/4src_3/180s_0swarm_100ms_src100ms/$i/
@@ -30,9 +30,22 @@ for ((i=0; i < 6; i++)); do
   INDIR=$SCRIPT_DIR/q6_boki/4src_3/180s_0swarm_100ms_src100ms/$i
   [[ -d $INDIR ]] && latency scan --prefix q6Avg --suffix .json.gz --output $OUT_DIR/q6-180s-0swarm-100ms-src100ms/ $INDIR
   echo "q7"
-  INDIR=$SCRIPT_DIR/q7_boki/mem_nosync/4src_3/180s_0swarm_100ms_src100ms_comm100ms/$i
+  INDIR=$SCRIPT_DIR/q7_boki/mem/4src_1/180s_0swarm_100ms_src100ms/$i
   [[ -d $INDIR ]] && latency scan --prefix q7JoinMaxBid --suffix .json.gz --output $OUT_DIR/q7-180s-0swarm-100ms-src100ms/ $INDIR
   echo "q8"
   INDIR=$SCRIPT_DIR/q8_boki/mem/4src_3/180s_0swarm_100ms_src100ms/$i
   [[ -d $INDIR ]] && latency scan --prefix q8JoinStream --suffix .json.gz --output $OUT_DIR/q8-180s-0swarm-100ms-src100ms/ $INDIR
+done
+
+for ((i=1; i <= 2; i++)); do
+  rm -rf $OUT_DIR/q${i}-180s-0swarm-100ms-src10ms/eo-* || true
+  rm -rf $OUT_DIR/q${i}-180s-0swarm-100ms-src10ms/epoch-* || true
+  rm -rf $OUT_DIR/q${i}-180s-0swarm-100ms-src10ms/remote_2pc-* || true
+done
+
+for ((i=3; i <= 8; i++)); do
+  rm -rf $OUT_DIR/q${i}-180s-0swarm-100ms-src100ms/eo-* || true
+  rm -rf $OUT_DIR/q${i}-180s-0swarm-100ms-src100ms/epoch-* || true
+  rm -rf $OUT_DIR/q${i}-180s-0swarm-100ms-src100ms/remote_2pc-* || true
+  rm -rf $OUT_DIR/q${i}-180s-0swarm-100ms-src100ms/2pc-* || true
 done
