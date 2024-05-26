@@ -206,7 +206,7 @@ if [[ "$CONFIG_SUBPATH" = "" ]]; then
     WCONFIG=$SRC_DIR/workload_config/4node/${NUM_WORKER}_ins/${APP_NAME}.json
 fi
 
-ssh -q $CLIENT_HOST -- $SRC_DIR/bin/nexmark_client -app_name ${APP_NAME} \
+ssh -q $CLIENT_HOST -- CHKPT_MNGR_ADDR=${ENGINE_ONE_HOST}:6060 $SRC_DIR/bin/nexmark_client -app_name ${APP_NAME} \
     -faas_gateway $ENTRY_HOST:8080 -engine1 ${ENGINE_ONE_HOST}:6060 -duration ${DURATION} -serde msgp \
     -guarantee $GUA -comm_everyMS ${COMM_EVERY_MS} -flushms ${FLUSH_MS} \
     -src_flushms ${SRC_FLUSH_MS} -events_num ${EVENTS_NUM} \

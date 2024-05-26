@@ -238,11 +238,26 @@ services:
        - faas-engine
     restart: always
 
+  chkptmngr_server:
+    image: ubuntu:focal
+    entrypoint: ["/src/bin/chkptmngr_server"]
+    ports:
+      - '6060:6060'
+    volumes:
+      - ${SRC_DIR:?}:/src
+      - ${FAAS_DIR:?}:/faas
+      - /mnt/inmem/faas:/tmp/faas
+    environment:
+       - GOGC=200
+       - REDIS_ADDR=snapcache-1:6666,snapcache-2:6666,snapcache-3:6666,snapcache-4:6666
+    depends_on:
+       - faas-engine
+       - snapcache
+    restart: always
+
   chkptmngr:
     image: ubuntu:focal
     entrypoint: ["/faas/tmp/run_basic_go", "/src/bin/nexmark_handler", "30"]
-    ports:
-      - '6060:6060'
     volumes:
       - ${SRC_DIR:?}:/src
       - ${FAAS_DIR:?}:/faas
@@ -253,6 +268,7 @@ services:
        - FAAS_STATIC_GO_MAX_PROCS=8
        - GOGC=200
        - REDIS_ADDR=snapcache-1:6666,snapcache-2:6666,snapcache-3:6666,snapcache-4:6666
+       - CHKPT_MNGR_ADDR=chkptmngr_server:6060
     depends_on:
        - faas-engine
        - snapcache
