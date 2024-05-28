@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import numpy as np
 import matplotlib.pyplot as plt
 
 current = os.path.dirname(os.path.realpath(__file__))
@@ -38,6 +39,10 @@ def main():
     print(f"epoch p99: {epoch_p99}")
     print(f"twopc p50: {twopc_p50}")
     print(f"twopc p99: {twopc_p99}")
+    p50_ratio = np.array(twopc_p50) / np.array(epoch_p50)
+    p99_ratio = np.array(twopc_p99) / np.array(epoch_p99)
+    print(f"2pc/epoch p50: {p50_ratio}")
+    print(f"2pc/epoch p99: {p99_ratio}")
 
     fig = plt.figure(figsize=(6.5, 3))
     axs = fig.subplots(1, 2)
