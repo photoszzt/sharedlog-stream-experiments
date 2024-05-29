@@ -127,11 +127,21 @@ if __name__ == "__main__":
         print(f"kafka tp: {kafka_in_tp}")
         print(f"kafka p50: {[int(row['p50']) for row in kafka]}")
         print(f"kafka p99: {[int(row['p99']) for row in kafka]}")
-        print(f"2pc tp: {sys_in_tp}") 
-        print(f"2pc p50: {twopc_p50}")
-        print(f"2pc p99: {twopc_p99}")
-        print(f"2pc/sys p50: {np.array(twopc_p50)/np.array(sys_p50)}")
-        print(f"2pc/sys p99: {np.array(twopc_p99)/np.array(sys_p99)}")
+        # print(f"2pc tp: {sys_in_tp}") 
+        # print(f"2pc p50: {twopc_p50}")
+        # print(f"2pc p99: {twopc_p99}")
+        p50_ratio = np.array(r2pc_p50)/np.array(sys_p50)
+        p99_ratio = np.array(r2pc_p99)/np.array(sys_p99)
+        target_idx = 0
+        assert len(sys_in_tp) == len(r2pc_in_tp)
+        print(f"ratio to 1st p99: [i/sys_p99[0] for i in sys_p99]")
+        for idx, t in enumerate(sys_p99):
+            if t <= 400 and sys_p50[idx] <= 400 and t <= sys_p99[0] * 1.1 and abs(p99_ratio[idx]-1) <= 0.1:
+                target_idx = idx
+        print(f"idx: {target_idx}, tp: {sys_in_per_worker_tp[target_idx]}, epoch_p50: {sys_p50[target_idx]}, epoch_p99: {sys_p99[target_idx]}")
+
+        print(f"r2pc/sys p50: {p50_ratio}")
+        print(f"r2pc/sys p99: {p99_ratio}")
         print(f"ackpt tp: {ackpt_in_tp}")
         print(f"alignchkpt p50: {ackpt_p50}")
         print(f"alignchkpt p99: {ackpt_p99}")
@@ -149,8 +159,8 @@ if __name__ == "__main__":
         l4, = ax2.plot(kafka_in_tp, [int(row['p99']) for row in kafka], label='Kafka Streams p99', ls='--', marker=markers[1], color=colors[1], markersize=marksize)
         # l5, = ax1.plot(sys_in_tp, twopc_p50, label='2pc on Impeller p50',  marker=markers[3], color=colors[3], markersize=marksize)
         # l6, = ax1.plot(sys_in_tp, twopc_p99, label='2pc on Impeller p99',  ls='--', marker=markers[3],color=colors[3], markersize=marksize)
-        l7, = ax1.plot(r2pc_in_tp, r2pc_p50, label='2pc on Impeller p50',  marker=markers[3], color=colors[3], markersize=marksize)
-        l8, = ax2.plot(r2pc_in_tp, r2pc_p99, label='2pc on Impeller p99',  ls='--', marker=markers[3],color=colors[3], markersize=marksize)
+        l7, = ax1.plot(r2pc_in_tp, r2pc_p50, label='Kafka Streams on Impeller p50',  marker=markers[3], color=colors[3], markersize=marksize)
+        l8, = ax2.plot(r2pc_in_tp, r2pc_p99, label='Kafka Streams on Impeller p99',  ls='--', marker=markers[3],color=colors[3], markersize=marksize)
         l11, = ax1.plot(ackpt_in_tp, ackpt_p50, label='Align chkpt on Impeller p50',  marker=markers[4], color=colors[4], markersize=marksize)
         l12, = ax2.plot(ackpt_in_tp, ackpt_p99, label='Align chkpt on Impeller p99',  ls='--', marker=markers[4],color=colors[4], markersize=marksize)
         lines = [l1, l2, l3, l4, l7, l8, l11, l12]
