@@ -133,8 +133,8 @@ if __name__ == "__main__":
         l4, = ax2.plot(kafka_in_tp, [int(row['p99']) for row in kafka], label='Kafka Streams p99', ls='--', marker=markers[1], color=colors[1])
         l5, = ax1.plot(none_in_tp, [int(row['p50']) for row in none], label='Impeller unsafe p50',  marker=markers[2],color=colors[2])
         l6, = ax2.plot(none_in_tp, [int(row['p99']) for row in none], label='Impeller unsafe p99', ls='--', marker=markers[2],color=colors[2])
-        l7, = ax1.plot(r2pc_in_tp, r2pc_p50, label='Kafka Streams on Impeller p50',  marker=markers[3], color=colors[3])
-        l8, = ax2.plot(r2pc_in_tp, r2pc_p99, label='Kafka Streams on Impeller p99',  ls='--', marker=markers[3],color=colors[3])
+        l7, = ax1.plot(r2pc_in_tp, r2pc_p50, label='Kafka Streams Protocol on Impeller p50',  marker=markers[3], color=colors[3])
+        l8, = ax2.plot(r2pc_in_tp, r2pc_p99, label='Kafka Streams Protocol on Impeller p99',  ls='--', marker=markers[3],color=colors[3])
 
         fig.supxlabel('Input throughput(events/s)')
         fig.supylabel('Event time latency(ms)')
