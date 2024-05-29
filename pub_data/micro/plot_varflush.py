@@ -10,18 +10,18 @@ sys.path.append(parent)
 
 from fig_const import markers, colors, headers
 
-markFreq = [10, 20, 40]
-markIntr = [100, 50, 25]
+markFreq = [20, 40, 100]
+markIntr = ["50", "25", "10"]
 
 markFreq_10 = [10, 20, 40, 100]
 markIntr_10 = [100, 50, 25, 10]
 
-throughputs = {4: "750", 6: "750", 7: "8000"}
+throughputs = {4: "750", 6: "750", 7: "28000", 8: "24000"}
 
 
 def get_varflush(markIntr, markFreq, tp, top_dir, json_fname):
     epoch_dir = f"{top_dir}/epoch"
-    twopc_dir = f"{top_dir}/2pc"
+    twopc_dir = f"{top_dir}/remote_2pc"
     epoch_p50 = []
     epoch_p99 = []
     twopc_p50 = []
@@ -52,35 +52,31 @@ def get_varflush(markIntr, markFreq, tp, top_dir, json_fname):
 
 def main():
     # queries = [4, 6, 7]
-    queries = [4, 6]
-    fig = plt.figure(figsize=(6.5, 3.5), layout='constrained')
+    queries = [4, 6, 7, 8]
+    fig = plt.figure(figsize=(12, 3.5), layout='constrained')
     # axs = fig.subplots(2, 3)
-    axs = fig.subplots(2, 2)
+    axs = fig.subplots(2, 4)
     for idx, q in enumerate(queries):
-        if q == 6 or q == 7:
-            mIntr = markIntr
-            mFreq = markFreq
-        else:
-            mIntr = markIntr_10
-            mFreq = markFreq_10
+        # if q == 6 or q == 7:
+        mIntr = markIntr
+        mFreq = markFreq
+        # else:
+        #     mIntr = markIntr_10
+        #     mFreq = markFreq_10
         epoch_p50, epoch_p99, twopc_p50, twopc_p99 = get_varflush(mIntr, mFreq, throughputs[q], f"./q{q}_varflush", f"q{q}.json")
         l1, = axs[0][idx].plot(mFreq, epoch_p50, label="Impeller p50", color=colors[0], marker=markers[0])
         l2, = axs[1][idx].plot(mFreq, epoch_p99, label="Impeller p99", color=colors[0], marker=markers[0], ls='--')
-        l3, = axs[0][idx].plot(mFreq, twopc_p50, label="2pc on Impeller p50", color=colors[3], marker=markers[3])
-        l4, = axs[1][idx].plot(mFreq, twopc_p99, label="2pc on Impeller p99", color=colors[3], marker=markers[3], ls='--')
+        l3, = axs[0][idx].plot(mFreq, twopc_p50, label="Kafka Streams on Impeller p50", color=colors[3], marker=markers[3])
+        l4, = axs[1][idx].plot(mFreq, twopc_p99, label="Kafka Streams on Impeller p99", color=colors[3], marker=markers[3], ls='--')
         if idx == 0:
             handles = [l1, l2, l3, l4]
         axs[0][idx].set_title(f"q{q}")
-        axs[0][idx].set_xticks(mFreq)
-        axs[1][idx].set_xticks(mFreq)
-    axs[0][0].set_ylim(0, 200)
-    axs[1][0].set_ylim(0, 650)
-    axs[0][1].set_ylim(0, 220)
-    axs[1][1].set_ylim(0, 1200)
-    # axs[0][2].set_ylim(0, 120)
-    # axs[1][2].set_ylim(0, 200)
+        axs[0][idx].set_xticks(mFreq, labels=mIntr)
+        axs[1][idx].set_xticks(mFreq, labels=mIntr)
+        # axs[0][idx].set_ylim(0, 1000)
+        # axs[1][idx].set_ylim(0, 2000)
     fig.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=2, handles=handles)
-    fig.supxlabel('Progress marking frequency(marks/s)', fontsize=14)
+    fig.supxlabel('Commit interval(ms)', fontsize=14)
     fig.supylabel('Event time latency (ms)', fontsize=14)
     # plt.subplots_adjust(bottom=0.15)
     plt.savefig('varMarkTime.pdf', bbox_inches='tight')
