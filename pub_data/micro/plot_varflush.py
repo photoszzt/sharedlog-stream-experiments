@@ -3,6 +3,8 @@ import os
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
+import subprocess
+import csv
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -10,16 +12,37 @@ sys.path.append(parent)
 
 from fig_const import markers, colors, headers
 
-markFreq = [20, 40, 100]
-markIntr = ["50", "25", "10"]
+markFreq = [10, 20, 40, 100]
+markIntr = [100, 50, 25, 10]
 
-markFreq_10 = [10, 20, 40, 100]
-markIntr_10 = [100, 50, 25, 10]
+throughputs = {1: "32000", 2: "64000", 3: "64000", 4: "750", 5: "32000", 6: "500", 7: "12000", 8: "16000"}
 
-throughputs = {4: "750", 6: "750", 7: "28000", 8: "24000"}
+allow_throughputs = [
+    [4000, 16000, 32000, 48000, 64000, 80000, 88000],
+    [4000, 16000, 32000, 48000, 64000, 80000, 88000],
+    [8000, 16000, 32000, 48000, 64000, 80000, 96000, 112000, 128000],
+    [250, 500, 750, 1000, 1250, 1500],
+    [1000, 8000, 16000, 24000, 32000, 40000, 48000, 56000, 64000],
+    # [1000, 8000, 16000, 24000, 32000, 40000, 48000, 56000],
+    [250, 500, 750, 1000, 1250, 1500],
+    [4000, 8000, 12000, 16000, 20000, 24000, 28000, 32000, 36000, 40000],
+    [4000, 8000, 12000, 16000, 20000, 24000, 28000, 32000, 36000],
+]
 
 
-def get_varflush(markIntr, markFreq, tp, top_dir, json_fname):
+def load(dpath, experiment):
+    rows = subprocess.run(["./latency", "query", dpath], stdout=subprocess.PIPE)
+    rows = rows.stdout.decode('utf-8').strip().split('\n')
+    rows = [row for row in csv.DictReader(rows, fieldnames=headers) 
+            if (row['del'] == 'eo' or row['del'] == '2pc' or row['del'] == 'align_chkpt' or row['del'] == 'remote_2pc') and int(row['tps']) in allow_throughputs[experiment]]
+    rows.sort(key=lambda row: int(row['tps']))
+    return rows
+
+
+def get_varflush(markIntr, markFreq, query):
+    top_dir=f"q{query}_varflush"
+    json_fname=f"q{query}.json"
+    tp = throughputs[query]
     epoch_dir = f"{top_dir}/epoch"
     twopc_dir = f"{top_dir}/remote_2pc"
     epoch_p50 = []
@@ -27,24 +50,47 @@ def get_varflush(markIntr, markFreq, tp, top_dir, json_fname):
     twopc_p50 = []
     twopc_p99 = []
     for intr in markIntr:
-        fname = os.path.join(epoch_dir, f"{intr}ms", json_fname)
-        with open(fname, "r") as f:
-            data = json.load(f)
-        epoch_p50.append(data[tp]["p50"])
-        epoch_p99.append(data[tp]["p99"])
+        ep_fname = os.path.join(epoch_dir, f"{intr}ms", json_fname)
+        if os.path.exists(ep_fname):
+            with open(ep_fname, "r") as f:
+                data = json.load(f)
+            epoch_p50.append(data[tp]["p50"])
+            epoch_p99.append(data[tp]["p99"])
+        elif intr == 100:
+            if query == 1 or query == 2:
+                ep_dir = f"../fig10_fig11/pm_data/sys-boki/q{query}-180s-0swarm-100ms-src10ms2"
+            else:
+                ep_dir = f"../fig10_fig11/q38_rerun/impeller/q{query}-180s-0swarm-100ms-src100ms"
+            epoch = load(ep_dir, query-1)
+            for row in epoch:
+                if row['tps'] == tp:
+                    epoch_p50.append(int(row['p50']))
+                    epoch_p99.append(int(row['p99']))
 
         fname = os.path.join(twopc_dir, f"{intr}ms", json_fname)
-        with open(fname, "r") as f:
-            data = json.load(f)
-        twopc_p50.append(data[tp]["p50"])
-        twopc_p99.append(data[tp]["p99"])
-    p50_ratio = np.array(twopc_p50) / np.array(epoch_p50)
-    p99_ratio = np.array(twopc_p99) / np.array(epoch_p99)
+        if os.path.exists(fname):
+            with open(fname, "r") as f:
+                data = json.load(f)
+            twopc_p50.append(data[tp]["p50"])
+            twopc_p99.append(data[tp]["p99"])
+        elif intr == 100:
+            if query == 1 or query == 2:
+                r2pc_dir = f"../fig10_fig11/q38_rerun/remote_2pc/q{query}-180s-0swarm-100ms-src10ms"
+            else:
+                r2pc_dir = f"../fig10_fig11/q38_rerun/remote_2pc/q{query}-180s-0swarm-100ms-src100ms"
+            r2pc = load(r2pc_dir, query-1)
+            for row in r2pc:
+                if row['tps'] == tp:
+                    twopc_p50.append(int(row['p50']))
+                    twopc_p99.append(int(row['p99']))
+
     print(f"mark intr: {markIntr}")
     print(f"epoch p50: {epoch_p50}")
     print(f"epoch p99: {epoch_p99}")
     print(f"twopc p50: {twopc_p50}")
     print(f"twopc p99: {twopc_p99}")
+    p50_ratio = np.array(twopc_p50) / np.array(epoch_p50)
+    p99_ratio = np.array(twopc_p99) / np.array(epoch_p99)
     print(f"twopc/epoch p50: {p50_ratio}")
     print(f"twopc/epoch p99: {p99_ratio}")
     return epoch_p50, epoch_p99, twopc_p50, twopc_p99
@@ -52,35 +98,32 @@ def get_varflush(markIntr, markFreq, tp, top_dir, json_fname):
 
 def main():
     # queries = [4, 6, 7]
-    queries = [4, 6, 7, 8]
+    queries = [2, 3, 4, 5, 6, 7, 8]
     fig = plt.figure(figsize=(12, 3.5), layout='constrained')
     # axs = fig.subplots(2, 3)
-    axs = fig.subplots(2, 4)
+    axs = fig.subplots(4, 4)
     for idx, q in enumerate(queries):
-        # if q == 6 or q == 7:
         mIntr = markIntr
         mFreq = markFreq
-        # else:
-        #     mIntr = markIntr_10
-        #     mFreq = markFreq_10
-        epoch_p50, epoch_p99, twopc_p50, twopc_p99 = get_varflush(mIntr, mFreq, throughputs[q], f"./q{q}_varflush", f"q{q}.json")
-        l1, = axs[0][idx].plot(mFreq, epoch_p50, label="Impeller p50", color=colors[0], marker=markers[0])
-        l2, = axs[1][idx].plot(mFreq, epoch_p99, label="Impeller p99", color=colors[0], marker=markers[0], ls='--')
-        l3, = axs[0][idx].plot(mFreq, twopc_p50, label="Kafka Streams on Impeller p50", color=colors[3], marker=markers[3])
-        l4, = axs[1][idx].plot(mFreq, twopc_p99, label="Kafka Streams on Impeller p99", color=colors[3], marker=markers[3], ls='--')
+        r = (q // 4) * 2
+        c = q % 4
+        ax1 = axs[r][c]
+        ax2 = axs[r+1][c]
+        print(f"q{q}")
+        epoch_p50, epoch_p99, twopc_p50, twopc_p99 = get_varflush(mIntr, mFreq, q)
+        l1, = ax1.plot(mFreq, epoch_p50, label="Impeller p50", color=colors[0], marker=markers[0])
+        l2, = ax2.plot(mFreq, epoch_p99, label="Impeller p99", color=colors[0], marker=markers[0], ls='--')
+        l3, = ax1.plot(mFreq, twopc_p50, label="Kafka Streams Protocol on Impeller p50", color=colors[3], marker=markers[3])
+        l4, = ax2.plot(mFreq, twopc_p99, label="Kafka Streams Protocol on Impeller p99", color=colors[3], marker=markers[3], ls='--')
         if idx == 0:
             handles = [l1, l2, l3, l4]
-        axs[0][idx].set_title(f"q{q}")
-        axs[0][idx].set_xticks(mFreq, labels=mIntr)
-        axs[1][idx].set_xticks(mFreq, labels=mIntr)
-        # axs[0][idx].set_ylim(0, 1000)
-        # axs[1][idx].set_ylim(0, 2000)
+        ax1.set_title(f"q{q}")
+        ax1.set_xticks(mFreq, labels=mIntr)
+        ax2.set_xticks(mFreq, labels=mIntr)
     fig.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=2, handles=handles)
     fig.supxlabel('Commit interval(ms)', fontsize=14)
     fig.supylabel('Event time latency (ms)', fontsize=14)
-    # plt.subplots_adjust(bottom=0.15)
     plt.savefig('varMarkTime.pdf', bbox_inches='tight')
-
 
 
 if __name__ == '__main__':

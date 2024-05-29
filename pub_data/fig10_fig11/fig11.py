@@ -124,26 +124,30 @@ if __name__ == "__main__":
         print(f"kafka p50: {[int(row['p50']) for row in kafka]}")
         print(f"kafka p99: {[int(row['p99']) for row in kafka]}")
 
-        fig = plt.figure(figsize=(6, 3.2))
-        ax1 = plt.subplot(111)
+        fig, axs = plt.subplots(2, 1, figsize=(6, 3.2), layout='constrained')
+        ax1 = axs[0]
+        ax2 = axs[1]
         l1, = ax1.plot(sys_in_tp, [int(row['p50']) for row in sys], label='Impeller p50',  marker=markers[0],color=colors[0])
-        l3, = ax1.plot(sys_in_tp, [int(row['p99']) for row in sys], label='Impeller p99', ls='--', marker=markers[0], color=colors[0])
+        l3, = ax2.plot(sys_in_tp, [int(row['p99']) for row in sys], label='Impeller p99', ls='--', marker=markers[0], color=colors[0])
         l2, = ax1.plot(kafka_in_tp, [int(row['p50']) for row in kafka], label='Kafka Streams p50',  marker=markers[1],color=colors[1])
-        l4, = ax1.plot(kafka_in_tp, [int(row['p99']) for row in kafka], label='Kafka Streams p99', ls='--', marker=markers[1], color=colors[1])
+        l4, = ax2.plot(kafka_in_tp, [int(row['p99']) for row in kafka], label='Kafka Streams p99', ls='--', marker=markers[1], color=colors[1])
         l5, = ax1.plot(none_in_tp, [int(row['p50']) for row in none], label='Impeller unsafe p50',  marker=markers[2],color=colors[2])
-        l6, = ax1.plot(none_in_tp, [int(row['p99']) for row in none], label='Impeller unsafe p99', ls='--', marker=markers[2],color=colors[2])
-        l7, = ax1.plot(r2pc_in_tp, r2pc_p50, label='2pc on Impeller p50',  marker=markers[3], color=colors[3])
-        l8, = ax1.plot(r2pc_in_tp, r2pc_p99, label='2pc on Impeller p99',  ls='--', marker=markers[3],color=colors[3])
+        l6, = ax2.plot(none_in_tp, [int(row['p99']) for row in none], label='Impeller unsafe p99', ls='--', marker=markers[2],color=colors[2])
+        l7, = ax1.plot(r2pc_in_tp, r2pc_p50, label='Kafka Streams on Impeller p50',  marker=markers[3], color=colors[3])
+        l8, = ax2.plot(r2pc_in_tp, r2pc_p99, label='Kafka Streams on Impeller p99',  ls='--', marker=markers[3],color=colors[3])
 
-        ax1.set_xlabel('Input throughput(events/s)')
-        ax1.set_ylabel('Event time latency(ms)')
-        ax1.legend(loc=(0, 1.1), ncol=2, handles=[l1, l3, l2, l4, l5, l6, l7, l8], handlelength=3)
+        fig.supxlabel('Input throughput(events/s)')
+        fig.supylabel('Event time latency(ms)')
+        fig.legend(ncol=2, handles=[l1, l3, l2, l4, l5, l6, l7, l8], loc='upper center', bbox_to_anchor=(0.55, 1.3))
         ax1.xaxis.set_major_formatter(ticker.EngFormatter())
+        ax2.xaxis.set_major_formatter(ticker.EngFormatter())
 
         if experiment < 2:
-            plt.ylim([0, 60])
+            ax1.set_ylim([0, 60])
+            ax2.set_ylim([0, 60])
         else:
-            plt.ylim([0, 1000])
+            ax1.set_ylim([0, 1000])
+            ax2.set_ylim([0, 1000])
 
         # plt.title('Q' + str(experiment + 1))
         plt.savefig('comparisons_unsafe/q' + str(experiment + 1) + '.pdf', bbox_inches='tight')
