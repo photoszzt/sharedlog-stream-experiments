@@ -127,7 +127,7 @@ def main():
         for l in lines:
             l.set_linewidth(3)
         tp = int(throughputs[q]) * 4
-        ax1.set_title(f"q{q}, {formatter.format_eng(tp)} events/s", fontsize=18)
+        ax1.set_title(f"Query{q}, {formatter.format_eng(tp)} events/s", fontsize=18)
         ax1.set_xticks(mFreq, labels=mIntr)
         ax2.set_xticks(mFreq, labels=mIntr)
         ax1.tick_params(labelsize=18)
