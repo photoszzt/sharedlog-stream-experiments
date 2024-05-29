@@ -16,7 +16,7 @@ NUM_WORKER=(4)
 DURATION=180
 WARM_DURATION=0
 APP=q4
-SRC_FLUSH_MS=(25 50 100)
+SRC_FLUSH_MS=(10 25 50)
 # FLUSH_MS=100
 # SRC_FLUSH_MS=100
 SNAPSHOT_S=10
@@ -35,7 +35,7 @@ for ((idx = 0; idx < ${#TPS_PER_WORKER[@]}; ++idx)); do
             echo ${APP}, ${DIR}, ${EVENTS} events, ${TPS} tps
             subdir=${DURATION}s_${WARM_DURATION}swarm_${FLUSH_MS}ms_src${SRC_FLUSH_MS[$s]}ms
             for mode in ${modes[@]}; do
-                for ((iter=0; iter < 2; ++iter)); do
+                for ((iter=0; iter < 3; ++iter)); do
                     ./run_once.sh --app ${APP} \
                         --exp_dir ./${NUM_WORKER[w]}src_varflush/${subdir}/${iter}/${TPS_PER_WORKER[idx]}tps_${mode}/ \
                         --gua $mode --duration $DURATION --events_num ${EVENTS} --nworker ${NUM_WORKER[w]} \
