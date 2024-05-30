@@ -147,7 +147,7 @@ def main():
     fig.legend(loc='upper center', bbox_to_anchor=(0.5, 1.1), ncol=2, handles=handles, fontsize=18)
     fig.supxlabel('Commit interval(ms)', fontsize=18)
     fig.supylabel('Event time latency (ms)', fontsize=18)
-    plt.savefig('varMarkTime.pdf', bbox_inches='tight')
+    plt.savefig('varMarkTime.pdf', bbox_inches='tight', pad_inches = 0)
 
 
 if __name__ == '__main__':

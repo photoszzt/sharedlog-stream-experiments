@@ -138,7 +138,7 @@ if __name__ == "__main__":
 
         fig.supxlabel('Input throughput(events/s)')
         fig.supylabel('Event time latency(ms)')
-        fig.legend(ncol=2, handles=[l1, l3, l2, l4, l5, l6, l7, l8], loc='upper center', bbox_to_anchor=(0.55, 1.3))
+        fig.legend(ncol=2, handles=[l1, l3, l2, l4, l5, l6, l7, l8], loc='upper center', bbox_to_anchor=(0.52, 1.3))
         ax1.xaxis.set_major_formatter(ticker.EngFormatter(sep=""))
         ax2.xaxis.set_major_formatter(ticker.EngFormatter(sep=""))
 
@@ -150,4 +150,4 @@ if __name__ == "__main__":
             ax2.set_ylim([0, 1000])
 
         # plt.title('Q' + str(experiment + 1))
-        plt.savefig('comparisons_unsafe/q' + str(experiment + 1) + '.pdf', bbox_inches='tight')
+        plt.savefig('comparisons_unsafe/q' + str(experiment + 1) + '.pdf', bbox_inches='tight', pad_inches = 0)
