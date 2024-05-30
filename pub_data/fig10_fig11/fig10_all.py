@@ -135,11 +135,14 @@ if __name__ == "__main__":
         target_idx = 0
         assert len(sys_in_tp) == len(r2pc_in_tp)
         print(f"ratio to 1st p99: {[i/sys_p99[0] for i in sys_p99]}")
-        allow=0.10
         if experiment == 0 or experiment == 1:
             allow=0.25
+        else:
+            allow=0.15
+        lat_max = sys_p99[0] * (1+allow)
+        print("lat max allow: ", lat_max)
         for idx, t in enumerate(sys_p99):
-            if t <= 400 and sys_p50[idx] <= 400 and t <= sys_p99[0] * (1+allow) and abs(p99_ratio[idx]-1) <= allow:
+            if t <= 400 and sys_p50[idx] <= 400 and t <= lat_max and abs(p99_ratio[idx]-1) <= allow:
                 target_idx = idx
         print(f"idx: {target_idx}, tp: {sys_in_per_worker_tp[target_idx]}, epoch_p50: {sys_p50[target_idx]}, epoch_p99: {sys_p99[target_idx]}")
 
