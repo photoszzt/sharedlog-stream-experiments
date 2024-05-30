@@ -119,8 +119,8 @@ def main():
         epoch_p50, epoch_p99, twopc_p50, twopc_p99 = get_varflush(mIntr, q)
         l1, = ax1.plot(mFreq, epoch_p50, label="Impeller p50", color=colors[0], marker=markers[0], markersize=marksize)
         l2, = ax2.plot(mFreq, epoch_p99, label="Impeller p99", color=colors[0], marker=markers[0], ls='--', markersize=marksize)
-        l3, = ax1.plot(mFreq, twopc_p50, label="Kafka Streams Protocol on Impeller p50", color=colors[3], marker=markers[3], markersize=marksize)
-        l4, = ax2.plot(mFreq, twopc_p99, label="Kafka Streams Protocol on Impeller p99", color=colors[3], marker=markers[3], ls='--', markersize=marksize)
+        l3, = ax1.plot(mFreq, twopc_p50, label="Multi-stream atomic append on Impeller p50", color=colors[3], marker=markers[3], markersize=marksize)
+        l4, = ax2.plot(mFreq, twopc_p99, label="Multi-stream atomic append on Impeller p99", color=colors[3], marker=markers[3], ls='--', markersize=marksize)
         if idx == 0:
             handles = [l1, l2, l3, l4]
         lines = [l1, l2, l3, l4]
