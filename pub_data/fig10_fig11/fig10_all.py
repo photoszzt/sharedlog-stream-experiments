@@ -102,6 +102,8 @@ if __name__ == "__main__":
 
     atos_p50_min_ratio = None
     atos_p50_max_ratio = None
+    atos_p99_min_ratio = None
+    atos_p99_max_ratio = None
     stoa_p50_min_ratio = None
     stoa_p50_max_ratio = None
 
@@ -208,6 +210,14 @@ if __name__ == "__main__":
                     atos_p50_max_ratio = r
                 atos_p50_min_ratio = min(r, atos_p50_min_ratio)
                 atos_p50_max_ratio = max(r, atos_p50_max_ratio)
+        for idx, r in enumerate(align_to_sys_p99_ratio):
+            if r > 1 and ackpt_p99[idx] <= 1000 and sys_p99[idx] < 1000:
+                if atos_p99_min_ratio is None:
+                    atos_p99_min_ratio = r
+                if atos_p99_max_ratio is None:
+                    atos_p99_max_ratio = r
+                atos_p99_min_ratio = min(r, atos_p99_min_ratio)
+                atos_p99_max_ratio = max(r, atos_p99_max_ratio)
         for idx, r in enumerate(sys_to_align_p50_ratio):
             if r > 1 and ackpt_p50[idx] <= 1000 and sys_p50[idx] < 1000:
                 if stoa_p50_min_ratio is None:
@@ -286,3 +296,6 @@ if __name__ == "__main__":
     print(f"align/sys p50 max ratio: {atos_p50_max_ratio}")
     print(f"sys/align p50 min ratio: {stoa_p50_min_ratio}")
     print(f"sys/align p50 max ratio: {stoa_p50_max_ratio}")
+
+    print(f"align/sys p99 min ratio: {atos_p99_min_ratio}")
+    print(f"align/sys p99 max ratio: {atos_p99_max_ratio}")

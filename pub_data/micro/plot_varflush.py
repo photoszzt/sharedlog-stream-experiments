@@ -92,10 +92,6 @@ def get_varflush(markIntr, query):
     print(f"epoch p99: {epoch_p99}")
     print(f"twopc p50: {twopc_p50}")
     print(f"twopc p99: {twopc_p99}")
-    p50_ratio = np.array(twopc_p50) / np.array(epoch_p50)
-    p99_ratio = np.array(twopc_p99) / np.array(epoch_p99)
-    print(f"twopc/epoch p50: {p50_ratio}")
-    print(f"twopc/epoch p99: {p99_ratio}")
     return epoch_p50, epoch_p99, twopc_p50, twopc_p99
 
 
@@ -108,6 +104,10 @@ def main():
     handles=[]
     formatter = ticker.EngFormatter(sep="")
     marksize=14
+    r2pc_min_p50_ratio = None
+    r2pc_max_p50_ratio = None
+    r2pc_min_p99_ratio = None
+    r2pc_max_p99_ratio = None
     for idx, q in enumerate(queries):
         print(f"q{q}")
         mIntr = markIntr
@@ -117,6 +117,24 @@ def main():
         ax1 = axs[r][c]
         ax2 = axs[r+1][c]
         epoch_p50, epoch_p99, twopc_p50, twopc_p99 = get_varflush(mIntr, q)
+        p50_ratio = np.array(twopc_p50) / np.array(epoch_p50)
+        p99_ratio = np.array(twopc_p99) / np.array(epoch_p99)
+        print(f"twopc/epoch p50: {p50_ratio}")
+        print(f"twopc/epoch p99: {p99_ratio}")
+        for r in p50_ratio:
+            if r2pc_min_p50_ratio is None:
+                r2pc_min_p50_ratio = r
+            if r2pc_max_p50_ratio is None:
+                r2pc_max_p50_ratio = r
+            r2pc_min_p50_ratio = min(r, r2pc_min_p50_ratio)
+            r2pc_max_p50_ratio = max(r, r2pc_max_p50_ratio)
+        for r in p99_ratio:
+            if r2pc_min_p99_ratio is None:
+                r2pc_min_p99_ratio = r
+            if r2pc_max_p99_ratio is None:
+                r2pc_max_p99_ratio = r
+            r2pc_min_p99_ratio = min(r, r2pc_min_p99_ratio)
+            r2pc_max_p99_ratio = max(r, r2pc_max_p99_ratio)
         l1, = ax1.plot(mFreq, epoch_p50, label="Impeller p50", color=colors[0], marker=markers[0], markersize=marksize)
         l2, = ax2.plot(mFreq, epoch_p99, label="Impeller p99", color=colors[0], marker=markers[0], ls='--', markersize=marksize)
         l3, = ax1.plot(mFreq, twopc_p50, label="Multi-stream atomic append on Impeller p50", color=colors[3], marker=markers[3], markersize=marksize)
@@ -148,6 +166,10 @@ def main():
     fig.supxlabel('Commit interval(ms)', fontsize=18)
     fig.supylabel('Event time latency (ms)', fontsize=18)
     plt.savefig('varMarkTime.pdf', bbox_inches='tight', pad_inches = 0)
+    print(f"r2pc/sys p50 min: {r2pc_min_p50_ratio}")
+    print(f"r2pc/sys p50 max: {r2pc_max_p50_ratio}")
+    print(f"r2pc/sys p99 min: {r2pc_min_p99_ratio}")
+    print(f"r2pc/sys p99 max: {r2pc_max_p99_ratio}")
 
 
 if __name__ == '__main__':
