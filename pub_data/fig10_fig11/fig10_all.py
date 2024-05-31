@@ -89,10 +89,17 @@ def load(system, experiment):
     return rows
 
 if __name__ == "__main__":
-    fig, axs = plt.subplots(4, 4, figsize=(24, 12), layout='constrained')
+    fig, axs = plt.subplots(4, 4, figsize=(28, 15), layout='constrained')
     handles = None
     letters=[f'({i})' for i in ascii_lowercase]
     print(axs)
+    sys_dict = {}
+    kafka_dict = {}
+    ktos_p50_min_ratio = None
+    ktos_p50_max_ratio = None
+    ktos_p99_min_ratio = None
+    ktos_p99_max_ratio = None
+
     for experiment in range(0, len(kafkas)):
         kafka = load(kafkas, experiment)
         sys = load(syss, experiment)
@@ -104,6 +111,22 @@ if __name__ == "__main__":
         kafka_in_per_worker_tp = [int(row['tps']) for row in kafka]
         ackpt_in_per_worker_tp = [int(row['tps']) for row in ackpt]
         remote2pc_in_per_worker_tp = [int(row['tps']) for row in r2pc]
+        sys_p99_over1 = None
+        kafka_p99_over1 = None
+        for row in sys:
+            sys_dict[int(row['tps'])] = {"p50": int(row['p50']), "p99": int(row['p99'])}
+            if int(row['p99']) > 1000 and sys_p99_over1 is None:
+                sys_p99_over1 = int(row['tps'])
+        for row in kafka:
+            kafka_dict[int(row['tps'])] = {"p50": int(row['p50']), "p99": int(row['p99'])}
+            if int(row['p99']) > 1000 and kafka_p99_over1 is None:
+                kafka_p99_over1 = int(row['tps'])
+        if sys_p99_over1 is None:
+            sys_p99_over1 = sys_in_per_worker_tp[-1]
+        if kafka_p99_over1 is None:
+            kafka_p99_over1 = kafka_in_per_worker_tp[-1]
+        print('Q' + str(experiment + 1))
+        print(f"kafka p99 over 1s: {kafka_p99_over1}, epoch p99 over 1s: {sys_p99_over1}, ratio: {sys_p99_over1/kafka_p99_over1}")
 
         kafka_in_tp = [i*4 for i in kafka_in_per_worker_tp]
         sys_in_tp = [i*4 for i in sys_in_per_worker_tp]
@@ -116,22 +139,53 @@ if __name__ == "__main__":
         twopc_p99 = np.array([int(row['p99']) for row in twopc])
         ackpt_p50 = [int(row['p50']) for row in ackpt]
         ackpt_p99 = [int(row['p99']) for row in ackpt]
+        kafka_p50 = [int(row['p50']) for row in kafka]
+        kafka_p99 = [int(row['p99']) for row in kafka]
 
         r2pc_p50 = [int(row['p50']) for row in r2pc]
         r2pc_p99 = [int(row['p99']) for row in r2pc]
 
-        print('Q' + str(experiment + 1))
         print(f"sys tp: {sys_in_tp}") 
         print(f"sys p50: {sys_p50}")
         print(f"sys p99: {sys_p99}")
+        sys_p50_arr = np.array(sys_p50)
+        sys_p99_arr = np.array(sys_p99)
         print(f"kafka tp: {kafka_in_tp}")
-        print(f"kafka p50: {[int(row['p50']) for row in kafka]}")
-        print(f"kafka p99: {[int(row['p99']) for row in kafka]}")
-        # print(f"2pc tp: {sys_in_tp}") 
-        # print(f"2pc p50: {twopc_p50}")
-        # print(f"2pc p99: {twopc_p99}")
-        p50_ratio = np.array(r2pc_p50)/np.array(sys_p50)
-        p99_ratio = np.array(r2pc_p99)/np.array(sys_p99)
+        print(f"kafka p50: {kafka_p50}")
+        print(f"kafka p99: {kafka_p99}")
+        kafka_p50_ratio = []
+        kafka_p99_ratio = []
+        for tps in kafka_in_per_worker_tp:
+            p50_ratio = round(kafka_dict[tps]["p50"]/sys_dict[tps]["p50"], 1)
+            p99_ratio = round(kafka_dict[tps]["p99"]/sys_dict[tps]["p99"], 1)
+            if kafka_dict[tps]["p50"] <= 1000 and experiment >= 2:
+                if ktos_p50_min_ratio is None:
+                    ktos_p50_min_ratio = p50_ratio
+                if ktos_p50_max_ratio is None:
+                    ktos_p50_max_ratio = p50_ratio
+                ktos_p50_max_ratio = max(p50_ratio, ktos_p50_max_ratio)
+                ktos_p50_min_ratio = min(p50_ratio, ktos_p50_min_ratio)
+            if kafka_dict[tps]["p99"] <= 1000 and experiment >= 2:
+                if ktos_p99_min_ratio is None:
+                    ktos_p99_min_ratio = p99_ratio
+                if ktos_p99_max_ratio is None:
+                    ktos_p99_max_ratio = p99_ratio
+                ktos_p99_max_ratio = max(p99_ratio, ktos_p99_max_ratio)
+                ktos_p99_min_ratio = min(p99_ratio, ktos_p99_min_ratio)
+            kafka_p50_ratio.append(p50_ratio)
+            kafka_p99_ratio.append(p99_ratio)
+        print(f"kafka/sys p50: {kafka_p50_ratio}")
+        print(f"kafka/sys p99: {kafka_p99_ratio}")
+        print(f"remote_2pc p50: {r2pc_p50}")
+        print(f"remote_2pc p99: {r2pc_p99}")
+        r2pc_p50_ratio = np.array(r2pc_p50)/sys_p50_arr
+        r2pc_p99_ratio = np.array(r2pc_p99)/sys_p99_arr
+        print(f"r2pc/sys p50: {r2pc_p50_ratio}")
+        print(f"r2pc/sys p99: {r2pc_p99_ratio}")
+        print(f"ackpt tp: {ackpt_in_tp}")
+        print(f"alignchkpt p50: {ackpt_p50}")
+        print(f"alignchkpt p99: {ackpt_p99}")
+
         target_idx = 0
         assert len(sys_in_tp) == len(r2pc_in_tp)
         print(f"ratio to 1st p99: {[i/sys_p99[0] for i in sys_p99]}")
@@ -140,19 +194,11 @@ if __name__ == "__main__":
         else:
             allow=0.15
         lat_max = sys_p99[0] * (1+allow)
-        print("lat max allow: ", lat_max)
         for idx, t in enumerate(sys_p99):
-            if t <= 400 and sys_p50[idx] <= 400 and t <= lat_max and abs(p99_ratio[idx]-1) <= allow:
+            if t <= 400 and sys_p50[idx] <= 400 and t <= lat_max and abs(r2pc_p99_ratio[idx]-1) <= allow:
                 target_idx = idx
         print(f"idx: {target_idx}, tp: {sys_in_per_worker_tp[target_idx]}, epoch_p50: {sys_p50[target_idx]}, epoch_p99: {sys_p99[target_idx]}")
 
-        print(f"r2pc/sys p50: {p50_ratio}")
-        print(f"r2pc/sys p99: {p99_ratio}")
-        print(f"ackpt tp: {ackpt_in_tp}")
-        print(f"alignchkpt p50: {ackpt_p50}")
-        print(f"alignchkpt p99: {ackpt_p99}")
-        print(f"remote_2pc p50: {r2pc_p50}")
-        print(f"remote_2pc p99: {r2pc_p99}")
         marksize=14
 
         r = (experiment // 4) * 2
@@ -183,6 +229,10 @@ if __name__ == "__main__":
         ax1.xaxis.set_major_formatter(ticker.EngFormatter(sep=""))
         ax2.tick_params(labelsize=18)
         ax2.xaxis.set_major_formatter(ticker.EngFormatter(sep=""))
+        ax1.set_xticks(sys_in_tp)
+        ax2.set_xticks(sys_in_tp)
+        ax1.tick_params(labelrotation=45)
+        ax2.tick_params(labelrotation=45)
 
         if experiment < 2:
             ax1.set_ylim([0, 60])
@@ -192,7 +242,11 @@ if __name__ == "__main__":
             ax2.set_ylim([0, 1000])
 
         # plt.title('Q' + str(experiment + 1))
-    fig.legend(ncol=4, handles=handles, fontsize=18, loc='upper center', bbox_to_anchor=(0.5, 1.10))
+    fig.legend(ncol=4, handles=handles, fontsize=18, loc='upper center', bbox_to_anchor=(0.5, 1.07))
     fig.supxlabel('Input throughput(events/s)', fontsize=20)
     fig.supylabel('Event time latency(ms)', fontsize=20)
     plt.savefig('q1-8.pdf', bbox_inches='tight', pad_inches = 0)
+    print(f"kafka/sys p50 min ratio: {ktos_p50_min_ratio}")
+    print(f"kafka/sys p50 max ratio: {ktos_p50_max_ratio}")
+    print(f"kafka/sys p99 min ratio: {ktos_p99_min_ratio}")
+    print(f"kafka/sys p99 max ratio: {ktos_p99_max_ratio}")

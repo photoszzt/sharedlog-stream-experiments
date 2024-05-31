@@ -102,7 +102,7 @@ def get_varflush(markIntr, query):
 def main():
     # queries = [4, 6, 7]
     queries = [1, 2, 3, 4, 5, 6, 7, 8]
-    fig = plt.figure(figsize=(24, 12), layout='constrained')
+    fig = plt.figure(figsize=(28, 15), layout='constrained')
     # axs = fig.subplots(2, 3)
     axs = fig.subplots(4, 4)
     handles=[]
@@ -144,7 +144,7 @@ def main():
         else:
             ax1.set_ylim(ymin=0)
             ax2.set_ylim(ymin=0)
-    fig.legend(loc='upper center', bbox_to_anchor=(0.5, 1.1), ncol=2, handles=handles, fontsize=18)
+    fig.legend(loc='upper center', bbox_to_anchor=(0.5, 1.07), ncol=2, handles=handles, fontsize=18)
     fig.supxlabel('Commit interval(ms)', fontsize=18)
     fig.supylabel('Event time latency (ms)', fontsize=18)
     plt.savefig('varMarkTime.pdf', bbox_inches='tight', pad_inches = 0)

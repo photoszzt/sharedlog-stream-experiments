@@ -89,10 +89,11 @@ def load(system, experiment):
 
 if __name__ == "__main__":
     os.makedirs('comparisons_unsafe', exist_ok=True)
+    sys_dict = {}
+    unsafe_dict = {}
     for experiment in range(0, len(kafkas)):
         kafka = load(kafkas, experiment)
         sys = load(syss, experiment)
-        twopc = load(twopcs, experiment)
         none = load(nones, experiment)
         r2pc = load(remote_2pc, experiment)
 
@@ -108,10 +109,16 @@ if __name__ == "__main__":
 
         sys_p50 = [int(row['p50']) for row in sys]
         sys_p99 = [int(row['p99']) for row in sys]
+        kafka_p50 = [int(row['p50']) for row in kafka]
+        kafka_p99 = [int(row['p99']) for row in kafka]
         r2pc_p50 = [int(row['p50']) for row in r2pc]
         r2pc_p99 = [int(row['p99']) for row in r2pc]
         unsafe_p50 = [int(row['p50']) for row in none]
         unsafe_p99 = [int(row['p99']) for row in none]
+        for row in sys:
+            sys_dict[int(row['tps'])] = {"p50": int(row['p50']), "p99": int(row['p99'])}
+        for row in none:
+            unsafe_dict[int(row['tps'])] = {"p50": int(row['p50']), "p99": int(row['p99'])}
 
         print('Q' + str(experiment + 1))
         print(f"sys tp: {sys_in_tp}") 
@@ -123,16 +130,24 @@ if __name__ == "__main__":
         print(f"kafka tp: {kafka_in_tp}")
         print(f"kafka p50: {[int(row['p50']) for row in kafka]}")
         print(f"kafka p99: {[int(row['p99']) for row in kafka]}")
+        unsafe_p50_ratio = [round(sys_dict[tps]["p50"]/unsafe_dict[tps]["p50"], 1) for tps in none_in_per_worker_tp] 
+        unsafe_p99_ratio = [round(sys_dict[tps]["p99"]/unsafe_dict[tps]["p99"], 1) for tps in none_in_per_worker_tp] 
+        unsafe_p50_diff = [sys_dict[tps]["p50"] - unsafe_dict[tps]["p50"] for tps in none_in_per_worker_tp]
+        unsafe_p99_diff = [sys_dict[tps]["p99"] - unsafe_dict[tps]["p99"] for tps in none_in_per_worker_tp] 
+        print(f"sys/unsafe p50: {unsafe_p50_ratio}")
+        print(f"sys/unsafe p99: {unsafe_p99_ratio}")
+        print(f"sys - unsafe p50: {unsafe_p50_diff}")
+        print(f"sys - unsafe p99: {unsafe_p99_diff}")
 
         fig, axs = plt.subplots(2, 1, figsize=(6, 3.2), layout='constrained')
         ax1 = axs[0]
         ax2 = axs[1]
-        l1, = ax1.plot(sys_in_tp, [int(row['p50']) for row in sys], label='Impeller p50',  marker=markers[0],color=colors[0])
-        l3, = ax2.plot(sys_in_tp, [int(row['p99']) for row in sys], label='Impeller p99', ls='--', marker=markers[0], color=colors[0])
-        l2, = ax1.plot(kafka_in_tp, [int(row['p50']) for row in kafka], label='Kafka Streams p50',  marker=markers[1],color=colors[1])
-        l4, = ax2.plot(kafka_in_tp, [int(row['p99']) for row in kafka], label='Kafka Streams p99', ls='--', marker=markers[1], color=colors[1])
-        l5, = ax1.plot(none_in_tp, [int(row['p50']) for row in none], label='Impeller unsafe p50',  marker=markers[2],color=colors[2])
-        l6, = ax2.plot(none_in_tp, [int(row['p99']) for row in none], label='Impeller unsafe p99', ls='--', marker=markers[2],color=colors[2])
+        l1, = ax1.plot(sys_in_tp, sys_p50, label='Impeller p50',  marker=markers[0],color=colors[0])
+        l3, = ax2.plot(sys_in_tp, sys_p99, label='Impeller p99', ls='--', marker=markers[0], color=colors[0])
+        l2, = ax1.plot(kafka_in_tp, kafka_p50, label='Kafka Streams p50',  marker=markers[1],color=colors[1])
+        l4, = ax2.plot(kafka_in_tp, kafka_p99, label='Kafka Streams p99', ls='--', marker=markers[1], color=colors[1])
+        l5, = ax1.plot(none_in_tp, unsafe_p50, label='Impeller unsafe p50',  marker=markers[2],color=colors[2])
+        l6, = ax2.plot(none_in_tp, unsafe_p99, label='Impeller unsafe p99', ls='--', marker=markers[2],color=colors[2])
         l7, = ax1.plot(r2pc_in_tp, r2pc_p50, label='Multi-stream atomic append on Impeller p50',  marker=markers[3], color=colors[3])
         l8, = ax2.plot(r2pc_in_tp, r2pc_p99, label='Multi-stream atomic append on Impeller p99',  ls='--', marker=markers[3],color=colors[3])
 
@@ -141,6 +156,8 @@ if __name__ == "__main__":
         fig.legend(ncol=2, handles=[l1, l3, l2, l4, l5, l6, l7, l8], loc='upper center', bbox_to_anchor=(0.52, 1.3))
         ax1.xaxis.set_major_formatter(ticker.EngFormatter(sep=""))
         ax2.xaxis.set_major_formatter(ticker.EngFormatter(sep=""))
+        ax1.set_xticks(none_in_tp)
+        ax2.set_xticks(none_in_tp)
 
         if experiment < 2:
             ax1.set_ylim([0, 60])
