@@ -185,6 +185,16 @@ if __name__ == "__main__":
         print(f"ackpt tp: {ackpt_in_tp}")
         print(f"alignchkpt p50: {ackpt_p50}")
         print(f"alignchkpt p99: {ackpt_p99}")
+        ackpt_p50_arr = np.array(ackpt_p50)
+        ackpt_p99_arr = np.array(ackpt_p99)
+        sys_to_align_p50_ratio = sys_p50_arr / ackpt_p50_arr
+        sys_to_align_p99_ratio = sys_p99_arr / ackpt_p99_arr
+        align_to_sys_p50_ratio = ackpt_p50_arr / sys_p50_arr
+        align_to_sys_p99_ratio = ackpt_p99_arr / sys_p99_arr
+        print(f"sys/alignchkpt p50: {sys_to_align_p50_ratio}")
+        print(f"sys/alignchkpt p99: {sys_to_align_p99_ratio}")
+        print(f"alignchkpt/sys p50: {align_to_sys_p50_ratio}")
+        print(f"alignchkpt/sys p99: {align_to_sys_p99_ratio}")
 
         target_idx = 0
         assert len(sys_in_tp) == len(r2pc_in_tp)
