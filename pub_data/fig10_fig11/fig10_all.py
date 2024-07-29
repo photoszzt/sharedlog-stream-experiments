@@ -252,8 +252,8 @@ if __name__ == "__main__":
         l4, = ax2.plot(kafka_in_tp, [int(row['p99']) for row in kafka], label='Kafka Streams p99', ls='--', marker=markers[1], color=colors[1], markersize=marksize)
         # l5, = ax1.plot(sys_in_tp, twopc_p50, label='2pc on Impeller p50',  marker=markers[3], color=colors[3], markersize=marksize)
         # l6, = ax1.plot(sys_in_tp, twopc_p99, label='2pc on Impeller p99',  ls='--', marker=markers[3],color=colors[3], markersize=marksize)
-        l7, = ax1.plot(r2pc_in_tp, r2pc_p50, label='Multi-stream atomic append on Impeller p50',  marker=markers[3], color=colors[3], markersize=marksize)
-        l8, = ax2.plot(r2pc_in_tp, r2pc_p99, label='Multi-stream atomic append on Impeller p99',  ls='--', marker=markers[3],color=colors[3], markersize=marksize)
+        l7, = ax1.plot(r2pc_in_tp, r2pc_p50, label='Kafka Streams transaction on Impeller p50',  marker=markers[3], color=colors[3], markersize=marksize)
+        l8, = ax2.plot(r2pc_in_tp, r2pc_p99, label='Kafka Streams transaction on Impeller p99',  ls='--', marker=markers[3],color=colors[3], markersize=marksize)
         l11, = ax1.plot(ackpt_in_tp, ackpt_p50, label='Align chkpt on Impeller p50',  marker=markers[4], color=colors[4], markersize=marksize)
         l12, = ax2.plot(ackpt_in_tp, ackpt_p99, label='Align chkpt on Impeller p99',  ls='--', marker=markers[4],color=colors[4], markersize=marksize)
         lines = [l1, l2, l3, l4, l7, l8, l11, l12]
@@ -265,15 +265,15 @@ if __name__ == "__main__":
         if experiment == 7:
             handles = [l1, l3, l2, l4, l7, l8, l11, l12]
             # ax1.legend(loc=(3, 1.05), ncol=2, handles=[l1, l5, l2, l3, l6, l4], handlelength=3, fontsize=11)
-        ax1.set_title(f'{letters[experiment]} Query{experiment+1}', fontsize=18)
-        ax1.tick_params(labelsize=18)
+        ax1.set_title(f'{letters[experiment]} Q{experiment+1}', fontsize=22)
+        ax1.tick_params(labelsize=20)
         ax1.xaxis.set_major_formatter(ticker.EngFormatter(sep=""))
-        ax2.tick_params(labelsize=18)
+        ax2.tick_params(labelsize=20)
         ax2.xaxis.set_major_formatter(ticker.EngFormatter(sep=""))
         ax1.set_xticks(sys_in_tp)
         ax2.set_xticks(sys_in_tp)
-        ax1.tick_params(labelrotation=45)
-        ax2.tick_params(labelrotation=45)
+        ax1.xaxis.set_tick_params(labelrotation=45)
+        ax2.xaxis.set_tick_params(labelrotation=45)
 
         if experiment < 2:
             ax1.set_ylim([0, 60])
@@ -283,9 +283,9 @@ if __name__ == "__main__":
             ax2.set_ylim([0, 1000])
 
         # plt.title('Q' + str(experiment + 1))
-    fig.legend(ncol=4, handles=handles, fontsize=18, loc='upper center', bbox_to_anchor=(0.5, 1.07))
-    fig.supxlabel('Input throughput(events/s)', fontsize=20)
-    fig.supylabel('Event time latency(ms)', fontsize=20)
+    fig.legend(ncol=4, handles=handles, fontsize=22, loc='upper center', bbox_to_anchor=(0.5, 1.06))
+    fig.supxlabel('Input throughput(events/s)', fontsize=22)
+    fig.supylabel('Event time latency(ms)', fontsize=22)
     plt.savefig('q1-8.pdf', bbox_inches='tight', pad_inches = 0)
     print(f"kafka/sys p50 min ratio: {ktos_p50_min_ratio}")
     print(f"kafka/sys p50 max ratio: {ktos_p50_max_ratio}")
