@@ -56,7 +56,7 @@ def load(system, experiment):
     return rows
 
 if __name__ == "__main__":
-    fig, axs = plt.subplots(4, 4, figsize=(24, 12), layout='constrained')
+    fig, axs = plt.subplots(4, 4, figsize=(24, 14), layout='constrained')
     handles = None
     letters=[f'({i})' for i in ascii_lowercase]
     for experiment in range(0, len(syss)):
