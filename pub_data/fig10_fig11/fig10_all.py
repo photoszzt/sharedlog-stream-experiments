@@ -89,7 +89,7 @@ def load(system, experiment):
     return rows
 
 if __name__ == "__main__":
-    fig, axs = plt.subplots(4, 4, figsize=(28, 15), layout='constrained')
+    fig, axs = plt.subplots(4, 4, figsize=(28, 20), layout='constrained')
     handles = None
     letters=[f'({i})' for i in ascii_lowercase]
     print(axs)

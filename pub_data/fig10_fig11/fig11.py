@@ -139,7 +139,7 @@ if __name__ == "__main__":
         print(f"sys - unsafe p50: {unsafe_p50_diff}")
         print(f"sys - unsafe p99: {unsafe_p99_diff}")
 
-        fig, axs = plt.subplots(2, 1, figsize=(6, 3.2), layout='constrained')
+        fig, axs = plt.subplots(2, 1, figsize=(6, 5), layout='constrained')
         ax1 = axs[0]
         ax2 = axs[1]
         l1, = ax1.plot(sys_in_tp, sys_p50, label='Impeller p50',  marker=markers[0],color=colors[0])
@@ -153,7 +153,7 @@ if __name__ == "__main__":
 
         fig.supxlabel('Input throughput(events/s)')
         fig.supylabel('Event time latency(ms)')
-        fig.legend(ncol=2, handles=[l1, l3, l2, l4, l5, l6, l7, l8], loc='upper center', bbox_to_anchor=(0.52, 1.3))
+        fig.legend(ncol=2, handles=[l1, l3, l2, l4, l5, l6, l7, l8], loc='upper center', bbox_to_anchor=(0.52, 1.2))
         ax1.xaxis.set_major_formatter(ticker.EngFormatter(sep=""))
         ax2.xaxis.set_major_formatter(ticker.EngFormatter(sep=""))
         ax1.set_xticks(none_in_tp)
