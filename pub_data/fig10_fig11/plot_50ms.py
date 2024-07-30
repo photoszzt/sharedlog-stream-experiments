@@ -56,7 +56,7 @@ def load(system, experiment):
     return rows
 
 if __name__ == "__main__":
-    fig, axs = plt.subplots(4, 4, figsize=(24, 14), layout='constrained')
+    fig, axs = plt.subplots(4, 4, figsize=(24, 12), layout='constrained')
     handles = None
     letters=[f'({i})' for i in ascii_lowercase]
     for experiment in range(0, len(syss)):
@@ -112,7 +112,7 @@ if __name__ == "__main__":
             ax2.set_ylim([0, 1000])
 
         # plt.title('Q' + str(experiment + 1))
-    fig.legend(ncol=5, handles=handles, fontsize=18, loc='upper center', bbox_to_anchor=(0.5, 1.10))
+    fig.legend(ncol=5, handles=handles, fontsize=18, loc='upper center', bbox_to_anchor=(0.5, 1.06))
     fig.supxlabel('Input throughput(events/s)', fontsize=20)
     fig.supylabel('Event time latency(ms)', fontsize=20)
     plt.savefig('q1-8_50ms.pdf', bbox_inches='tight')
