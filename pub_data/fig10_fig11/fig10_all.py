@@ -262,8 +262,7 @@ if __name__ == "__main__":
 
         # ax1.set_xlabel('input throughput(events/s)', fontsize=16)
         # ax1.set_ylabel('event time latency(ms)', fontsize=16)
-        if experiment == 7:
-            handles = [l1, l3, l2, l4, l7, l8, l11, l12]
+        handles = [l1, l3, l2, l4, l7, l8, l11, l12]
             # ax1.legend(loc=(3, 1.05), ncol=2, handles=[l1, l5, l2, l3, l6, l4], handlelength=3, fontsize=11)
         ax1.set_title(f'{letters[experiment]} Q{experiment+1}', fontsize=22)
         ax1.tick_params(labelsize=20)
