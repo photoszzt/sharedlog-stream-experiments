@@ -98,7 +98,7 @@ def get_varflush(markIntr, query):
 def main():
     # queries = [4, 6, 7]
     queries = [1, 2, 3, 4, 5, 6, 7, 8]
-    fig = plt.figure(figsize=(28, 15), layout='constrained')
+    fig = plt.figure(figsize=(28, 14), layout='constrained')
     # axs = fig.subplots(2, 3)
     axs = fig.subplots(4, 4)
     handles=[]
@@ -137,19 +137,19 @@ def main():
             r2pc_max_p99_ratio = max(r, r2pc_max_p99_ratio)
         l1, = ax1.plot(mFreq, epoch_p50, label="Impeller p50", color=colors[0], marker=markers[0], markersize=marksize)
         l2, = ax2.plot(mFreq, epoch_p99, label="Impeller p99", color=colors[0], marker=markers[0], ls='--', markersize=marksize)
-        l3, = ax1.plot(mFreq, twopc_p50, label="Multi-stream atomic append on Impeller p50", color=colors[3], marker=markers[3], markersize=marksize)
-        l4, = ax2.plot(mFreq, twopc_p99, label="Multi-stream atomic append on Impeller p99", color=colors[3], marker=markers[3], ls='--', markersize=marksize)
+        l3, = ax1.plot(mFreq, twopc_p50, label="Kafka Streams transaction on Impeller p50", color=colors[3], marker=markers[3], markersize=marksize)
+        l4, = ax2.plot(mFreq, twopc_p99, label="Kafka Streams transaction on Impeller p99", color=colors[3], marker=markers[3], ls='--', markersize=marksize)
         if idx == 0:
             handles = [l1, l2, l3, l4]
         lines = [l1, l2, l3, l4]
         for l in lines:
             l.set_linewidth(3)
         tp = int(throughputs[q]) * 4
-        ax1.set_title(f"Query{q}, {formatter.format_eng(tp)} events/s", fontsize=18)
+        ax1.set_title(f"Q{q}, {formatter.format_eng(tp)} events/s", fontsize=22)
         ax1.set_xticks(mFreq, labels=mIntr)
         ax2.set_xticks(mFreq, labels=mIntr)
-        ax1.tick_params(labelsize=18)
-        ax2.tick_params(labelsize=18)
+        ax1.tick_params(labelsize=22)
+        ax2.tick_params(labelsize=22)
         if q == 1:
             ax1.set_ylim([0, 15])
             ax2.set_ylim([0, 30])
@@ -162,9 +162,9 @@ def main():
         else:
             ax1.set_ylim(ymin=0)
             ax2.set_ylim(ymin=0)
-    fig.legend(loc='upper center', bbox_to_anchor=(0.5, 1.07), ncol=2, handles=handles, fontsize=18)
-    fig.supxlabel('Commit interval(ms)', fontsize=18)
-    fig.supylabel('Event time latency (ms)', fontsize=18)
+    fig.legend(loc='upper center', bbox_to_anchor=(0.5, 1.09), ncol=2, handles=handles, fontsize=22)
+    fig.supxlabel('Commit interval(ms)', fontsize=22)
+    fig.supylabel('Event time latency (ms)', fontsize=22)
     plt.savefig('varMarkTime.pdf', bbox_inches='tight', pad_inches = 0)
     print(f"r2pc/sys p50 min: {r2pc_min_p50_ratio}")
     print(f"r2pc/sys p50 max: {r2pc_max_p50_ratio}")
